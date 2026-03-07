@@ -1,0 +1,7 @@
+# Testing
+pytest==8.1.1
+pytest-asyncio==0.23.6
+
+# Linting / formatting
+black==24.3.0
+flake8==7.0.0
