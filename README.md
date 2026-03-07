@@ -33,7 +33,7 @@ CodePulse analyzes your code in real-time and provides:
 **CI/CD**
 - Git - Version control
 - GitHub - Repository hosting and collaboration
-- GitHub Actions - Automated testing and deployment (planned)
+- GitHub Actions - Automated testing and build verification on every PR
 
 ## Project Structure
 

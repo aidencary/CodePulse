@@ -1,1 +1,150 @@
 # CodePulse Frontend
+
+React frontend for the CodePulse code quality and bug prediction dashboard.
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Framework | React 18 (functional components / Hooks) |
+| Routing | React Router v6 |
+| Auth | Supabase Auth (`@supabase/supabase-js`) |
+| Styling | Plain CSS (CSS files per feature area) |
+| Build | Create React App (`react-scripts`) |
+
+---
+
+## Project Structure
+
+```
+frontend/
+├── public/
+│   └── index.html              # HTML shell
+└── src/
+    ├── index.js                # React entry point
+    ├── App.js                  # Router and AuthProvider setup
+    ├── services/
+    │   └── supabaseClient.js   # Supabase client singleton
+    ├── context/
+    │   └── AuthContext.js      # Auth state, useAuth hook, signIn/signUp/signOut
+    ├── components/
+    │   └── ProtectedRoute.js   # Redirects unauthenticated users to /login
+    ├── pages/
+    │   ├── LoginPage.js        # Log In / Sign Up form (toggled)
+    │   └── DashboardPage.js    # Main dashboard (placeholder)
+    └── styles/
+        └── auth.css            # Login/sign-up form styles
+```
+
+---
+
+## Routes
+
+| Path | Access | Description |
+|------|--------|-------------|
+| `/` | Public | Redirects to `/dashboard` |
+| `/login` | Public | Log In and Sign Up forms |
+| `/dashboard` | Protected | Main dashboard — requires authentication |
+
+---
+
+## Authentication
+
+Authentication is handled entirely by Supabase Auth. Passwords are never stored in the application database.
+
+- **Sign Up** — creates a Supabase Auth user and automatically creates a matching row in the `profiles` table via a database trigger
+- **Log In** — establishes a session; the JWT (`session.access_token`) is available via `useAuth()` for passing to backend API calls
+- **Session persistence** — Supabase persists the session to `localStorage`; users remain logged in across page refreshes
+
+```js
+// Access auth state from any component
+const { user, session, signOut } = useAuth()
+
+// JWT for backend API calls
+const token = session.access_token
+```
+
+---
+
+## Local Setup
+
+### Prerequisites
+
+- Node.js 18+
+- A configured Supabase project (see `backend/database/schema.sql`)
+
+### Installation
+
+```bash
+cd frontend
+npm install
+cp .env.example .env   # Fill in your Supabase URL and anon key
+npm start              # Runs at http://localhost:3000
+```
+
+### Environment Variables
+
+| Variable | Description |
+|----------|-------------|
+| `REACT_APP_SUPABASE_URL` | Your Supabase project URL |
+| `REACT_APP_SUPABASE_ANON_KEY` | Your Supabase publishable (anon) key |
+
+Copy `.env.example` to `.env` and fill in the values. Never commit `.env`.
+
+---
+
+## Testing
+
+Tests use [React Testing Library](https://testing-library.com/react) and Jest (bundled with CRA). Supabase is mocked in all tests — no real network calls are made.
+
+```bash
+npm test                  # Run in watch mode
+npm test -- --watchAll=false   # Run once and exit (used in CI)
+```
+
+| Test File | Coverage |
+|-----------|----------|
+| `components/__tests__/ProtectedRoute.test.js` | Loading state, unauthenticated redirect, authenticated render |
+| `context/__tests__/AuthContext.test.js` | Auth lifecycle, signIn / signUp / signOut calls |
+| `pages/__tests__/LoginPage.test.js` | Form toggle, submission handlers, error display |
+
+---
+
+## CI/CD
+
+The frontend CI workflow runs automatically on every push and pull request to `main` that touches `frontend/**`.
+
+**Workflow:** `.github/workflows/frontend-ci.yml`
+
+| Step | Command |
+|------|---------|
+| Install | `npm ci` |
+| Test | `npm test -- --watchAll=false --ci` |
+| Build | `npm run build` |
+
+A pull request cannot be merged if any step fails.
+
+**Required GitHub Secrets** (Settings → Secrets → Actions):
+
+| Secret | Description |
+|--------|-------------|
+| `REACT_APP_SUPABASE_URL` | Supabase project URL (used in the build step) |
+| `REACT_APP_SUPABASE_ANON_KEY` | Supabase publishable key (used in the build step) |
+
+---
+
+## Implementation Status
+
+| Feature | Status |
+|---------|--------|
+| React app bootstrap | Done |
+| Supabase client setup | Done |
+| Auth context + session observer | Done |
+| Login / Sign Up UI | Done |
+| Protected routes | Done |
+| JWT token hand-off pattern | Done |
+| Dashboard UI | Not started |
+| Code editor / submission flow | Not started |
+| Results display | Not started |
