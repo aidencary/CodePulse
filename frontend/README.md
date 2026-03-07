@@ -95,6 +95,46 @@ Copy `.env.example` to `.env` and fill in the values. Never commit `.env`.
 
 ---
 
+## Testing
+
+Tests use [React Testing Library](https://testing-library.com/react) and Jest (bundled with CRA). Supabase is mocked in all tests — no real network calls are made.
+
+```bash
+npm test                  # Run in watch mode
+npm test -- --watchAll=false   # Run once and exit (used in CI)
+```
+
+| Test File | Coverage |
+|-----------|----------|
+| `components/__tests__/ProtectedRoute.test.js` | Loading state, unauthenticated redirect, authenticated render |
+| `context/__tests__/AuthContext.test.js` | Auth lifecycle, signIn / signUp / signOut calls |
+| `pages/__tests__/LoginPage.test.js` | Form toggle, submission handlers, error display |
+
+---
+
+## CI/CD
+
+The frontend CI workflow runs automatically on every push and pull request to `main` that touches `frontend/**`.
+
+**Workflow:** `.github/workflows/frontend-ci.yml`
+
+| Step | Command |
+|------|---------|
+| Install | `npm ci` |
+| Test | `npm test -- --watchAll=false --ci` |
+| Build | `npm run build` |
+
+A pull request cannot be merged if any step fails.
+
+**Required GitHub Secrets** (Settings → Secrets → Actions):
+
+| Secret | Description |
+|--------|-------------|
+| `REACT_APP_SUPABASE_URL` | Supabase project URL (used in the build step) |
+| `REACT_APP_SUPABASE_ANON_KEY` | Supabase publishable key (used in the build step) |
+
+---
+
 ## Implementation Status
 
 | Feature | Status |

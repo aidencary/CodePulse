@@ -112,7 +112,7 @@ All credentials are stored in environment variables loaded from `.env`. The `.en
 cd backend
 python -m venv venv
 source venv/bin/activate        # Windows: venv\Scripts\activate
-pip install -r requirements.txt # (to be created)
+pip install -r requirements.txt
 cp .env.example .env            # Fill in your Supabase credentials
 uvicorn app.main:app --reload   # Runs at http://localhost:8000
 ```
@@ -137,6 +137,35 @@ Copy `.env.example` to `.env` and fill in the values. Never commit `.env`.
 | — | — | No endpoints implemented yet |
 
 Full API docs will be available at `http://localhost:8000/docs` once the server is running.
+
+---
+
+## Testing
+
+Tests use [pytest](https://pytest.org). Run from the `backend/` directory.
+
+```bash
+pip install -r requirements.txt
+pytest tests/ -v
+```
+
+As backend routes and services are implemented, add a corresponding test file in `tests/` for each service module. See `tests/test_placeholder.py` as a reference starting point.
+
+---
+
+## CI/CD
+
+The backend CI workflow runs automatically on every push and pull request to `main` that touches `backend/**`.
+
+**Workflow:** `.github/workflows/backend-ci.yml`
+
+| Step | Command |
+|------|---------|
+| Format check | `black --check .` |
+| Lint | `flake8 .` |
+| Test | `pytest tests/ -v` |
+
+A pull request cannot be merged if any step fails. All new code must be Black-formatted and pass flake8 before opening a PR.
 
 ---
 
