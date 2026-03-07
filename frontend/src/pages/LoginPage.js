@@ -71,6 +71,9 @@ function LoginPage() {
                 required
                 autoComplete="username"
                 placeholder="your_username"
+                maxLength={20}
+                pattern="^[a-zA-Z0-9_-]{3,20}$"
+                title="3–20 characters: letters, numbers, underscores, hyphens"
               />
             </div>
           )}
@@ -97,7 +100,8 @@ function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               required
               autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-              minLength={6}
+              minLength={8}
+              maxLength={128}
               placeholder="••••••••"
             />
           </div>

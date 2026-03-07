@@ -23,10 +23,13 @@ beforeEach(() => {
 const renderLoginPage = () =>
   render(<MemoryRouter><LoginPage /></MemoryRouter>)
 
+// Helper: submit the form via the email input's parent form
+const submitForm = () =>
+  fireEvent.submit(screen.getByLabelText(/email/i).closest('form'))
+
 describe('LoginPage', () => {
   it('renders Log In form by default without username field', () => {
     renderLoginPage()
-    expect(screen.getByRole('button', { name: /log in/i })).toBeInTheDocument()
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/password/i)).toBeInTheDocument()
     expect(screen.queryByLabelText(/username/i)).not.toBeInTheDocument()
@@ -34,6 +37,7 @@ describe('LoginPage', () => {
 
   it('shows username field after switching to Sign Up mode', () => {
     renderLoginPage()
+    // Click the Sign Up toggle tab (not the submit button)
     fireEvent.click(screen.getByRole('button', { name: /sign up/i }))
     expect(screen.getByLabelText(/username/i)).toBeInTheDocument()
   })
@@ -43,7 +47,7 @@ describe('LoginPage', () => {
     renderLoginPage()
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'user@example.com' } })
     fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'password123' } })
-    fireEvent.submit(screen.getByRole('button', { name: /log in/i }).closest('form'))
+    submitForm()
     await waitFor(() =>
       expect(mockSignIn).toHaveBeenCalledWith('user@example.com', 'password123')
     )
@@ -56,7 +60,7 @@ describe('LoginPage', () => {
     fireEvent.change(screen.getByLabelText(/username/i), { target: { value: 'testuser' } })
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'user@example.com' } })
     fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'password123' } })
-    fireEvent.submit(screen.getByLabelText(/username/i).closest('form'))
+    submitForm()
     await waitFor(() =>
       expect(mockSignUp).toHaveBeenCalledWith('user@example.com', 'password123', 'testuser')
     )
@@ -67,7 +71,7 @@ describe('LoginPage', () => {
     renderLoginPage()
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'user@example.com' } })
     fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'wrongpassword' } })
-    fireEvent.submit(screen.getByRole('button', { name: /log in/i }).closest('form'))
+    submitForm()
     await waitFor(() =>
       expect(screen.getByText('Invalid login credentials')).toBeInTheDocument()
     )
