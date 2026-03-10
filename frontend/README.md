@@ -25,6 +25,7 @@ frontend/
 └── src/
     ├── index.js                # React entry point
     ├── App.js                  # Router and AuthProvider setup
+    ├── setupTests.js           # Jest / Testing Library global setup
     ├── services/
     │   └── supabaseClient.js   # Supabase client singleton
     ├── context/

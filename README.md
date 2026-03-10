@@ -1,13 +1,13 @@
 # CodePulse
 
-A code quality and bug prediction dashboard to verify if code adheres to coding standards and give feedback on potential bugs. Users can paste code into the live text editor and get feedback from the dashboard such as a code quality score, deviations from code standards, and potential bugs.
+![CodePulse Demo](images/CodePulseSlow.gif)
 
-CodePulse is live at: [INSERT LINK HERE]
+A code quality and bug prediction dashboard to verify if code adheres to coding standards and give feedback on potential bugs. Users can paste code into the live text editor and get feedback from the dashboard such as a code quality score, deviations from code standards, and potential bugs.
 
 ## Quick Start (For use locally)
 
-- The frontend runs at `http://localhost:XXXX`
-- The backend runs at `http://localhost:YYYY`
+- The frontend runs at `http://localhost:3000`
+- The backend runs at `http://localhost:8000`
 
 ## What It Does With Your Code
 
@@ -22,12 +22,17 @@ CodePulse analyzes your code in real-time and provides:
 ## Tech Stack
 
 **Frontend**
-- JavaScript - Programming language
+- React 18 (functional components / Hooks)
+- React Router v6
+- Supabase Auth (`@supabase/supabase-js`)
+- Plain CSS (per feature area)
+- Create React App (`react-scripts`)
 
 **Backend**
-- Python 3.x - Programming language
+- Python 3.11+
 - FastAPI - Modern web framework for building APIs
-- Machine Learning libraries (TBD) - Bug prediction models
+- Supabase (PostgreSQL + Auth + RLS)
+- Machine learning libraries (planned) - Bug prediction models
 - Static analysis tools - Code quality assessment
 
 **CI/CD**
@@ -42,48 +47,68 @@ CodePulse/
 ├── backend/          # Python backend application
 ├── frontend/         # React frontend application
 ├── docs/             # Project documentation and diagrams
+├── images/           # Project images and GIFs
 ├── README.md         # This file
-└── STANDARDS.md      # Coding standards and guidelines
+├── STANDARDS.md      # Coding standards and guidelines
+└── TESTING.md        # Testing and CI/CD guide
 ```
 
 For detailed project structure, see [STANDARDS.md](STANDARDS.md).
 
 ## READMEs
+
 - [Frontend README](frontend/README.md) - Frontend setup and development guide
 - [Backend README](backend/README.md) - Backend setup and development guide
+- [Testing & CI/CD Guide](TESTING.md) - How to run tests and how CI/CD works
 
 ## API
 
 The backend uses FastAPI with these main endpoints:
 
+| Method | Path | Description |
+|--------|------|-------------|
+| — | — | No endpoints implemented yet |
+
+Full API docs available at `http://localhost:8000/docs` once the server is running.
 
 ## Development Setup
 
 ### Prerequisites
 
+- Node.js 18+
+- Python 3.11+
+- A configured [Supabase](https://supabase.com) project (see `backend/database/schema.sql`)
 
 ### Installation
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/CodePulse.git
+   git clone https://github.com/aidencary/CodePulse.git
    cd CodePulse
    ```
 
 2. **Set up the backend**
    ```bash
-   
+   cd backend
+   python -m venv venv
+   source venv/bin/activate        # Windows: venv\Scripts\activate
+   pip install -r requirements.txt
+   cp .env.example .env            # Fill in your Supabase credentials
+   uvicorn app.main:app --reload
    ```
 
 3. **Set up the frontend**
    ```bash
-   
+   cd frontend
+   npm install
+   cp .env.example .env            # Fill in your Supabase URL and anon key
+   npm start
    ```
 
 4. **Access the application**
-   - Frontend: http://localhost:XXXX
-   - Backend API: http://localhost:YYYY
-   - API Docs: http://localhost:YYYY/docs
+   - Frontend: http://localhost:3000
+   - Backend API: http://localhost:8000
+   - API Docs: http://localhost:8000/docs
 
 ### Environment Variables
 
