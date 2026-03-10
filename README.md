@@ -1,6 +1,8 @@
 # CodePulse
 
-![CodePulse Demo](images/CodePulseSlow.gif)
+<p align="center">
+  <img src="images/CodePulseSlow.gif" width="500">
+</p>
 
 A code quality and bug prediction dashboard to verify if code adheres to coding standards and give feedback on potential bugs. Users can paste code into the live text editor and get feedback from the dashboard such as a code quality score, deviations from code standards, and potential bugs.
 
