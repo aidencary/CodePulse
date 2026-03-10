@@ -7,30 +7,34 @@ This markdown file outlines CodePulse's project structure, coding standards, bra
 ```
 CodePulse/
 ├── backend/                  # Python backend application
-│   ├── app/                  # Main application directory
-│   │   ├── __init__.py       # App initialization
-│   │   ├── main.py           # Application entry point
-│   │   ├── models/           # Database models
-│   │   ├── routes/           # API route handlers
+│   ├── app/                  # Main application directory (planned)
+│   │   ├── main.py           # FastAPI entry point
+│   │   ├── config.py         # Environment/configuration settings
+│   │   ├── models/           # Pydantic models
+│   │   ├── routes/           # API route handlers (thin layer)
 │   │   ├── services/         # Business logic layer
-│   │   ├── utils/            # Utility functions
-│   │   └── config.py         # Configuration settings
+│   │   └── utils/            # Shared utility functions
+│   ├── engine/               # Code analysis pipeline (planned)
+│   │   ├── ast_parser.py     # AST-based code parsing
+│   │   ├── static_analyzer.py # Static analysis rules
+│   │   └── ai_model_loader.py # ML model inference
+│   ├── database/
+│   │   └── schema.sql        # Supabase PostgreSQL schema (source of truth)
 │   ├── tests/                # Backend tests
 │   ├── requirements.txt      # Python dependencies
 │   └── .env.example          # Environment variables template
 │
 ├── frontend/                # JavaScript/React frontend
 │   ├── public/              # Static files
-│   ├── src/                 # Source code
-│   │   ├── components/      # React components
-│   │   ├── pages/           # Page components
-│   │   ├── services/        # API service calls
-│   │   ├── utils/           # Utility functions
-│   │   ├── styles/          # CSS/styling files
-│   │   ├── App.js           # Main app component
-│   │   └── index.js         # Entry point
-│   ├── package.json         # Node dependencies
-│   └── .env.example         # Environment variables template
+│   └── src/                 # Source code
+│       ├── components/      # React components
+│       ├── context/         # React context (AuthContext)
+│       ├── pages/           # Page components
+│       ├── services/        # API service calls (supabaseClient)
+│       ├── styles/          # CSS/styling files
+│       ├── setupTests.js    # Jest / Testing Library global setup
+│       ├── App.js           # Main app component
+│       └── index.js         # Entry point
 │
 ├── docs/                     # Project documentation
 │   ├── CodePulse_Class_Diagram.png
@@ -38,8 +42,10 @@ CodePulse/
 │   ├── CodePulse_UseCaseDiagram.drawio.png
 │   ├── CodePulse_Design_&_Architecture.pdf
 │   └── CodePulse_Requirements_Analysis.pdf
+├── images/                   # Project images and GIFs
 ├── README.md                 # Project overview
-└── STANDARDS.md              # This file
+├── STANDARDS.md              # This file
+└── TESTING.md                # Testing and CI/CD guide
 ```
 
 ## Documentation
