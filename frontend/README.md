@@ -11,6 +11,7 @@ React frontend for the CodePulse code quality and bug prediction dashboard.
 | Framework | React 18 (functional components / Hooks) |
 | Routing | React Router v6 |
 | Auth | Supabase Auth (`@supabase/supabase-js`) |
+| Code Editor | Monaco Editor (`@monaco-editor/react`) |
 | Styling | Plain CSS (CSS files per feature area) |
 | Build | Create React App (`react-scripts`) |
 
@@ -27,16 +28,20 @@ frontend/
     ├── App.js                  # Router and AuthProvider setup
     ├── setupTests.js           # Jest / Testing Library global setup
     ├── services/
-    │   └── supabaseClient.js   # Supabase client singleton
+    │   ├── supabaseClient.js   # Supabase client singleton
+    │   └── analysisService.js  # analyzeCode() — POST /api/v1/analyze
     ├── context/
     │   └── AuthContext.js      # Auth state, useAuth hook, signIn/signUp/signOut
     ├── components/
-    │   └── ProtectedRoute.js   # Redirects unauthenticated users to /login
+    │   ├── ProtectedRoute.js   # Redirects unauthenticated users to /login
+    │   ├── CodeEditor.js       # Monaco editor + Run Analysis button
+    │   └── ResultsPanel.js     # Displays JSON results, loading, error states
     ├── pages/
     │   ├── LoginPage.js        # Log In / Sign Up form (toggled)
-    │   └── DashboardPage.js    # Main dashboard (placeholder)
+    │   └── DashboardPage.js    # Dashboard shell — editor + results
     └── styles/
-        └── auth.css            # Login/sign-up form styles
+        ├── auth.css            # Login/sign-up form styles
+        └── dashboard.css       # Dashboard layout styles
 ```
 
 ---
@@ -91,6 +96,7 @@ npm start              # Runs at http://localhost:3000
 |----------|-------------|
 | `REACT_APP_SUPABASE_URL` | Your Supabase project URL |
 | `REACT_APP_SUPABASE_ANON_KEY` | Your Supabase publishable (anon) key |
+| `REACT_APP_API_URL` | Backend API base URL (default: `http://localhost:8000`) |
 
 Copy `.env.example` to `.env` and fill in the values. Never commit `.env`.
 
@@ -110,6 +116,8 @@ npm test -- --watchAll=false   # Run once and exit (used in CI)
 | `components/__tests__/ProtectedRoute.test.js` | Loading state, unauthenticated redirect, authenticated render |
 | `context/__tests__/AuthContext.test.js` | Auth lifecycle, signIn / signUp / signOut calls |
 | `pages/__tests__/LoginPage.test.js` | Form toggle, submission handlers, error display |
+| `components/__tests__/CodeEditor.test.js` | Renders editor, button click fires onRun, disabled during loading |
+| `components/__tests__/ResultsPanel.test.js` | Idle, loading, error, and results display states |
 
 ---
 
@@ -146,6 +154,6 @@ A pull request cannot be merged if any step fails.
 | Login / Sign Up UI | Done |
 | Protected routes | Done |
 | JWT token hand-off pattern | Done |
-| Dashboard UI | Not started |
-| Code editor / submission flow | Not started |
-| Results display | Not started |
+| Dashboard UI | Done |
+| Code editor / submission flow | Done |
+| Results display | Done |

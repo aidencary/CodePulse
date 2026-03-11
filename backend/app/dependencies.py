@@ -40,8 +40,9 @@ def get_current_user(
             token,
             settings.supabase_jwt_secret,
             algorithms=[_ALGORITHM],
-            options={"verify_aud": False},
+            audience="authenticated",
         )
+
         user_id: str | None = payload.get("sub")
         if user_id is None:
             raise credentials_exception
@@ -49,3 +50,4 @@ def get_current_user(
         raise credentials_exception
 
     return user_id
+
