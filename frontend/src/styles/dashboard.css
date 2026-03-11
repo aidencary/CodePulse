@@ -1,0 +1,146 @@
+.dashboard-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: #0f1117;
+  color: #e2e8f0;
+}
+
+/* ── Navigation bar ── */
+.dashboard-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 1.5rem;
+  background: #1a1d2e;
+  border-bottom: 1px solid #2d3148;
+}
+
+.nav-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.02em;
+}
+
+.nav-user {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.nav-email {
+  font-size: 0.85rem;
+  color: #94a3b8;
+}
+
+.signout-btn {
+  padding: 0.4rem 0.9rem;
+  background: transparent;
+  color: #94a3b8;
+  border: 1px solid #2d3148;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.signout-btn:hover {
+  color: #e2e8f0;
+  border-color: #6366f1;
+}
+
+/* ── Main layout ── */
+.dashboard-main {
+  display: flex;
+  flex: 1;
+  gap: 1.25rem;
+  padding: 1.25rem;
+}
+
+/* ── Shared panel style ── */
+.editor-panel,
+.results-panel {
+  background: #1a1d2e;
+  border: 1px solid #2d3148;
+  border-radius: 10px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.editor-panel {
+  flex: 3;
+}
+
+.results-panel {
+  flex: 2;
+}
+
+/* ── Panel header ── */
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #2d3148;
+}
+
+.panel-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* ── Run button ── */
+.run-btn {
+  padding: 0.45rem 1.1rem;
+  background: #6366f1;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.run-btn:hover:not(:disabled) {
+  background: #4f46e5;
+}
+
+.run-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* ── Results content ── */
+.results-placeholder {
+  padding: 1.25rem;
+  font-size: 0.9rem;
+  color: #4a5568;
+}
+
+.results-error {
+  padding: 1rem;
+  margin: 1rem;
+  font-size: 0.875rem;
+  color: #f87171;
+  background: rgba(248, 113, 113, 0.1);
+  border: 1px solid rgba(248, 113, 113, 0.3);
+  border-radius: 6px;
+}
+
+.results-pre {
+  flex: 1;
+  padding: 1rem;
+  margin: 0;
+  font-family: 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+  font-size: 0.8rem;
+  color: #94a3b8;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-y: auto;
+}
