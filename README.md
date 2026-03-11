@@ -67,9 +67,10 @@ For detailed project structure, see [STANDARDS.md](STANDARDS.md).
 
 The backend uses FastAPI with these main endpoints:
 
-| Method | Path | Description |
-|--------|------|-------------|
-| — | — | No endpoints implemented yet |
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `GET` | `/` | None | Health check |
+| `POST` | `/api/v1/analyze` | Bearer JWT | Submit code for analysis (mock) |
 
 Full API docs available at `http://localhost:8000/docs` once the server is running.
 

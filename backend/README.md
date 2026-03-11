@@ -20,20 +20,27 @@ Python FastAPI backend for the CodePulse code quality and bug prediction dashboa
 
 ```
 backend/
-├── app/                        # Main application (to be created)
-│   ├── main.py                 # FastAPI entry point
-│   ├── config.py               # Environment/configuration settings
-│   ├── models/                 # Pydantic models
-│   ├── routes/                 # API route handlers (thin layer)
-│   ├── services/               # Business logic layer
-│   └── utils/                  # Shared utility functions
-├── engine/                     # Code analysis pipeline (to be created)
-│   ├── ast_parser.py           # AST-based code parsing
-│   ├── static_analyzer.py      # Static analysis rules
-│   └── ai_model_loader.py      # ML model inference
-├── tests/                      # Backend test suite
-└── database/
-    └── schema.sql              # Supabase PostgreSQL schema (source of truth)
+├── app/
+│   ├── __init__.py
+│   ├── main.py                 # FastAPI entry point, CORS, router mount
+│   ├── config.py               # Pydantic Settings loaded from .env
+│   ├── dependencies.py         # get_current_user — Supabase JWT auth
+│   ├── models/
+│   │   └── analysis.py         # AnalyzeRequest / AnalyzeResponse
+│   └── routes/
+│       └── analysis.py         # POST /api/v1/analyze
+├── engine/                     # Code analysis pipeline (planned)
+│   ├── ast_parser.py
+│   ├── static_analyzer.py
+│   └── ai_model_loader.py
+├── tests/
+│   ├── test_placeholder.py
+│   └── test_analyze_endpoint.py
+├── database/
+│   └── schema.sql              # Supabase PostgreSQL schema (source of truth)
+├── Dockerfile
+├── requirements.txt
+└── .env.example
 ```
 
 ---
@@ -119,24 +126,34 @@ uvicorn app.main:app --reload   # Runs at http://localhost:8000
 
 ### Environment Variables
 
-| Variable | Description |
-|----------|-------------|
-| `SUPABASE_URL` | Your Supabase project URL |
-| `SUPABASE_ANON_KEY` | Supabase publishable key (for user-context queries) |
-| `SUPABASE_SERVICE_ROLE_KEY` | Supabase secret key (server-side only — never expose) |
-| `DATABASE_URL` | Direct PostgreSQL connection string |
+| Variable | Where to find it |
+|----------|-----------------|
+| `SUPABASE_URL` | Supabase Dashboard → Settings → API → Project URL |
+| `SUPABASE_ANON_KEY` | Supabase Dashboard → Settings → API → `anon` key |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase Dashboard → Settings → API → `service_role` key |
+| `SUPABASE_JWT_SECRET` | Supabase Dashboard → Settings → API → JWT Secret |
+| `DATABASE_URL` | Supabase Dashboard → Settings → Database → Connection string (URI) |
 
 Copy `.env.example` to `.env` and fill in the values. Never commit `.env`.
+
+### Docker
+
+```bash
+cd backend
+docker build -t codepulse-backend .
+docker run -p 8000:8000 --env-file .env codepulse-backend
+```
 
 ---
 
 ## API Endpoints
 
-| Method | Path | Description |
-|--------|------|-------------|
-| — | — | No endpoints implemented yet |
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `GET` | `/` | None | Health check → `{"status": "ok"}` |
+| `POST` | `/api/v1/analyze` | Bearer JWT | Submit code for analysis (mock response) |
 
-Full API docs will be available at `http://localhost:8000/docs` once the server is running.
+Full API docs available at `http://localhost:8000/docs` once the server is running.
 
 ---
 
@@ -174,9 +191,11 @@ A pull request cannot be merged if any step fails. All new code must be Black-fo
 | Feature | Status |
 |---------|--------|
 | Database schema + RLS | Done |
-| Environment config | Done |
-| FastAPI app scaffold | Not started |
-| JWT authentication middleware | Not started |
-| Submission endpoint | Not started |
-| Analysis engine integration | Not started |
+| Environment config (`app/config.py`) | Done |
+| FastAPI app scaffold (`app/main.py`) | Done |
+| JWT auth dependency (`app/dependencies.py`) | Done |
+| `POST /api/v1/analyze` — mock response | Done |
+| Dockerfile | Done |
+| Analysis engine integration (`engine/`) | Not started |
+| Submission persistence to Supabase | Not started |
 | Results endpoints | Not started |
