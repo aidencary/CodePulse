@@ -1,146 +1,457 @@
+/* ─── Design tokens (light mode base) ─────────────────────────── */
+:root {
+  --bg:       #f9f9f8;
+  --surface:  #ffffff;
+  --border:   #e5e5e3;
+  --text:     #1a1a18;
+  --muted:    #737370;
+  --accent:   #1a1a18;
+  --danger:   #dc2626;
+}
+
+/* ─── Dark mode toggle (Pure CSS curtain) ──────────────────────── */
+
+/* 1. Hide the native checkbox */
+.dark-toggle-input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+/* 2. Pill label */
+.dark-toggle-label {
+  display: flex;
+  align-items: center;
+  width: 36px;
+  height: 20px;
+  background: var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+  position: relative;
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+
+/* 3. Knob */
+.dark-toggle-label::after {
+  content: '';
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  background: var(--accent);
+  border-radius: 50%;
+  top: 3px;
+  left: 3px;
+  transition: transform 0.2s;
+}
+
+/* 4. Animate knob when checked — sibling nav descendant */
+.dark-toggle-input:checked ~ .dashboard-nav .dark-toggle-label::after {
+  transform: translateX(16px);
+}
+
+/* 5. The curtain — covers entire viewport, inverts all colors */
+.curtain {
+  position: fixed;
+  inset: 0;
+  background: #ffffff;
+  mix-blend-mode: difference;
+  pointer-events: none;
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.4s ease;
+  z-index: 9999;
+}
+
+.dark-toggle-input:checked ~ .curtain {
+  transform: scaleX(1);
+}
+
+/* ─── Screen-reader only utility ───────────────────────────────── */
+.sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ─── Base reset ───────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* ─── Page shell ───────────────────────────────────────────────── */
 .dashboard-page {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
-  background: #0f1117;
-  color: #e2e8f0;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
 }
 
-/* ── Navigation bar ── */
+/* ─── Navbar ───────────────────────────────────────────────────── */
 .dashboard-nav {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.85rem 1.5rem;
-  background: #1a1d2e;
-  border-bottom: 1px solid #2d3148;
+  padding: 0 1.25rem;
+  height: 48px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
 }
 
-.nav-title {
-  font-size: 1.1rem;
+.nav-brand {
+  font-size: 1rem;
   font-weight: 700;
-  color: #ffffff;
   letter-spacing: 0.02em;
+  color: var(--text);
 }
 
 .nav-user {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.75rem;
 }
 
-.nav-email {
-  font-size: 0.85rem;
-  color: #94a3b8;
+.nav-username {
+  font-size: 0.82rem;
+  color: var(--muted);
 }
 
-.signout-btn {
-  padding: 0.4rem 0.9rem;
-  background: transparent;
-  color: #94a3b8;
-  border: 1px solid #2d3148;
-  border-radius: 6px;
-  font-size: 0.85rem;
+/* ─── Profile dropdown ─────────────────────────────────────────── */
+.profile-dropdown {
+  position: relative;
+}
+
+.avatar-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--bg);
   cursor: pointer;
-  transition: color 0.2s, border-color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 0;
+  transition: border-color 0.15s;
 }
 
-.signout-btn:hover {
-  color: #e2e8f0;
-  border-color: #6366f1;
+.avatar-btn:hover {
+  border-color: var(--muted);
 }
 
-/* ── Main layout ── */
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-initial {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text);
+  user-select: none;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 140px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  z-index: 100;
+}
+
+.dropdown-item {
+  display: block;
+  width: 100%;
+  padding: 0.55rem 1rem;
+  background: none;
+  border: none;
+  text-align: left;
+  font-size: 0.875rem;
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.dropdown-item:hover {
+  background: var(--bg);
+}
+
+.dropdown-item--danger {
+  color: var(--danger);
+}
+
+/* ─── 3-column main layout ─────────────────────────────────────── */
 .dashboard-main {
   display: flex;
   flex: 1;
-  gap: 1.25rem;
-  padding: 1.25rem;
+  overflow: hidden;
 }
 
-/* ── Shared panel style ── */
-.editor-panel,
-.results-panel {
-  background: #1a1d2e;
-  border: 1px solid #2d3148;
-  border-radius: 10px;
-  overflow: hidden;
+/* ─── Submission sidebar ───────────────────────────────────────── */
+.submission-sidebar {
+  width: 240px;
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  overflow: hidden;
 }
 
-.editor-panel {
-  flex: 3;
-}
-
-.results-panel {
-  flex: 2;
-}
-
-/* ── Panel header ── */
-.panel-header {
+.sidebar-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0.75rem 1rem;
-  border-bottom: 1px solid #2d3148;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
 }
 
-.panel-title {
-  font-size: 0.9rem;
+.sidebar-title {
+  font-size: 0.78rem;
   font-weight: 600;
-  color: #94a3b8;
   text-transform: uppercase;
   letter-spacing: 0.06em;
+  color: var(--muted);
 }
 
-/* ── Run button ── */
+.new-btn {
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: none;
+  color: var(--muted);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.new-btn:hover {
+  color: var(--text);
+  border-color: var(--muted);
+}
+
+.sidebar-search {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.35rem 0.6rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.82rem;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.search-input:focus {
+  border-color: var(--muted);
+}
+
+.search-input::placeholder {
+  color: var(--muted);
+}
+
+.submission-list {
+  list-style: none;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.submission-empty {
+  padding: 1rem;
+  font-size: 0.82rem;
+  color: var(--muted);
+  text-align: center;
+}
+
+.submission-item {
+  padding: 0.65rem 1rem;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.1s;
+}
+
+.submission-item:hover {
+  background: var(--bg);
+}
+
+.submission-item.active {
+  background: var(--border);
+}
+
+.submission-title {
+  display: block;
+  font-size: 0.83rem;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.submission-date {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-top: 0.15rem;
+}
+
+/* ─── Editor panel ─────────────────────────────────────────────── */
+.editor-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+}
+
+.editor-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  background: var(--surface);
+}
+
+.editor-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
 .run-btn {
-  padding: 0.45rem 1.1rem;
-  background: #6366f1;
-  color: #ffffff;
+  padding: 0.4rem 1rem;
+  background: var(--accent);
+  color: var(--surface);
   border: none;
   border-radius: 6px;
-  font-size: 0.875rem;
+  font-size: 0.825rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: opacity 0.15s;
 }
 
 .run-btn:hover:not(:disabled) {
-  background: #4f46e5;
+  opacity: 0.75;
 }
 
 .run-btn:disabled {
-  opacity: 0.55;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
-/* ── Results content ── */
+.editor-monaco {
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ─── Results panel ────────────────────────────────────────────── */
+.results-panel {
+  width: 320px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.panel-title {
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.results-body {
+  flex: 1;
+  overflow-y: auto;
+}
+
 .results-placeholder {
   padding: 1.25rem;
-  font-size: 0.9rem;
-  color: #4a5568;
+  font-size: 0.875rem;
+  color: var(--muted);
 }
 
 .results-error {
-  padding: 1rem;
   margin: 1rem;
-  font-size: 0.875rem;
-  color: #f87171;
-  background: rgba(248, 113, 113, 0.1);
-  border: 1px solid rgba(248, 113, 113, 0.3);
+  padding: 0.75rem 1rem;
+  font-size: 0.85rem;
+  color: var(--danger);
+  background: rgba(220, 38, 38, 0.07);
+  border: 1px solid rgba(220, 38, 38, 0.25);
   border-radius: 6px;
 }
 
 .results-pre {
-  flex: 1;
   padding: 1rem;
   margin: 0;
   font-family: 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
-  font-size: 0.8rem;
-  color: #94a3b8;
+  font-size: 0.78rem;
+  color: var(--text);
   white-space: pre-wrap;
   word-break: break-word;
-  overflow-y: auto;
+}
+
+/* ─── Auth loading state ───────────────────────────────────────── */
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  font-size: 0.9rem;
+  color: var(--muted);
+  background: var(--bg);
 }

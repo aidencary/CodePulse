@@ -29,7 +29,9 @@ function ResultsPanel({ results, loading, error }) {
       <div className="panel-header">
         <h2 className="panel-title">Results</h2>
       </div>
-      {renderContent()}
+      <div className="results-body">
+        {renderContent()}
+      </div>
     </div>
   )
 }
