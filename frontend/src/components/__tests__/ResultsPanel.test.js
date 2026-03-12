@@ -22,7 +22,6 @@ describe('ResultsPanel', () => {
   it('renders JSON results in a pre element', () => {
     const results = { status: 'received', lines: 42 }
     render(<ResultsPanel results={results} loading={false} error={null} />)
-    const pre = screen.getByRole('generic', { hidden: true })
     expect(screen.getByText(/"status": "received"/)).toBeInTheDocument()
     expect(screen.getByText(/"lines": 42/)).toBeInTheDocument()
   })
