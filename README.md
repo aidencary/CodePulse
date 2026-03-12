@@ -152,6 +152,10 @@ See the [docs](docs/) folder for:
 - Keller Willhite (UI/UX Developer)
 - Zachery Atchley (Integration and Unit Tester/Developer)
 
+## Artists
+
+- Ashlynn Monroe (Logo Creator)
+
 ## License
 
 [INSERT LICENSE HERE]
