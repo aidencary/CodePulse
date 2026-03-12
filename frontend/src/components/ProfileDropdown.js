@@ -23,7 +23,17 @@ function ProfileDropdown({ user }) {
     user?.email?.[0]?.toUpperCase() ||
     '?'
 
-  const avatarUrl = user?.user_metadata?.avatar_url || null
+  const rawAvatarUrl = user?.user_metadata?.avatar_url || null
+  const avatarUrl = (() => {
+    if (!rawAvatarUrl) return null
+    try {
+      const { protocol, hostname } = new URL(rawAvatarUrl)
+      const allowedHosts = ['lh3.googleusercontent.com', 'avatars.githubusercontent.com', 's.gravatar.com']
+      return protocol === 'https:' && allowedHosts.includes(hostname) ? rawAvatarUrl : null
+    } catch {
+      return null
+    }
+  })()
   const avatarColor = hashColor(user?.id || user?.email || '')
 
   useEffect(() => {
