@@ -1,15 +1,21 @@
 """CodePulse Backend — FastAPI application entry point."""
 
+import os
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 
 from app.routes import analysis
 
+_debug = os.environ.get("DEBUG", "false").lower() == "true"
+
 app = FastAPI(
     title="CodePulse API",
     version="0.1.0",
-    description="Secure gateway between the CodePulse frontend and the analysis engine.",
+    description="Gateway between the CodePulse frontend and the analysis engine.",
+    docs_url="/docs" if _debug else None,
+    redoc_url="/redoc" if _debug else None,
 )
 
 app.add_middleware(
@@ -19,6 +25,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 @app.middleware("http")
 async def add_security_headers(request: Request, call_next) -> Response:

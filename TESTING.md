@@ -98,6 +98,7 @@ All test files live in `backend/tests/` and follow the `test_<module>.py` naming
 
 | File | What It Tests |
 |------|--------------|
+| `tests/test_analyze_endpoint.py` | Health check, auth guard (missing header, malformed token, wrong Bearer prefix), valid JWT happy path, request body validation |
 | `tests/test_placeholder.py` | Confirms the test runner is configured correctly — replace with real tests as services are implemented |
 
 ### Writing New Backend Tests
@@ -126,7 +127,7 @@ black .
 # Check formatting without modifying files (what CI runs)
 black --check .
 
-# Lint
+# Lint (config in backend/.flake8 — max-line-length=88 to match black)
 flake8 .
 ```
 
@@ -144,6 +145,7 @@ Two workflows run automatically. They are path-filtered so only the relevant wor
 | Step | Command | Notes |
 |------|---------|-------|
 | Install | `npm ci` | Clean install from `package-lock.json` |
+| Audit | `npm audit --audit-level=critical` | Fails only on critical vulnerabilities; high-severity false positives from `react-scripts` transitive deps are excluded by design |
 | Test | `npm test -- --watchAll=false --ci` | Fails the build if any test fails |
 | Build | `npm run build` | Verifies the production build compiles |
 
@@ -174,17 +176,18 @@ A PR to `main` cannot be merged if any CI step fails. Before opening a PR:
 
 1. Run `npm test -- --watchAll=false` (frontend) and/or `pytest tests/ -v` (backend) locally
 2. Ensure all tests pass
-3. Ensure backend code is Black-formatted (`black .`)
-4. Commit and push — GitHub Actions will run automatically
-5. Check the Actions tab on GitHub to confirm all checks are green
+3. Ensure backend code is Black-formatted (`black .`) and passes `flake8 .`
+4. Run `npm audit --audit-level=critical` in `frontend/` — fix anything reported
+5. Commit and push — GitHub Actions will run automatically
+6. Check the Actions tab on GitHub to confirm all checks are green
 
 ---
 
 ## Quick Reference
 
 ```bash
-# Frontend — run tests once
-cd frontend && npm test -- --watchAll=false
+# Frontend — audit and run tests once
+cd frontend && npm audit --audit-level=critical && npm test -- --watchAll=false
 
 # Backend — format, lint, and test
 cd backend && black . && flake8 . && pytest tests/ -v

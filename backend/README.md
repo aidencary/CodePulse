@@ -12,7 +12,7 @@ Python FastAPI backend for the CodePulse code quality and bug prediction dashboa
 | Database | Supabase (PostgreSQL + Auth + RLS) |
 | Auth | Supabase JWT verification |
 | Analysis Engine | Static analysis + ML (planned) |
-| API Docs | Swagger / OpenAPI (auto-generated at `/docs`) |
+| API Docs | Swagger / OpenAPI (available at `/docs` when `DEBUG=true`) |
 
 ---
 
@@ -118,7 +118,7 @@ All credentials are stored in environment variables loaded from `.env`. The `.en
 ```bash
 cd backend
 python -m venv venv
-source venv/bin/activate        # Windows: venv\Scripts\activate
+source venv/bin/activate        # PowerShell: venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 cp .env.example .env            # Fill in your Supabase credentials
 uvicorn app.main:app --reload   # Runs at http://localhost:8000
@@ -126,13 +126,13 @@ uvicorn app.main:app --reload   # Runs at http://localhost:8000
 
 ### Environment Variables
 
-| Variable | Where to find it |
-|----------|-----------------|
-| `SUPABASE_URL` | Supabase Dashboard → Settings → API → Project URL |
-| `SUPABASE_ANON_KEY` | Supabase Dashboard → Settings → API → `anon` key |
-| `SUPABASE_SERVICE_ROLE_KEY` | Supabase Dashboard → Settings → API → `service_role` key |
-| `SUPABASE_JWT_SECRET` | Supabase Dashboard → Settings → API → JWT Secret |
-| `DATABASE_URL` | Supabase Dashboard → Settings → Database → Connection string (URI) |
+| Variable | Required | Where to find it |
+|----------|----------|-----------------|
+| `SUPABASE_URL` | Yes | Supabase Dashboard → Settings → API → Project URL |
+| `SUPABASE_ANON_KEY` | Yes | Supabase Dashboard → Settings → API → `anon` key |
+| `SUPABASE_SERVICE_ROLE_KEY` | Yes | Supabase Dashboard → Settings → API → `service_role` key |
+| `SUPABASE_JWT_SECRET` | Yes | Supabase Dashboard → Settings → API → JWT Secret |
+| `DEBUG` | No | Set to `true` locally to enable `/docs` and `/redoc`; omit in production |
 
 Copy `.env.example` to `.env` and fill in the values. Never commit `.env`.
 
@@ -153,7 +153,7 @@ docker run -p 8000:8000 --env-file .env codepulse-backend
 | `GET` | `/` | None | Health check → `{"status": "ok"}` |
 | `POST` | `/api/v1/analyze` | Bearer JWT | Submit code for analysis (mock response) |
 
-Full API docs available at `http://localhost:8000/docs` once the server is running.
+Full API docs available at `http://localhost:8000/docs` when running locally with `DEBUG=true`. Disabled in production.
 
 ---
 
