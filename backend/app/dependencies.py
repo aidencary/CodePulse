@@ -33,7 +33,7 @@ def get_current_user(
     if not authorization.startswith("Bearer "):
         raise credentials_exception
 
-    token = authorization[len("Bearer "):]
+    token = authorization[len("Bearer ") :]
 
     try:
         payload = jwt.decode(
@@ -53,4 +53,3 @@ def get_current_user(
         raise credentials_exception
 
     return user_id
-

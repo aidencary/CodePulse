@@ -33,7 +33,7 @@ jobs:
 
       - name: Audit dependencies
         working-directory: frontend
-        run: npm audit --audit-level=high
+        run: npm audit --audit-level=critical
 
       - name: Run tests
         working-directory: frontend

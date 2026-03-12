@@ -11,7 +11,7 @@ _TEST_JWT_SECRET = "test-secret-key-for-unit-testing-only"
 
 def _override_settings() -> Settings:
     """Return a Settings instance wired to test values (no .env required)."""
-    return Settings(
+    return Settings.model_construct(
         supabase_url="https://test.supabase.co",
         supabase_anon_key="test-anon-key",
         supabase_service_role_key="test-service-role-key",
@@ -25,8 +25,16 @@ client = TestClient(app)
 
 
 def _make_token(user_id: str = "00000000-0000-0000-0000-000000000001") -> str:
-    """Sign a minimal JWT with the test secret."""
-    return jwt.encode({"sub": user_id}, _TEST_JWT_SECRET, algorithm="HS256")
+    """Sign a JWT with the claims required by get_current_user."""
+    return jwt.encode(
+        {
+            "sub": user_id,
+            "aud": "authenticated",
+            "iss": "https://test.supabase.co",
+        },
+        _TEST_JWT_SECRET,
+        algorithm="HS256",
+    )
 
 
 # ---------------------------------------------------------------------------

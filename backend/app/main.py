@@ -9,7 +9,7 @@ from app.routes import analysis
 app = FastAPI(
     title="CodePulse API",
     version="0.1.0",
-    description="Secure gateway between the CodePulse frontend and the analysis engine.",
+    description="Secure gateway between the CodePulse frontend and the analysis engine.",  # noqa: E501
 )
 
 app.add_middleware(
@@ -19,6 +19,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 @app.middleware("http")
 async def add_security_headers(request: Request, call_next) -> Response:
