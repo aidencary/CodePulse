@@ -25,6 +25,7 @@ backend/
 │   ├── main.py                 # FastAPI entry point, CORS, router mount
 │   ├── config.py               # Pydantic Settings loaded from .env
 │   ├── dependencies.py         # get_current_user — Supabase JWT auth
+│   ├── database.py             # Supabase service-role client (cached singleton)
 │   ├── models/
 │   │   └── analysis.py         # AnalyzeRequest / AnalyzeResponse
 │   └── routes/
@@ -194,6 +195,7 @@ A pull request cannot be merged if any step fails. All new code must be Black-fo
 | Environment config (`app/config.py`) | Done |
 | FastAPI app scaffold (`app/main.py`) | Done |
 | JWT auth dependency (`app/dependencies.py`) | Done |
+| Supabase client module (`app/database.py`) | Done |
 | `POST /api/v1/analyze` — mock response | Done |
 | Dockerfile | Done |
 | Analysis engine integration (`engine/`) | Not started |
