@@ -4,6 +4,7 @@
 -- ============================================================
 
 -- 0. Clean up existing tables
+DROP TABLE IF EXISTS predicted_bugs CASCADE;
 DROP TABLE IF EXISTS actionable_fixes CASCADE;
 DROP TABLE IF EXISTS findings CASCADE;
 DROP TABLE IF EXISTS analysis_reports CASCADE;
@@ -54,6 +55,17 @@ CREATE TABLE actionable_fixes (
     suggested_snippet TEXT NOT NULL,
     rationale        TEXT,
     tags             TEXT[]
+);
+
+-- 6. Predicted Bugs (AI-generated bug predictions per report)
+CREATE TABLE predicted_bugs (
+    bug_id        UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    report_id     UUID REFERENCES analysis_reports(report_id) ON DELETE CASCADE,
+    line_number   INT,
+    bug_type      TEXT NOT NULL,
+    severity      TEXT NOT NULL CHECK (severity IN ('low', 'medium', 'high', 'critical')),
+    description   TEXT NOT NULL,
+    suggested_fix TEXT NOT NULL
 );
 
 -- ============================================================
@@ -132,6 +144,20 @@ CREATE POLICY "Users can view own actionable fixes"
                 WHERE submission_id IN (
                     SELECT submission_id FROM submissions WHERE user_id = auth.uid()
                 )
+            )
+        )
+    );
+
+-- Predicted bugs: visible only if the linked report belongs to the user
+ALTER TABLE predicted_bugs ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own predicted bugs"
+    ON predicted_bugs FOR SELECT
+    USING (
+        report_id IN (
+            SELECT report_id FROM analysis_reports
+            WHERE submission_id IN (
+                SELECT submission_id FROM submissions WHERE user_id = auth.uid()
             )
         )
     );
