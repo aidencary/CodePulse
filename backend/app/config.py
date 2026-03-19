@@ -13,9 +13,11 @@ class Settings(BaseSettings):
     supabase_service_role_key: str
     supabase_jwt_secret: str
     openai_api_key: str
-    gpt_model: str = "gpt-4o"
+    gpt_model: str = "gpt-4o-mini"
 
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+    model_config = SettingsConfigDict(
+        env_file=".env", env_file_encoding="utf-8", extra="ignore"
+    )
 
 
 @lru_cache

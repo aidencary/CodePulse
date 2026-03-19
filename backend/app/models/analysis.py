@@ -37,3 +37,4 @@ class AnalyzeResponse(BaseModel):
     summary: str
     findings: list[Finding]
     predicted_bugs: list[PredictedBug]
+    submission_id: str | None = None

@@ -2,7 +2,6 @@
 
 import ast
 import logging
-from typing import Union
 
 from app.models.analysis import Finding, PredictedBug
 
@@ -48,26 +47,15 @@ _SEVERITY_PENALTIES: dict[str, int] = {
 }
 
 
-'''
-Private Helper Methods:
-These methods implement individual static analysis checks.  
-They are not intended to be called directly by external code.
-Instead, they are invoked by the public API methods defined below.
-
-Method Names:
-- _check_long_lines, _check_missing_docstrings, and _check_bare_excepts each return a list of Findings for the specific issue they check for.
-- _check_missing_docstrings takes the pre-parsed AST as an argument to avoid redundant parsing and allow for more efficient analysis.
-- _check_bare_excepts also relies on the AST to identify except clauses and determine if they are bare (i.e., have no specified exception type).
-'''
+# ---------------------------------------------------------------------------
+# Private helpers
+# ---------------------------------------------------------------------------
 
 
 def _check_long_lines(code: str) -> list[Finding]:
     """Return a Finding for each line that exceeds the 88-character limit."""
     findings: list[Finding] = []
-    # Note: we check line lengths against the raw code string rather than the AST
-    # because the AST doesn't preserve formatting details like line breaks or indentation.
     for line_number, line in enumerate(code.splitlines(), start=1):
-        # We use a limit of 88 chars (the PEP 8 limit) to allow for indentation and avoid false positives.
         if len(line) > _LONG_LINE_LIMIT:
             findings.append(
                 Finding(
@@ -83,10 +71,7 @@ def _check_long_lines(code: str) -> list[Finding]:
     return findings
 
 
-def _check_missing_docstrings(
-    # Create the AST from the code string once and pass it to this function.
-    tree: ast.Module,
-) -> list[Finding]:
+def _check_missing_docstrings(tree: ast.Module) -> list[Finding]:
     """Return a Finding for every function or class missing a docstring."""
     findings: list[Finding] = []
     for node in ast.walk(tree):
@@ -94,12 +79,10 @@ def _check_missing_docstrings(
             node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)
         ):
             continue
-        # Skip dunder methods (e.g., __init__) — they are intentionally undocumented in most styles.
+        # Skip dunder methods — intentionally undocumented in most styles.
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
             if node.name in _DUNDER_METHODS:
                 continue
-        # The AST doesn't preserve comments or docstrings as separate nodes,
-        #  so we have to check for missing docstrings by looking at function and class definitions
         if ast.get_docstring(node) is None:
             kind = "Class" if isinstance(node, ast.ClassDef) else "Function"
             findings.append(
@@ -118,8 +101,6 @@ def _check_missing_docstrings(
 def _check_bare_excepts(tree: ast.Module) -> list[Finding]:
     """Return a Finding for each bare ``except:`` clause."""
     findings: list[Finding] = []
-    # The AST represents both ``except:`` and ``except Exception:`` as ExceptHandler nodes,
-    # but the former has a None type while the latter has a non-None type.
     for node in ast.walk(tree):
         if isinstance(node, ast.ExceptHandler) and node.type is None:
             findings.append(
@@ -137,17 +118,10 @@ def _check_bare_excepts(tree: ast.Module) -> list[Finding]:
     return findings
 
 
-'''
-Public API Methods:
-These methods are intended to be called by external code (e.g., API endpoints) to perform analysis tasks.
-They provide a clean interface for running static analysis and computing overall scores based on findings and predicted bugs.
+# ---------------------------------------------------------------------------
+# Public API
+# ---------------------------------------------------------------------------
 
-Method Names:
-- compute_score: Computes an overall quality score (0-100) from static analysis findings and GPT-predicted bugs.
-                 It takes lists of Findings and PredictedBugs as input and applies severity-based penalties to calculate the final score.
-- run_static_analysis: Runs all static checks against a given code string and returns a tuple of (findings, raw_score).
-                       The raw_score is computed from static findings alone and can be used as a baseline before incorporating GPT predictions.
-'''
 
 def compute_score(
     findings: list[Finding],
@@ -187,7 +161,7 @@ def run_static_analysis(code: str) -> tuple[list[Finding], int]:
     findings: list[Finding] = []
 
     # Parse — catch syntax errors before attempting AST traversal.
-    tree: Union[ast.Module, None] = None
+    tree: ast.Module | None = None
     try:
         tree = ast.parse(code)
     except SyntaxError as exc:
@@ -208,5 +182,9 @@ def run_static_analysis(code: str) -> tuple[list[Finding], int]:
     findings.extend(_check_bare_excepts(tree))
 
     raw_score = compute_score(findings, [])
-    logger.debug("Static analysis complete: %d findings, raw score %d", len(findings), raw_score)
+    logger.debug(
+        "Static analysis complete: %d findings, raw score %d",
+        len(findings),
+        raw_score,
+    )
     return findings, raw_score

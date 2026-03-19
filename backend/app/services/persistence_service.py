@@ -1,0 +1,115 @@
+"""Persistence service — writes analysis results to Supabase."""
+
+import logging
+
+from app.database import get_supabase_client
+from app.models.analysis import Finding, PredictedBug
+
+logger = logging.getLogger(__name__)
+
+
+class PersistenceError(Exception):
+    """Raised when a Supabase write fails during analysis persistence."""
+
+
+async def persist_analysis(
+    user_id: str,
+    code: str,
+    overall_score: int,
+    summary: str,
+    findings: list[Finding],
+    predicted_bugs: list[PredictedBug],
+) -> str:
+    """Persist a complete analysis result to Supabase and return the submission ID.
+
+    Writes rows in dependency order:
+    1. ``submissions``
+    2. ``analysis_reports``
+    3. ``findings``
+    4. ``predicted_bugs``
+
+    The ``actionable_fixes`` table is intentionally skipped — the static analyzer
+    does not currently produce ``original_snippet`` values.
+
+    Args:
+        user_id: Authenticated user's UUID.
+        code: Raw code string submitted by the user.
+        overall_score: Final quality score (0–100).
+        summary: Human-readable one-line summary.
+        findings: Static analysis findings.
+        predicted_bugs: GPT-predicted bugs.
+
+    Returns:
+        The ``submission_id`` UUID string for the newly created submission.
+
+    Raises:
+        PersistenceError: If any database write fails.
+    """
+    try:
+        client = get_supabase_client()
+
+        # 1. Insert submission.
+        sub_result = (
+            client.table("submissions")
+            .insert({"user_id": user_id, "code": code})
+            .execute()
+        )
+        submission_id: str = sub_result.data[0]["submission_id"]
+
+        # 2. Insert analysis report.
+        report_result = (
+            client.table("analysis_reports")
+            .insert(
+                {
+                    "submission_id": submission_id,
+                    "overall_score": overall_score,
+                    "summary": summary,
+                }
+            )
+            .execute()
+        )
+        report_id: str = report_result.data[0]["report_id"]
+
+        # 3. Insert findings (bulk).
+        if findings:
+            findings_rows = [
+                {
+                    "report_id": report_id,
+                    "issue_type": f.issue_type,
+                    "line_number": f.line_number,
+                    "line_severity": f.severity,  # DB column is line_severity
+                    "message": f.message,
+                }
+                for f in findings
+            ]
+            client.table("findings").insert(findings_rows).execute()
+
+        # 4. Insert predicted bugs (bulk).
+        if predicted_bugs:
+            bugs_rows = [
+                {
+                    "report_id": report_id,
+                    "line_number": b.line_number,
+                    "bug_type": b.bug_type,
+                    "severity": b.severity,
+                    "description": b.description,
+                    "suggested_fix": b.suggested_fix,
+                }
+                for b in predicted_bugs
+            ]
+            client.table("predicted_bugs").insert(bugs_rows).execute()
+
+        logger.info(
+            "Persisted analysis for user %s: submission=%s, report=%s, "
+            "%d findings, %d predicted bugs.",
+            user_id,
+            submission_id,
+            report_id,
+            len(findings),
+            len(predicted_bugs),
+        )
+        return submission_id
+
+    except Exception as exc:
+        logger.error("Failed to persist analysis for user %s: %s", user_id, exc)
+        raise PersistenceError(str(exc)) from exc

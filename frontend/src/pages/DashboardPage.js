@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { analyzeCode } from '../services/analysisService'
-import { saveSubmission } from '../services/submissionService'
 import CodeEditor from '../components/CodeEditor'
 import ResultsPanel from '../components/ResultsPanel'
 import SubmissionSidebar from '../components/SubmissionSidebar'
@@ -65,8 +64,7 @@ function DashboardPage() {
       const data = await analyzeCode(currentCode, session.access_token)
       setResults(data)
 
-      const saved = await saveSubmission(user.id, currentCode)
-      setActiveId(saved.submission_id)
+      setActiveId(data.submission_id)
       sidebarRef.current?.refresh()
     } catch (err) {
       setError(err.message)
