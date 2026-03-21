@@ -10,6 +10,7 @@ This document explains how testing is structured, how to run tests locally, and 
 |-------|-----------|--------|
 | Frontend | React Testing Library + Jest | `npm test` |
 | Backend | pytest | `pytest` |
+| API Integration | Postman / Newman | `newman run` |
 | CI/CD | GitHub Actions | Runs on every push / PR to `main` |
 
 ---
@@ -41,6 +42,8 @@ All test files live in `__tests__/` directories next to the code they test.
 | File | What It Tests |
 |------|--------------|
 | `src/components/__tests__/ProtectedRoute.test.js` | Loading state, unauthenticated redirect to `/login`, authenticated render of children |
+| `src/components/__tests__/CodeEditor.test.js` | Renders editor, button click fires onRun, disabled during loading |
+| `src/components/__tests__/ResultsPanel.test.js` | Idle, loading, error, score, findings, predicted bugs (expand/collapse), empty states |
 | `src/context/__tests__/AuthContext.test.js` | `onAuthStateChange` lifecycle and cleanup, `signIn` / `signUp` / `signOut` call correct Supabase methods with correct arguments |
 | `src/pages/__tests__/LoginPage.test.js` | Log In / Sign Up form toggle, form submission handlers, error message display |
 
@@ -99,21 +102,17 @@ All test files live in `backend/tests/` and follow the `test_<module>.py` naming
 | File | What It Tests |
 |------|--------------|
 | `tests/test_analyze_endpoint.py` | Health check, auth guard (missing header, malformed token, wrong Bearer prefix), valid JWT happy path, request body validation |
-| `tests/test_placeholder.py` | Confirms the test runner is configured correctly — replace with real tests as services are implemented |
+| `tests/test_analyze_route.py` | Route integration tests — full response shape, score range, finding/bug schema, persistence failure resilience |
+| `tests/test_analysis_engine.py` | Static analyzer — long lines, missing docstrings, bare excepts, syntax errors, score computation |
+| `tests/test_gpt_predictor.py` | GPT predictor — valid responses, empty arrays, API errors, malformed JSON, schema validation, prompt construction |
+| `tests/test_placeholder.py` | Confirms the test runner is configured correctly |
 
 ### Writing New Backend Tests
 
-As each service module is added to `backend/app/services/`, create a corresponding test file:
-
-```
-app/services/submission_service.py  →  tests/test_submission_service.py
-app/services/analysis_service.py    →  tests/test_analysis_service.py
-```
-
 Follow these conventions:
-- One test file per service module
+- One test file per service module (`app/services/foo.py` → `tests/test_foo.py`)
 - Use `pytest` fixtures for shared setup (database mocks, test clients)
-- Mock all external calls (Supabase, ML models) — tests must run without a live database
+- Mock all external calls (Supabase, OpenAI) — tests must run without live services
 - Follow the Arrange / Act / Assert pattern
 
 ### Code Style Requirements
@@ -133,9 +132,47 @@ flake8 .
 
 ---
 
+## API Integration Testing (Postman / Newman)
+
+A Postman collection at `postman/collections/codepulse-api.postman_collection.json` provides end-to-end API tests using real HTTP requests against a running backend.
+
+### Collection Structure
+
+| Folder | Tests | Auth Required | Description |
+|--------|-------|---------------|-------------|
+| Health Check | 1 | No | `GET /` — status, response time, content-type |
+| Auth Errors | 4 | No | Missing header, no Bearer prefix, invalid JWT, expired JWT |
+| Validation Errors | 4 | Yes | Missing code field, wrong type, max length exceeded, empty body |
+| Happy Path | 5 | Yes | Valid code, empty string, syntax errors, unicode, non-Python code |
+
+Every response is also checked for security headers (`X-Content-Type-Options`, `X-Frame-Options`) via a collection-level test script.
+
+### Running Locally with Newman
+
+```bash
+# Install Newman
+npm install -g newman
+
+# Run all folders (requires a running backend and valid auth_token)
+newman run postman/collections/codepulse-api.postman_collection.json \
+  --environment postman/environments/ci.postman_environment.json \
+  --env-var "auth_token=YOUR_JWT_HERE"
+
+# Run a specific folder
+newman run postman/collections/codepulse-api.postman_collection.json \
+  --environment postman/environments/ci.postman_environment.json \
+  --folder "Health Check"
+```
+
+### Importing into Postman
+
+The collection auto-registers in Postman's Local View if you have the workspace linked (see `.postman/resources.yaml`). Otherwise, import `postman/collections/codepulse-api.postman_collection.json` manually.
+
+---
+
 ## CI/CD — GitHub Actions
 
-Two workflows run automatically. They are path-filtered so only the relevant workflow triggers when files change.
+Three workflows run automatically. They are path-filtered so only the relevant workflow triggers when files change.
 
 ### Frontend CI
 
@@ -170,6 +207,22 @@ The test step uses placeholder Supabase values — all Supabase calls are mocked
 | Lint | `flake8 .` | Fails on PEP 8 violations |
 | Test | `pytest tests/ -v` | Fails if any test fails |
 
+### API Tests (Newman)
+
+**File:** `.github/workflows/api-tests.yml`
+**Triggers:** Push or PR to `main` where `backend/**` or `postman/**` files changed
+
+| Step | What It Does |
+|------|-------------|
+| Start backend | Launches uvicorn with placeholder env vars and a known JWT secret |
+| Generate auth token | Creates a valid HS256 JWT using `python-jose` for the validation tests |
+| Health Check folder | Verifies `GET /` returns `200 OK` |
+| Auth Errors folder | Tests missing/invalid/expired tokens (no real services needed) |
+| Validation Errors folder | Tests bad request bodies with a valid CI token (no real services needed) |
+| Happy Path folder | **Only runs** if the repo variable `RUN_HAPPY_PATH` is set to `true` (requires live OpenAI + Supabase) |
+
+The first three folders use placeholder env vars — they never reach OpenAI or Supabase, so no secrets are required for CI.
+
 ### Pull Request Rules
 
 A PR to `main` cannot be merged if any CI step fails. Before opening a PR:
@@ -191,4 +244,9 @@ cd frontend && npm audit --audit-level=critical && npm test -- --watchAll=false
 
 # Backend — format, lint, and test
 cd backend && black . && flake8 . && pytest tests/ -v
+
+# API integration tests (requires running backend)
+newman run postman/collections/codepulse-api.postman_collection.json \
+  --environment postman/environments/ci.postman_environment.json \
+  --folder "Health Check"
 ```

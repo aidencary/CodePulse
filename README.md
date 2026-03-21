@@ -34,8 +34,8 @@ CodePulse analyzes your code in real-time and provides:
 - Python 3.11+
 - FastAPI - Modern web framework for building APIs
 - Supabase (PostgreSQL + Auth + RLS)
-- Machine learning libraries (planned) - Bug prediction models
-- Static analysis tools - Code quality assessment
+- OpenAI GPT API - AI-powered bug prediction
+- AST-based static analysis - Code quality assessment
 
 **CI/CD**
 - Git - Version control
@@ -48,6 +48,7 @@ CodePulse analyzes your code in real-time and provides:
 CodePulse/
 ├── backend/          # Python backend application
 ├── frontend/         # React frontend application
+├── postman/          # Postman collections, environments, and API tests
 ├── docs/             # Project documentation and diagrams
 ├── images/           # Project images and GIFs
 ├── README.md         # This file
@@ -70,9 +71,19 @@ The backend uses FastAPI with these main endpoints:
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
 | `GET` | `/` | None | Health check |
-| `POST` | `/api/v1/analyze` | Bearer JWT | Submit code for analysis (mock) |
+| `POST` | `/api/v1/analyze` | Bearer JWT | Submit code for analysis — returns static findings, GPT-predicted bugs, and quality score |
 
-Full API docs available at `http://localhost:8000/docs` once the server is running.
+Full API docs available at `http://localhost:8000/docs` once the server is running (requires `DEBUG=true`).
+
+### API Testing (Postman / Newman)
+
+A Postman collection is available at `postman/collections/codepulse-api.postman_collection.json` with 14 tests across 4 folders (Health Check, Auth Errors, Validation Errors, Happy Path). Import it into Postman or run via Newman:
+
+```bash
+npm install -g newman
+newman run postman/collections/codepulse-api.postman_collection.json \
+  --environment postman/environments/ci.postman_environment.json
+```
 
 ## Development Setup
 

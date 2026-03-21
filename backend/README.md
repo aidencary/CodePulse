@@ -11,7 +11,7 @@ Python FastAPI backend for the CodePulse code quality and bug prediction dashboa
 | Framework | Python 3.x, FastAPI |
 | Database | Supabase (PostgreSQL + Auth + RLS) |
 | Auth | Supabase JWT verification |
-| Analysis Engine | Static analysis + ML (planned) |
+| Analysis Engine | AST-based static analysis + OpenAI GPT bug prediction |
 | API Docs | Swagger / OpenAPI (available at `/docs` when `DEBUG=true`) |
 
 ---
@@ -138,7 +138,7 @@ uvicorn app.main:app --reload   # Runs at http://localhost:8000
 | `SUPABASE_SERVICE_ROLE_KEY` | Yes | Supabase Dashboard → Settings → API → `service_role` key |
 | `SUPABASE_JWT_SECRET` | Yes | Supabase Dashboard → Settings → API → JWT Secret |
 | `OPENAI_API_KEY` | Yes | OpenAI Dashboard → API Keys — used by the GPT bug predictor |
-| `GPT_MODEL` | No | GPT model name (default: `gpt-4o`) |
+| `GPT_MODEL` | No | GPT model name (default: `gpt-4o-mini`) |
 | `ALLOWED_ORIGINS` | Yes | Comma-separated allowed CORS origins (e.g. `http://localhost:3000`) |
 | `DEBUG` | No | Set to `true` locally to enable `/docs` and `/redoc`; omit in production |
 
@@ -181,15 +181,15 @@ pytest tests/test_gpt_predictor.py -v    # GPT predictor tests (mocked)
 pytest tests/test_analyze_route.py -v    # Route integration tests
 ```
 
-32 tests, all passing. Add a corresponding test file in `tests/` for each new service module.
+39 tests, all passing. Add a corresponding test file in `tests/` for each new service module.
 
 ---
 
 ## CI/CD
 
-The backend CI workflow runs automatically on every push and pull request to `main` that touches `backend/**`.
+Two workflows run automatically on every push and pull request to `main` that touches `backend/**` or `postman/**`.
 
-**Workflow:** `.github/workflows/backend-ci.yml`
+**Unit Tests:** `.github/workflows/backend-ci.yml`
 
 | Step | Command |
 |------|---------|
@@ -197,7 +197,17 @@ The backend CI workflow runs automatically on every push and pull request to `ma
 | Lint | `flake8 .` |
 | Test | `pytest tests/ -v` |
 
-A pull request cannot be merged if any step fails. All new code must be Black-formatted and pass flake8 before opening a PR.
+**API Integration Tests:** `.github/workflows/api-tests.yml`
+
+| Step | What It Does |
+|------|-------------|
+| Start backend | Launches uvicorn with placeholder env vars |
+| Generate token | Creates a valid HS256 JWT for CI |
+| Newman | Runs Postman collection folders (Health Check, Auth Errors, Validation Errors) |
+
+The Newman workflow uses placeholder credentials — auth/validation tests never reach external services. See [TESTING.md](../TESTING.md) for details.
+
+A pull request cannot be merged if any CI step fails. All new code must be Black-formatted and pass flake8 before opening a PR.
 
 ---
 
@@ -215,4 +225,5 @@ A pull request cannot be merged if any step fails. All new code must be Black-fo
 | Static analysis engine (`app/services/analysis_engine.py`) | Done |
 | GPT bug prediction (`app/services/gpt_predictor.py`) | Done |
 | Submission persistence to Supabase (`app/services/persistence_service.py`) | Done |
+| Postman collection + Newman CI | Done |
 | Results endpoints | Not started |
