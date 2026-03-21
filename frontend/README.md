@@ -35,7 +35,7 @@ frontend/
     ├── components/
     │   ├── ProtectedRoute.js   # Redirects unauthenticated users to /login
     │   ├── CodeEditor.js       # Monaco editor + Run Analysis button
-    │   └── ResultsPanel.js     # Displays JSON results, loading, error states
+    │   └── ResultsPanel.js     # Score circle, static findings, AI bug prediction cards
     ├── pages/
     │   ├── LoginPage.js        # Log In / Sign Up form (toggled)
     │   └── DashboardPage.js    # Dashboard shell — editor + results
@@ -117,7 +117,7 @@ npm test -- --watchAll=false   # Run once and exit (used in CI)
 | `context/__tests__/AuthContext.test.js` | Auth lifecycle, signIn / signUp / signOut calls |
 | `pages/__tests__/LoginPage.test.js` | Form toggle, submission handlers, error display |
 | `components/__tests__/CodeEditor.test.js` | Renders editor, button click fires onRun, disabled during loading |
-| `components/__tests__/ResultsPanel.test.js` | Idle, loading, error, and results display states |
+| `components/__tests__/ResultsPanel.test.js` | Idle, loading, error, score, findings, predicted bugs (expand/collapse), empty states (17 tests) |
 
 ---
 

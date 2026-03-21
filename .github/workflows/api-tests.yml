@@ -1,0 +1,108 @@
+name: API Tests (Newman)
+
+on:
+  push:
+    branches: [main]
+    paths: ['backend/**', 'postman/**']
+  pull_request:
+    branches: [main]
+    paths: ['backend/**', 'postman/**']
+
+permissions:
+  contents: read
+
+jobs:
+  api-tests:
+    name: Newman API Tests
+    runs-on: ubuntu-latest
+
+    env:
+      CI_JWT_SECRET: ci-test-jwt-secret-at-least-32-chars-long
+      CI_SUPABASE_URL: https://placeholder.supabase.co
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: pip install -r requirements.txt
+
+      - name: Start backend server
+        working-directory: backend
+        run: |
+          uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:8000/ && break
+            sleep 1
+          done
+        env:
+          SUPABASE_URL: ${{ env.CI_SUPABASE_URL }}
+          SUPABASE_ANON_KEY: placeholder-anon-key
+          SUPABASE_SERVICE_ROLE_KEY: placeholder-service-role-key
+          SUPABASE_JWT_SECRET: ${{ env.CI_JWT_SECRET }}
+          OPENAI_API_KEY: placeholder-openai-key
+          ALLOWED_ORIGINS: '*'
+
+      - name: Generate CI auth token
+        id: gen-token
+        run: |
+          python -c "
+          from jose import jwt
+          import time
+          token = jwt.encode(
+              {'sub': 'ci-test-user',
+               'aud': 'authenticated',
+               'iss': '${{ env.CI_SUPABASE_URL }}/auth/v1',
+               'exp': int(time.time()) + 3600},
+              '${{ env.CI_JWT_SECRET }}',
+              algorithm='HS256')
+          print(f'token={token}')
+          " >> "$GITHUB_OUTPUT"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install Newman
+        run: npm install -g newman
+
+      - name: Run Newman — Health Check
+        run: |
+          newman run postman/collections/codepulse-api.postman_collection.json \
+            --environment postman/environments/ci.postman_environment.json \
+            --folder "Health Check" \
+            --color on
+
+      - name: Run Newman — Auth Errors
+        run: |
+          newman run postman/collections/codepulse-api.postman_collection.json \
+            --environment postman/environments/ci.postman_environment.json \
+            --folder "Auth Errors" \
+            --color on
+
+      - name: Run Newman — Validation Errors
+        run: |
+          newman run postman/collections/codepulse-api.postman_collection.json \
+            --environment postman/environments/ci.postman_environment.json \
+            --env-var "auth_token=${{ steps.gen-token.outputs.token }}" \
+            --folder "Validation Errors" \
+            --color on
+
+      - name: Run Newman — Happy Path (requires live services)
+        if: ${{ vars.RUN_HAPPY_PATH == 'true' }}
+        run: |
+          newman run postman/collections/codepulse-api.postman_collection.json \
+            --environment postman/environments/ci.postman_environment.json \
+            --env-var "auth_token=${{ steps.gen-token.outputs.token }}" \
+            --folder "Happy Path" \
+            --color on \
+            --timeout-request 20000

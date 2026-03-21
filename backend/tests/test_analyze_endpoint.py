@@ -30,7 +30,7 @@ def _make_token(user_id: str = "00000000-0000-0000-0000-000000000001") -> str:
         {
             "sub": user_id,
             "aud": "authenticated",
-            "iss": "https://test.supabase.co",
+            "iss": "https://test.supabase.co/auth/v1",
         },
         _TEST_JWT_SECRET,
         algorithm="HS256",
@@ -86,18 +86,28 @@ def test_analyze_wrong_prefix() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_analyze_valid_token_returns_mock() -> None:
-    """Valid JWT returns the mock analysis response."""
+def test_analyze_valid_token_returns_analysis() -> None:
+    """Valid JWT returns a real AnalyzeResponse with an overall_score."""
+    from unittest.mock import AsyncMock, patch
+
     token = _make_token()
-    response = client.post(
-        "/api/v1/analyze",
-        json={"code": "print('hello world')"},
-        headers={"Authorization": f"Bearer {token}"},
-    )
+    with (
+        patch("app.routes.analysis.run_static_analysis", return_value=([], 100)),
+        patch("app.routes.analysis.predict_bugs", new=AsyncMock(return_value=[])),
+        patch(
+            "app.routes.analysis.persist_analysis",
+            new=AsyncMock(return_value="sub-test-id"),
+        ),
+    ):
+        response = client.post(
+            "/api/v1/analyze",
+            json={"code": "print('hello world')"},
+            headers={"Authorization": f"Bearer {token}"},
+        )
     assert response.status_code == 200
     body = response.json()
-    assert body["status"] == "received"
-    assert body["lines"] == 42
+    assert "overall_score" in body
+    assert isinstance(body["overall_score"], int)
 
 
 # ---------------------------------------------------------------------------

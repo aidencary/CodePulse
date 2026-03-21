@@ -11,7 +11,7 @@ Python FastAPI backend for the CodePulse code quality and bug prediction dashboa
 | Framework | Python 3.x, FastAPI |
 | Database | Supabase (PostgreSQL + Auth + RLS) |
 | Auth | Supabase JWT verification |
-| Analysis Engine | Static analysis + ML (planned) |
+| Analysis Engine | AST-based static analysis + OpenAI GPT bug prediction |
 | API Docs | Swagger / OpenAPI (available at `/docs` when `DEBUG=true`) |
 
 ---
@@ -27,16 +27,19 @@ backend/
 │   ├── dependencies.py         # get_current_user — Supabase JWT auth
 │   ├── database.py             # Supabase service-role client (cached singleton)
 │   ├── models/
-│   │   └── analysis.py         # AnalyzeRequest / AnalyzeResponse
-│   └── routes/
-│       └── analysis.py         # POST /api/v1/analyze
-├── engine/                     # Code analysis pipeline (planned)
-│   ├── ast_parser.py
-│   ├── static_analyzer.py
-│   └── ai_model_loader.py
+│   │   └── analysis.py         # AnalyzeRequest / AnalyzeResponse / Finding / PredictedBug
+│   ├── routes/
+│   │   └── analysis.py         # POST /api/v1/analyze
+│   └── services/
+│       ├── analysis_engine.py  # AST-based static analyzer + score computation
+│       ├── gpt_predictor.py    # OpenAI GPT bug prediction with graceful fallback
+│       └── persistence_service.py  # Supabase write sequence (submissions → reports → findings → bugs)
 ├── tests/
 │   ├── test_placeholder.py
-│   └── test_analyze_endpoint.py
+│   ├── test_analyze_endpoint.py
+│   ├── test_analyze_route.py   # Route integration tests (mocked services)
+│   ├── test_analysis_engine.py # Static analyzer unit tests
+│   └── test_gpt_predictor.py   # GPT predictor unit tests (mocked OpenAI)
 ├── database/
 │   └── schema.sql              # Supabase PostgreSQL schema (source of truth)
 ├── Dockerfile
@@ -58,6 +61,7 @@ Defined in `database/schema.sql`. Run in the Supabase SQL Editor to apply.
 | `analysis_reports` | Analysis results linked to a submission |
 | `findings` | Individual issues found in a report |
 | `actionable_fixes` | Suggested fix for a finding |
+| `predicted_bugs` | GPT-predicted bugs linked to a report |
 
 Row Level Security (RLS) is enabled on all tables. Users can only access their own data.
 
@@ -133,6 +137,9 @@ uvicorn app.main:app --reload   # Runs at http://localhost:8000
 | `SUPABASE_ANON_KEY` | Yes | Supabase Dashboard → Settings → API → `anon` key |
 | `SUPABASE_SERVICE_ROLE_KEY` | Yes | Supabase Dashboard → Settings → API → `service_role` key |
 | `SUPABASE_JWT_SECRET` | Yes | Supabase Dashboard → Settings → API → JWT Secret |
+| `OPENAI_API_KEY` | Yes | OpenAI Dashboard → API Keys — used by the GPT bug predictor |
+| `GPT_MODEL` | No | GPT model name (default: `gpt-4o-mini`) |
+| `ALLOWED_ORIGINS` | Yes | Comma-separated allowed CORS origins (e.g. `http://localhost:3000`) |
 | `DEBUG` | No | Set to `true` locally to enable `/docs` and `/redoc`; omit in production |
 
 Copy `.env.example` to `.env` and fill in the values. Never commit `.env`.
@@ -152,7 +159,7 @@ docker run -p 8000:8000 --env-file .env codepulse-backend
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
 | `GET` | `/` | None | Health check → `{"status": "ok"}` |
-| `POST` | `/api/v1/analyze` | Bearer JWT | Submit code for analysis (mock response) |
+| `POST` | `/api/v1/analyze` | Bearer JWT | Submit code; returns static findings + GPT-predicted bugs + quality score |
 
 Full API docs available at `http://localhost:8000/docs` when running locally with `DEBUG=true`. Disabled in production.
 
@@ -167,15 +174,22 @@ pip install -r requirements.txt
 pytest tests/ -v
 ```
 
-As backend routes and services are implemented, add a corresponding test file in `tests/` for each service module. See `tests/test_placeholder.py` as a reference starting point.
+```bash
+pytest tests/ -v                         # Run all tests
+pytest tests/test_analysis_engine.py -v  # Static analyzer unit tests
+pytest tests/test_gpt_predictor.py -v    # GPT predictor tests (mocked)
+pytest tests/test_analyze_route.py -v    # Route integration tests
+```
+
+39 tests, all passing. Add a corresponding test file in `tests/` for each new service module.
 
 ---
 
 ## CI/CD
 
-The backend CI workflow runs automatically on every push and pull request to `main` that touches `backend/**`.
+Two workflows run automatically on every push and pull request to `main` that touches `backend/**` or `postman/**`.
 
-**Workflow:** `.github/workflows/backend-ci.yml`
+**Unit Tests:** `.github/workflows/backend-ci.yml`
 
 | Step | Command |
 |------|---------|
@@ -183,7 +197,17 @@ The backend CI workflow runs automatically on every push and pull request to `ma
 | Lint | `flake8 .` |
 | Test | `pytest tests/ -v` |
 
-A pull request cannot be merged if any step fails. All new code must be Black-formatted and pass flake8 before opening a PR.
+**API Integration Tests:** `.github/workflows/api-tests.yml`
+
+| Step | What It Does |
+|------|-------------|
+| Start backend | Launches uvicorn with placeholder env vars |
+| Generate token | Creates a valid HS256 JWT for CI |
+| Newman | Runs Postman collection folders (Health Check, Auth Errors, Validation Errors) |
+
+The Newman workflow uses placeholder credentials — auth/validation tests never reach external services. See [TESTING.md](../TESTING.md) for details.
+
+A pull request cannot be merged if any CI step fails. All new code must be Black-formatted and pass flake8 before opening a PR.
 
 ---
 
@@ -196,8 +220,10 @@ A pull request cannot be merged if any step fails. All new code must be Black-fo
 | FastAPI app scaffold (`app/main.py`) | Done |
 | JWT auth dependency (`app/dependencies.py`) | Done |
 | Supabase client module (`app/database.py`) | Done |
-| `POST /api/v1/analyze` — mock response | Done |
+| `POST /api/v1/analyze` — real analysis pipeline | Done |
 | Dockerfile | Done |
-| Analysis engine integration (`engine/`) | Not started |
-| Submission persistence to Supabase | Not started |
+| Static analysis engine (`app/services/analysis_engine.py`) | Done |
+| GPT bug prediction (`app/services/gpt_predictor.py`) | Done |
+| Submission persistence to Supabase (`app/services/persistence_service.py`) | Done |
+| Postman collection + Newman CI | Done |
 | Results endpoints | Not started |
