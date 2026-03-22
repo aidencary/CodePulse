@@ -17,7 +17,7 @@ CodePulse analyzes your code in real-time and provides:
 
 - **Code Quality Score**: Overall assessment of code quality based on best practices
 - **Standards Compliance**: Identifies deviations from established coding standards
-- **Bug Prediction**: Uses machine learning to predict potential bugs and vulnerabilities
+- **Bug Prediction**: Uses a ChatGPT API to predict bugs
 - **Actionable Feedback**: Provides specific suggestions for code improvements
 - **Real-time Analysis**: Instant feedback as you type in the live editor
 
