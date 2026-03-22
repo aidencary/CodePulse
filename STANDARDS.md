@@ -7,17 +7,19 @@ This markdown file outlines CodePulse's project structure, coding standards, bra
 ```
 CodePulse/
 ├── backend/                  # Python backend application
-│   ├── app/                  # Main application directory (planned)
-│   │   ├── main.py           # FastAPI entry point
-│   │   ├── config.py         # Environment/configuration settings
+│   ├── app/                  # Main application directory
+│   │   ├── main.py           # FastAPI entry point, CORS, security headers
+│   │   ├── config.py         # Pydantic Settings loaded from .env
+│   │   ├── dependencies.py   # get_current_user — Supabase JWT auth
+│   │   ├── database.py       # Supabase service-role client (cached singleton)
 │   │   ├── models/           # Pydantic models
+│   │   │   └── analysis.py   # AnalyzeRequest / AnalyzeResponse / Finding / PredictedBug
 │   │   ├── routes/           # API route handlers (thin layer)
-│   │   ├── services/         # Business logic layer
-│   │   └── utils/            # Shared utility functions
-│   ├── engine/               # Code analysis pipeline (planned)
-│   │   ├── ast_parser.py     # AST-based code parsing
-│   │   ├── static_analyzer.py # Static analysis rules
-│   │   └── ai_model_loader.py # ML model inference
+│   │   │   └── analysis.py   # POST /api/v1/analyze
+│   │   └── services/         # Business logic layer
+│   │       ├── analysis_engine.py    # AST-based static analyzer (21 PEP 8 checks)
+│   │       ├── gpt_predictor.py      # OpenAI GPT bug prediction
+│   │       └── persistence_service.py # Supabase write sequence
 │   ├── database/
 │   │   └── schema.sql        # Supabase PostgreSQL schema (source of truth)
 │   ├── tests/                # Backend tests
@@ -27,35 +29,49 @@ CodePulse/
 ├── frontend/                # JavaScript/React frontend
 │   ├── public/              # Static files
 │   └── src/                 # Source code
-│       ├── components/      # React components
+│       ├── components/      # React components (CodeEditor, ResultsPanel, ProtectedRoute, ProfileDropdown, SubmissionSidebar)
 │       ├── context/         # React context (AuthContext)
-│       ├── pages/           # Page components
-│       ├── services/        # API service calls (supabaseClient)
+│       ├── pages/           # Page components (LoginPage, DashboardPage)
+│       ├── services/        # API service calls (supabaseClient, analysisService, submissionService)
 │       ├── styles/          # CSS/styling files
 │       ├── setupTests.js    # Jest / Testing Library global setup
 │       ├── App.js           # Main app component
 │       └── index.js         # Entry point
 │
 ├── docs/                     # Project documentation
-│   ├── CodePulse_Class_Diagram.png
-│   ├── CodePulse_ER_Diagram.png
-│   ├── CodePulse_UseCaseDiagram.drawio.png
+│   ├── CodePulse Class Diagram.drawio.png
+│   ├── CodePulse Deployment Diagram.drawio.png
+│   ├── CodePulse Engine Pipeline Flowchart.png
+│   ├── CodePulse Sequence Diagram.png
 │   ├── CodePulse_Design_&_Architecture.pdf
+│   ├── CodePulse_ER_Diagram.png
 │   └── CodePulse_Requirements_Analysis.pdf
+├── postman/                  # API integration tests (Postman / Newman)
+│   ├── collections/
+│   │   └── codepulse-api.postman_collection.json
+│   └── environments/
+│       └── ci.postman_environment.json
+├── .github/workflows/        # CI/CD pipelines
+│   ├── backend-ci.yml        # Black + flake8 + pytest
+│   ├── frontend-ci.yml       # npm audit + test + build
+│   └── api-tests.yml         # Newman API integration tests
 ├── images/                   # Project images and GIFs
 ├── README.md                 # Project overview
 ├── STANDARDS.md              # This file
-└── TESTING.md                # Testing and CI/CD guide
+├── TESTING.md                # Testing and CI/CD guide
+└── CLAUDE.md                 # AI assistant guide
 ```
 
 ## Documentation
 
 The `docs/` folder contains project documentation and diagrams:
 
-- **CodePulse_Class_Diagram.png** - UML class diagram showing system architecture and relationships
-- **CodePulse_ER_Diagram.png** - Entity-Relationship diagram for database schema
-- **CodePulse_UseCaseDiagram.drawio.png** - Use case diagram illustrating system functionality
+- **CodePulse Class Diagram.drawio.png** - UML class diagram showing system architecture and relationships
+- **CodePulse Deployment Diagram.drawio.png** - Deployment diagram showing infrastructure layout
+- **CodePulse Engine Pipeline Flowchart.png** - Analysis engine pipeline flowchart
+- **CodePulse Sequence Diagram.png** - Sequence diagram showing request/response flow
 - **CodePulse_Design_&_Architecture.pdf** - Detailed design and architecture specifications
+- **CodePulse_ER_Diagram.png** - Entity-Relationship diagram for database schema
 - **CodePulse_Requirements_Analysis.pdf** - Project requirements and analysis documentation
 
 ## Coding Standards

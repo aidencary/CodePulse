@@ -46,14 +46,16 @@ CodePulse analyzes your code in real-time and provides:
 
 ```
 CodePulse/
-├── backend/          # Python backend application
+├── backend/          # Python FastAPI backend
 ├── frontend/         # React frontend application
 ├── postman/          # Postman collections, environments, and API tests
-├── docs/             # Project documentation and diagrams
+├── .github/workflows/# CI/CD pipelines (backend-ci, frontend-ci, api-tests)
+├── docs/             # Architecture diagrams and specs
 ├── images/           # Project images and GIFs
 ├── README.md         # This file
 ├── STANDARDS.md      # Coding standards and guidelines
-└── TESTING.md        # Testing and CI/CD guide
+├── TESTING.md        # Testing and CI/CD guide
+└── CLAUDE.md         # AI assistant guide
 ```
 
 For detailed project structure, see [STANDARDS.md](STANDARDS.md).
@@ -89,7 +91,7 @@ newman run postman/collections/codepulse-api.postman_collection.json \
 
 ### Prerequisites
 
-- Node.js 18+
+- Node.js 20+
 - Python 3.11+
 - A configured [Supabase](https://supabase.com) project (see `backend/database/schema.sql`)
 
@@ -151,9 +153,11 @@ We welcome contributions! Please follow these steps:
 ## Documentation
 
 See the [docs](docs/) folder for:
-- Class diagrams
-- ER diagrams
-- Use case diagrams
+- Class diagram
+- Deployment diagram
+- Engine pipeline flowchart
+- Sequence diagram
+- ER diagram
 - Design and architecture documentation
 - Requirements analysis
 

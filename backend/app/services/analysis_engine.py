@@ -147,6 +147,44 @@ def _suggest_string_method(node: ast.Subscript) -> str | None:
     return None
 
 
+def _find_comment_start(line: str) -> int | None:
+    """Return the index of ``#`` that starts a comment, skipping strings."""
+    in_single = False
+    in_double = False
+    i = 0
+    while i < len(line):
+        c = line[i]
+        if c == "\\" and (in_single or in_double):
+            i += 2
+            continue
+        if c == "'" and not in_double:
+            in_single = not in_single
+        elif c == '"' and not in_single:
+            in_double = not in_double
+        elif c == "#" and not in_single and not in_double:
+            return i
+        i += 1
+    return None
+
+
+def _effective_start(node: ast.AST) -> int:
+    """Return the first line of *node*, accounting for decorators."""
+    if hasattr(node, "decorator_list") and node.decorator_list:
+        return node.decorator_list[0].lineno
+    return node.lineno
+
+
+def _count_blank_lines_before(lines: list[str], lineno: int) -> int:
+    """Count consecutive blank lines before 1-based *lineno*."""
+    count = 0
+    for i in range(lineno - 2, -1, -1):
+        if lines[i].strip() == "":
+            count += 1
+        else:
+            break
+    return count
+
+
 def _collect_returns(node: ast.AST) -> list[ast.Return]:
     """Collect Return nodes in *node*, skipping nested function definitions."""
     returns: list[ast.Return] = []
@@ -641,6 +679,182 @@ def _check_string_slicing(tree: ast.Module) -> list[Finding]:
     return findings
 
 
+def _check_trailing_whitespace(code: str) -> list[Finding]:
+    """Flag lines with trailing spaces or tabs."""
+    findings: list[Finding] = []
+    for line_number, line in enumerate(code.splitlines(), start=1):
+        if line != line.rstrip():
+            findings.append(
+                Finding(
+                    issue_type="trailing_whitespace",
+                    line_number=line_number,
+                    severity="Low",
+                    message="Line has trailing whitespace.",
+                )
+            )
+    return findings
+
+
+def _check_tab_indentation(code: str) -> list[Finding]:
+    """Flag tab characters used for indentation."""
+    findings: list[Finding] = []
+    for line_number, line in enumerate(code.splitlines(), start=1):
+        stripped = line.lstrip()
+        if not stripped:
+            continue
+        leading = line[: len(line) - len(stripped)]
+        if "\t" in leading:
+            findings.append(
+                Finding(
+                    issue_type="tab_indentation",
+                    line_number=line_number,
+                    severity="Med",
+                    message=("Use spaces for indentation, not tabs."),
+                )
+            )
+    return findings
+
+
+def _check_blank_line_spacing(code: str, tree: ast.Module) -> list[Finding]:
+    """Verify 2 blank lines before top-level defs and 1 between methods."""
+    lines = code.splitlines()
+    findings: list[Finding] = []
+
+    # Top-level defs: require 2 blank lines (skip first statement).
+    for i, stmt in enumerate(tree.body):
+        if i == 0:
+            continue
+        if not isinstance(
+            stmt,
+            (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef),
+        ):
+            continue
+        start = _effective_start(stmt)
+        blanks = _count_blank_lines_before(lines, start)
+        if blanks < 2:
+            findings.append(
+                Finding(
+                    issue_type="blank_line_spacing",
+                    line_number=start,
+                    severity="Low",
+                    message=(
+                        f"Expected 2 blank lines before top-level "
+                        f"definition, found {blanks}."
+                    ),
+                )
+            )
+
+    # Class methods: require 1 blank line between methods.
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.ClassDef):
+            continue
+        methods = [
+            n
+            for n in node.body
+            if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))
+        ]
+        for j in range(1, len(methods)):
+            start = _effective_start(methods[j])
+            blanks = _count_blank_lines_before(lines, start)
+            if blanks < 1:
+                findings.append(
+                    Finding(
+                        issue_type="blank_line_spacing",
+                        line_number=start,
+                        severity="Low",
+                        message=(
+                            f"Expected 1 blank line before method "
+                            f"definition, found {blanks}."
+                        ),
+                    )
+                )
+
+    return findings
+
+
+def _check_inline_comment_spacing(code: str) -> list[Finding]:
+    """Flag inline comments with fewer than 2 spaces before ``#``."""
+    findings: list[Finding] = []
+    for line_number, line in enumerate(code.splitlines(), start=1):
+        stripped = line.lstrip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        idx = _find_comment_start(line)
+        if idx is None or idx == 0:
+            continue
+        before = line[:idx]
+        trailing_spaces = len(before) - len(before.rstrip())
+        if trailing_spaces < 2:
+            findings.append(
+                Finding(
+                    issue_type="inline_comment_spacing",
+                    line_number=line_number,
+                    severity="Low",
+                    message=(
+                        "Inline comments should be separated by "
+                        "at least 2 spaces from the code."
+                    ),
+                )
+            )
+    return findings
+
+
+def _check_comment_hash_spacing(code: str) -> list[Finding]:
+    """Flag comments missing a space after ``#``."""
+    findings: list[Finding] = []
+    for line_number, line in enumerate(code.splitlines(), start=1):
+        stripped = line.lstrip()
+        # Block comments.
+        if stripped.startswith("#"):
+            if line_number == 1 and stripped.startswith("#!"):
+                continue
+            if len(stripped) > 1 and stripped[1] != " ":
+                findings.append(
+                    Finding(
+                        issue_type="comment_spacing",
+                        line_number=line_number,
+                        severity="Low",
+                        message="Add a space after '#' in comments.",
+                    )
+                )
+            continue
+        # Inline comments.
+        idx = _find_comment_start(line)
+        if idx is not None and idx + 1 < len(line):
+            if line[idx + 1] != " ":
+                findings.append(
+                    Finding(
+                        issue_type="comment_spacing",
+                        line_number=line_number,
+                        severity="Low",
+                        message="Add a space after '#' in comments.",
+                    )
+                )
+    return findings
+
+
+def _check_triple_quote_style(code: str) -> list[Finding]:
+    """Flag ``'''`` triple-quoted strings — should use ``\"\"\"``."""
+    findings: list[Finding] = []
+    flagged_lines: set[int] = set()
+    for match in re.finditer(r"'''", code):
+        line_number = code[: match.start()].count("\n") + 1
+        if line_number not in flagged_lines:
+            flagged_lines.add(line_number)
+            findings.append(
+                Finding(
+                    issue_type="triple_quote_style",
+                    line_number=line_number,
+                    severity="Low",
+                    message=(
+                        'Use triple double quotes (""") instead '
+                        "of triple single quotes (''')."
+                    ),
+                )
+            )
+    return findings
+
+
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
@@ -701,6 +915,11 @@ def run_static_analysis(code: str) -> tuple[list[Finding], int]:
 
     # Text-based checks.
     findings.extend(_check_long_lines(code))
+    findings.extend(_check_trailing_whitespace(code))
+    findings.extend(_check_tab_indentation(code))
+    findings.extend(_check_inline_comment_spacing(code))
+    findings.extend(_check_comment_hash_spacing(code))
+    findings.extend(_check_triple_quote_style(code))
 
     # AST-based checks.
     findings.extend(_check_missing_docstrings(tree))
@@ -717,6 +936,9 @@ def run_static_analysis(code: str) -> tuple[list[Finding], int]:
     findings.extend(_check_return_consistency(tree))
     findings.extend(_check_exception_inheritance(tree))
     findings.extend(_check_string_slicing(tree))
+
+    # Mixed text + AST checks.
+    findings.extend(_check_blank_line_spacing(code, tree))
 
     raw_score = compute_score(findings, [])
     logger.debug(

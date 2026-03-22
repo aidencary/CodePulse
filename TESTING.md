@@ -103,7 +103,7 @@ All test files live in `backend/tests/` and follow the `test_<module>.py` naming
 |------|--------------|
 | `tests/test_analyze_endpoint.py` | Health check, auth guard (missing header, malformed token, wrong Bearer prefix), valid JWT happy path, request body validation |
 | `tests/test_analyze_route.py` | Route integration tests — full response shape, score range, finding/bug schema, persistence failure resilience |
-| `tests/test_analysis_engine.py` | Static analyzer — long lines, missing docstrings, bare excepts, syntax errors, score computation |
+| `tests/test_analysis_engine.py` | Static analyzer — 21 PEP 8 checks (naming conventions, self/cls, None/boolean/type comparisons, empty sequences, lambda assignment, import formatting, is-not preference, return consistency, exception inheritance, string slicing, trailing whitespace, tab indentation, blank line spacing, comment spacing, triple quote style), syntax errors, score computation (63 tests) |
 | `tests/test_gpt_predictor.py` | GPT predictor — valid responses, empty arrays, API errors, malformed JSON, schema validation, prompt construction |
 | `tests/test_placeholder.py` | Confirms the test runner is configured correctly |
 

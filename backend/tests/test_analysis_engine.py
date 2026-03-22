@@ -517,3 +517,175 @@ def test_startswith_not_flagged() -> None:
     )
     findings, _ = run_static_analysis(code)
     assert not any(f.issue_type == "string_slicing" for f in findings)
+
+
+# ---------------------------------------------------------------------------
+# Trailing whitespace
+# ---------------------------------------------------------------------------
+
+
+def test_trailing_whitespace_detected() -> None:
+    """A line with trailing spaces produces a trailing_whitespace finding."""
+    code = "x = 1   \ny = 2\n"
+    findings, _ = run_static_analysis(code)
+    tw = [f for f in findings if f.issue_type == "trailing_whitespace"]
+    assert len(tw) == 1
+    assert tw[0].line_number == 1
+
+
+def test_no_trailing_whitespace_not_flagged() -> None:
+    """Clean lines produce no trailing_whitespace findings."""
+    code = 'def foo():\n    """Doc."""\n    return 1\n'
+    findings, _ = run_static_analysis(code)
+    assert not any(f.issue_type == "trailing_whitespace" for f in findings)
+
+
+# ---------------------------------------------------------------------------
+# Tab indentation
+# ---------------------------------------------------------------------------
+
+
+def test_tab_indentation_detected() -> None:
+    """A line indented with a tab produces a tab_indentation finding."""
+    code = 'def foo():\n\t"""Doc."""\n\tpass\n'
+    findings, _ = run_static_analysis(code)
+    ti = [f for f in findings if f.issue_type == "tab_indentation"]
+    assert len(ti) == 2
+    assert ti[0].severity == "Med"
+
+
+def test_space_indentation_not_flagged() -> None:
+    """Lines indented with spaces produce no tab_indentation findings."""
+    code = 'def foo():\n    """Doc."""\n    pass\n'
+    findings, _ = run_static_analysis(code)
+    assert not any(f.issue_type == "tab_indentation" for f in findings)
+
+
+# ---------------------------------------------------------------------------
+# Blank line spacing
+# ---------------------------------------------------------------------------
+
+
+def test_missing_blank_lines_before_top_level_def() -> None:
+    """A top-level def with < 2 blank lines before it is flagged."""
+    code = 'import os\n\ndef foo():\n    """Doc."""\n    pass\n'
+    findings, _ = run_static_analysis(code)
+    bl = [f for f in findings if f.issue_type == "blank_line_spacing"]
+    assert len(bl) == 1
+    assert "2 blank lines" in bl[0].message
+
+
+def test_correct_blank_lines_before_top_level_def() -> None:
+    """A top-level def with 2 blank lines before it is not flagged."""
+    code = "import os\n\n\n" 'def foo():\n    """Doc."""\n    pass\n'
+    findings, _ = run_static_analysis(code)
+    assert not any(f.issue_type == "blank_line_spacing" for f in findings)
+
+
+def test_missing_blank_line_between_methods() -> None:
+    """Methods without a blank line between them are flagged."""
+    code = (
+        "class Foo:\n"
+        '    """Doc."""\n'
+        "    def a(self):\n"
+        '        """Doc."""\n'
+        "        pass\n"
+        "    def b(self):\n"
+        '        """Doc."""\n'
+        "        pass\n"
+    )
+    findings, _ = run_static_analysis(code)
+    bl = [f for f in findings if f.issue_type == "blank_line_spacing"]
+    assert len(bl) == 1
+    assert "1 blank line" in bl[0].message
+
+
+def test_correct_blank_line_between_methods() -> None:
+    """Methods with 1 blank line between them are not flagged."""
+    code = (
+        "class Foo:\n"
+        '    """Doc."""\n'
+        "    def a(self):\n"
+        '        """Doc."""\n'
+        "        pass\n"
+        "\n"
+        "    def b(self):\n"
+        '        """Doc."""\n'
+        "        pass\n"
+    )
+    findings, _ = run_static_analysis(code)
+    assert not any(f.issue_type == "blank_line_spacing" for f in findings)
+
+
+# ---------------------------------------------------------------------------
+# Inline comment spacing
+# ---------------------------------------------------------------------------
+
+
+def test_inline_comment_too_close_detected() -> None:
+    """An inline comment with < 2 spaces before it is flagged."""
+    code = 'def foo():\n    """Doc."""\n    x = 1 # bad\n'
+    findings, _ = run_static_analysis(code)
+    ic = [f for f in findings if f.issue_type == "inline_comment_spacing"]
+    assert len(ic) == 1
+
+
+def test_inline_comment_proper_spacing_not_flagged() -> None:
+    """An inline comment with 2+ spaces before it is not flagged."""
+    code = 'def foo():\n    """Doc."""\n    x = 1  # good\n'
+    findings, _ = run_static_analysis(code)
+    assert not any(f.issue_type == "inline_comment_spacing" for f in findings)
+
+
+def test_block_comment_not_flagged_as_inline() -> None:
+    """A block comment is not flagged by the inline comment check."""
+    code = '# this is a block comment\ndef foo():\n    """Doc."""\n    pass\n'
+    findings, _ = run_static_analysis(code)
+    assert not any(f.issue_type == "inline_comment_spacing" for f in findings)
+
+
+# ---------------------------------------------------------------------------
+# Comment hash spacing
+# ---------------------------------------------------------------------------
+
+
+def test_comment_missing_space_after_hash() -> None:
+    """A comment without a space after # is flagged."""
+    code = "#bad comment\n"
+    findings, _ = run_static_analysis(code)
+    cs = [f for f in findings if f.issue_type == "comment_spacing"]
+    assert len(cs) == 1
+
+
+def test_comment_with_space_after_hash_not_flagged() -> None:
+    """A comment with a space after # is not flagged."""
+    code = '# good comment\ndef foo():\n    """Doc."""\n    pass\n'
+    findings, _ = run_static_analysis(code)
+    assert not any(f.issue_type == "comment_spacing" for f in findings)
+
+
+def test_shebang_not_flagged() -> None:
+    """A shebang line is not flagged for missing space after #."""
+    code = '#!/usr/bin/env python\ndef foo():\n    """Doc."""\n    pass\n'
+    findings, _ = run_static_analysis(code)
+    assert not any(f.issue_type == "comment_spacing" for f in findings)
+
+
+# ---------------------------------------------------------------------------
+# Triple quote style
+# ---------------------------------------------------------------------------
+
+
+def test_triple_single_quotes_detected() -> None:
+    """Triple single quotes produce a triple_quote_style finding."""
+    code = "def foo():\n    '''Bad docstring.'''\n    pass\n"
+    findings, _ = run_static_analysis(code)
+    tq = [f for f in findings if f.issue_type == "triple_quote_style"]
+    assert len(tq) >= 1
+
+
+def test_triple_double_quotes_not_flagged() -> None:
+    """Triple double quotes do not produce a triple_quote_style finding."""
+    code = 'def foo():\n    """Good docstring."""\n    pass\n'
+    findings, _ = run_static_analysis(code)
+    assert not any(f.issue_type == "triple_quote_style" for f in findings)
