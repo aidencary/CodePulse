@@ -3,6 +3,7 @@
 import ast
 import logging
 import re
+import sys
 
 from app.models.analysis import Finding, PredictedBug
 
@@ -855,6 +856,107 @@ def _check_triple_quote_style(code: str) -> list[Finding]:
     return findings
 
 
+def _check_import_ordering(tree: ast.Module) -> list[Finding]:
+    """Flag stdlib/third-party/local imports that are not properly grouped."""
+    _STDLIB = sys.stdlib_module_names
+
+    # Collect top-level imports in source order.
+    imports: list[tuple[int, str, int]] = []  # (lineno, top-level name, group)
+    for node in tree.body:
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                top = alias.name.split(".")[0]
+                if top in _STDLIB:
+                    group = 0  # stdlib
+                else:
+                    group = 1  # third-party
+                imports.append((node.lineno, alias.name, group))
+        elif isinstance(node, ast.ImportFrom):
+            if node.level and node.level > 0:
+                group = 2  # relative / local
+            else:
+                top = (node.module or "").split(".")[0]
+                if top in _STDLIB:
+                    group = 0
+                else:
+                    group = 1
+            imports.append((node.lineno, node.module or "", group))
+
+    findings: list[Finding] = []
+    highest_group = -1
+    for lineno, name, group in imports:
+        if group < highest_group:
+            labels = {0: "stdlib", 1: "third-party", 2: "local"}
+            findings.append(
+                Finding(
+                    issue_type="import_ordering",
+                    line_number=lineno,
+                    severity="Low",
+                    message=(
+                        f"Import '{name}' ({labels[group]}) appears "
+                        f"after a {labels[highest_group]} import. "
+                        f"Group imports: stdlib, then third-party, "
+                        f"then local."
+                    ),
+                )
+            )
+        else:
+            highest_group = max(highest_group, group)
+
+    return findings
+
+
+_TRY_BLOCK_LIMIT = 5
+
+
+def _check_try_block_scope(tree: ast.Module) -> list[Finding]:
+    """Flag try blocks with more than 5 statements."""
+    findings: list[Finding] = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Try) and len(node.body) > _TRY_BLOCK_LIMIT:
+            findings.append(
+                Finding(
+                    issue_type="try_block_scope",
+                    line_number=node.lineno,
+                    severity="Low",
+                    message=(
+                        f"Try block has {len(node.body)} statements "
+                        f"(limit is {_TRY_BLOCK_LIMIT}). Narrow the "
+                        f"try block to only the code that may raise."
+                    ),
+                )
+            )
+    return findings
+
+
+def _check_context_manager_usage(tree: ast.Module) -> list[Finding]:
+    """Flag try/finally with .close() — should use a ``with`` statement."""
+    findings: list[Finding] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Try) or not node.finalbody:
+            continue
+        for stmt in node.finalbody:
+            if (
+                isinstance(stmt, ast.Expr)
+                and isinstance(stmt.value, ast.Call)
+                and isinstance(stmt.value.func, ast.Attribute)
+                and stmt.value.func.attr == "close"
+            ):
+                findings.append(
+                    Finding(
+                        issue_type="context_manager_usage",
+                        line_number=node.lineno,
+                        severity="Low",
+                        message=(
+                            "Use a 'with' statement instead of "
+                            "try/finally with .close()."
+                        ),
+                    )
+                )
+                break
+    return findings
+
+
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
@@ -936,6 +1038,9 @@ def run_static_analysis(code: str) -> tuple[list[Finding], int]:
     findings.extend(_check_return_consistency(tree))
     findings.extend(_check_exception_inheritance(tree))
     findings.extend(_check_string_slicing(tree))
+    findings.extend(_check_import_ordering(tree))
+    findings.extend(_check_try_block_scope(tree))
+    findings.extend(_check_context_manager_usage(tree))
 
     # Mixed text + AST checks.
     findings.extend(_check_blank_line_spacing(code, tree))

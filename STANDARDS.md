@@ -17,7 +17,7 @@ CodePulse/
 │   │   ├── routes/           # API route handlers (thin layer)
 │   │   │   └── analysis.py   # POST /api/v1/analyze
 │   │   └── services/         # Business logic layer
-│   │       ├── analysis_engine.py    # AST-based static analyzer (21 PEP 8 checks)
+│   │       ├── analysis_engine.py    # AST-based static analyzer (24 PEP 8 checks)
 │   │       ├── gpt_predictor.py      # OpenAI GPT bug prediction
 │   │       └── persistence_service.py # Supabase write sequence
 │   ├── database/
