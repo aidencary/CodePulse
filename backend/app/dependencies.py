@@ -53,7 +53,7 @@ def get_current_user(
     if not authorization.startswith("Bearer "):
         raise credentials_exception
 
-    token = authorization[len("Bearer "):]
+    token = authorization[len("Bearer ") :]
 
     try:
         header = jwt.get_unverified_header(token)

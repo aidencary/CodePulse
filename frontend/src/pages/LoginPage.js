@@ -59,7 +59,7 @@ function LoginPage() {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="auth-form">
+        <form onSubmit={handleSubmit} className="auth-form" aria-label="authentication">
           {mode === 'signup' && (
             <div className="form-group">
               <label htmlFor="username">Username</label>

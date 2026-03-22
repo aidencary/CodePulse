@@ -75,9 +75,7 @@ def _check_missing_docstrings(tree: ast.Module) -> list[Finding]:
     """Return a Finding for every function or class missing a docstring."""
     findings: list[Finding] = []
     for node in ast.walk(tree):
-        if not isinstance(
-            node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)
-        ):
+        if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
             continue
         # Skip dunder methods — intentionally undocumented in most styles.
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
@@ -90,9 +88,7 @@ def _check_missing_docstrings(tree: ast.Module) -> list[Finding]:
                     issue_type="missing_docstring",
                     line_number=node.lineno,
                     severity="Low",
-                    message=(
-                        f"{kind} '{node.name}' is missing a docstring."
-                    ),
+                    message=(f"{kind} '{node.name}' is missing a docstring."),
                 )
             )
     return findings
