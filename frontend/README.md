@@ -29,13 +29,16 @@ frontend/
     ├── setupTests.js           # Jest / Testing Library global setup
     ├── services/
     │   ├── supabaseClient.js   # Supabase client singleton
-    │   └── analysisService.js  # analyzeCode() — POST /api/v1/analyze
+    │   ├── analysisService.js  # analyzeCode() — POST /api/v1/analyze
+    │   └── submissionService.js # Submission history fetch
     ├── context/
     │   └── AuthContext.js      # Auth state, useAuth hook, signIn/signUp/signOut
     ├── components/
     │   ├── ProtectedRoute.js   # Redirects unauthenticated users to /login
     │   ├── CodeEditor.js       # Monaco editor + Run Analysis button
-    │   └── ResultsPanel.js     # Score circle, static findings, AI bug prediction cards
+    │   ├── ResultsPanel.js     # Score circle, static findings, AI bug prediction cards
+    │   ├── ProfileDropdown.js  # User avatar and dropdown menu
+    │   └── SubmissionSidebar.js # Collapsible submission history sidebar
     ├── pages/
     │   ├── LoginPage.js        # Log In / Sign Up form (toggled)
     │   └── DashboardPage.js    # Dashboard shell — editor + results
@@ -78,7 +81,7 @@ const token = session.access_token
 
 ### Prerequisites
 
-- Node.js 18+
+- Node.js 20+
 - A configured Supabase project (see `backend/database/schema.sql`)
 
 ### Installation
@@ -130,6 +133,7 @@ The frontend CI workflow runs automatically on every push and pull request to `m
 | Step | Command |
 |------|---------|
 | Install | `npm ci` |
+| Audit | `npm audit --audit-level=critical` |
 | Test | `npm test -- --watchAll=false --ci` |
 | Build | `npm run build` |
 

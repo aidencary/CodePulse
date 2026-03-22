@@ -31,14 +31,14 @@ backend/
 │   ├── routes/
 │   │   └── analysis.py         # POST /api/v1/analyze
 │   └── services/
-│       ├── analysis_engine.py  # AST-based static analyzer + score computation
+│       ├── analysis_engine.py  # AST-based static analyzer (21 PEP 8 checks) + score computation
 │       ├── gpt_predictor.py    # OpenAI GPT bug prediction with graceful fallback
 │       └── persistence_service.py  # Supabase write sequence (submissions → reports → findings → bugs)
 ├── tests/
 │   ├── test_placeholder.py
 │   ├── test_analyze_endpoint.py
 │   ├── test_analyze_route.py   # Route integration tests (mocked services)
-│   ├── test_analysis_engine.py # Static analyzer unit tests
+│   ├── test_analysis_engine.py # Static analyzer unit tests (63 tests — 21 PEP 8 checks)
 │   └── test_gpt_predictor.py   # GPT predictor unit tests (mocked OpenAI)
 ├── database/
 │   └── schema.sql              # Supabase PostgreSQL schema (source of truth)
@@ -181,7 +181,7 @@ pytest tests/test_gpt_predictor.py -v    # GPT predictor tests (mocked)
 pytest tests/test_analyze_route.py -v    # Route integration tests
 ```
 
-39 tests, all passing. Add a corresponding test file in `tests/` for each new service module.
+82 tests, all passing. Add a corresponding test file in `tests/` for each new service module.
 
 ---
 

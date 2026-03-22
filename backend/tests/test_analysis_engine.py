@@ -137,3 +137,555 @@ def test_compute_score_includes_predicted_bugs() -> None:
     score = compute_score(findings, bugs)
     # 100 - 2 (Low) - 8 (critical) = 90
     assert score == 90
+
+
+# ---------------------------------------------------------------------------
+# Naming convention checks
+# ---------------------------------------------------------------------------
+
+
+def test_camel_case_function_detected() -> None:
+    """A camelCase function name produces a naming_convention finding."""
+    code = 'def myFunction():\n    """Doc."""\n    pass\n'
+    findings, _ = run_static_analysis(code)
+    naming = [f for f in findings if f.issue_type == "naming_convention"]
+    assert any("myFunction" in f.message for f in naming)
+
+
+def test_snake_case_function_not_flagged() -> None:
+    """A snake_case function name produces no naming_convention finding."""
+    code = 'def my_function():\n    """Doc."""\n    pass\n'
+    findings, _ = run_static_analysis(code)
+    naming = [f for f in findings if f.issue_type == "naming_convention"]
+    assert not any("my_function" in f.message for f in naming)
+
+
+def test_non_pascal_case_class_detected() -> None:
+    """A non-PascalCase class name produces a naming_convention finding."""
+    code = 'class my_class:\n    """Doc."""\n    pass\n'
+    findings, _ = run_static_analysis(code)
+    naming = [f for f in findings if f.issue_type == "naming_convention"]
+    assert any("my_class" in f.message for f in naming)
+
+
+def test_pascal_case_class_not_flagged() -> None:
+    """A PascalCase class name produces no naming_convention finding."""
+    code = 'class MyClass:\n    """Doc."""\n    pass\n'
+    findings, _ = run_static_analysis(code)
+    naming = [f for f in findings if f.issue_type == "naming_convention"]
+    assert not any("MyClass" in f.message for f in naming)
+
+
+def test_ambiguous_name_detected() -> None:
+    """Single-char names l, O, I produce ambiguous_name findings."""
+    code = 'def foo():\n    """Doc."""\n    l = 1\n    O = 2\n    I = 3\n'
+    findings, _ = run_static_analysis(code)
+    ambig = [f for f in findings if f.issue_type == "ambiguous_name"]
+    assert len(ambig) == 3
+
+
+def test_ambiguous_name_not_flagged_for_other_singles() -> None:
+    """Single-char names like x, y, i are not ambiguous."""
+    code = 'def foo():\n    """Doc."""\n    x = 1\n    i = 2\n'
+    findings, _ = run_static_analysis(code)
+    assert not any(f.issue_type == "ambiguous_name" for f in findings)
+
+
+def test_camel_case_variable_detected() -> None:
+    """A camelCase variable assignment produces a naming_convention finding."""
+    code = 'def foo():\n    """Doc."""\n    myVar = 1\n'
+    findings, _ = run_static_analysis(code)
+    naming = [f for f in findings if f.issue_type == "naming_convention"]
+    assert any("myVar" in f.message for f in naming)
+
+
+# ---------------------------------------------------------------------------
+# self/cls checks
+# ---------------------------------------------------------------------------
+
+
+def test_wrong_self_detected() -> None:
+    """Instance method not using 'self' is flagged."""
+    code = (
+        "class Foo:\n"
+        '    """Doc."""\n'
+        "    def method(this):\n"
+        '        """Doc."""\n'
+        "        pass\n"
+    )
+    findings, _ = run_static_analysis(code)
+    sc = [f for f in findings if f.issue_type == "self_cls_naming"]
+    assert len(sc) == 1
+    assert "self" in sc[0].message
+
+
+def test_correct_self_not_flagged() -> None:
+    """Instance method using 'self' is not flagged."""
+    code = (
+        "class Foo:\n"
+        '    """Doc."""\n'
+        "    def method(self):\n"
+        '        """Doc."""\n'
+        "        pass\n"
+    )
+    findings, _ = run_static_analysis(code)
+    assert not any(f.issue_type == "self_cls_naming" for f in findings)
+
+
+def test_wrong_cls_detected() -> None:
+    """Classmethod not using 'cls' is flagged."""
+    code = (
+        "class Foo:\n"
+        '    """Doc."""\n'
+        "    @classmethod\n"
+        "    def create(self):\n"
+        '        """Doc."""\n'
+        "        pass\n"
+    )
+    findings, _ = run_static_analysis(code)
+    sc = [f for f in findings if f.issue_type == "self_cls_naming"]
+    assert len(sc) == 1
+    assert "cls" in sc[0].message
+
+
+def test_staticmethod_not_flagged() -> None:
+    """Static methods are exempt from self/cls checks."""
+    code = (
+        "class Foo:\n"
+        '    """Doc."""\n'
+        "    @staticmethod\n"
+        "    def helper(x):\n"
+        '        """Doc."""\n'
+        "        return x\n"
+    )
+    findings, _ = run_static_analysis(code)
+    assert not any(f.issue_type == "self_cls_naming" for f in findings)
+
+
+# ---------------------------------------------------------------------------
+# None comparison
+# ---------------------------------------------------------------------------
+
+
+def test_none_equality_detected() -> None:
+    """``== None`` produces a none_comparison finding."""
+    code = 'def foo():\n    """Doc."""\n    if x == None:\n        pass\n'
+    findings, _ = run_static_analysis(code)
+    nc = [f for f in findings if f.issue_type == "none_comparison"]
+    assert len(nc) == 1
+    assert nc[0].severity == "Med"
+
+
+def test_none_is_not_flagged() -> None:
+    """``is None`` does not produce a none_comparison finding."""
+    code = 'def foo():\n    """Doc."""\n    if x is None:\n        pass\n'
+    findings, _ = run_static_analysis(code)
+    assert not any(f.issue_type == "none_comparison" for f in findings)
+
+
+# ---------------------------------------------------------------------------
+# Boolean comparison
+# ---------------------------------------------------------------------------
+
+
+def test_boolean_comparison_detected() -> None:
+    """``== True`` produces a boolean_comparison finding."""
+    code = 'def foo():\n    """Doc."""\n    if x == True:\n        pass\n'
+    findings, _ = run_static_analysis(code)
+    bc = [f for f in findings if f.issue_type == "boolean_comparison"]
+    assert len(bc) == 1
+
+
+def test_boolean_comparison_not_flagged_for_direct_use() -> None:
+    """Using a boolean directly does not produce a boolean_comparison."""
+    code = 'def foo():\n    """Doc."""\n    if x:\n        pass\n'
+    findings, _ = run_static_analysis(code)
+    assert not any(f.issue_type == "boolean_comparison" for f in findings)
+
+
+# ---------------------------------------------------------------------------
+# Type comparison
+# ---------------------------------------------------------------------------
+
+
+def test_type_comparison_detected() -> None:
+    """``type(x) is type(y)`` produces a type_comparison finding."""
+    code = (
+        "def foo():\n"
+        '    """Doc."""\n'
+        "    if type(x) is type(y):\n"
+        "        pass\n"
+    )
+    findings, _ = run_static_analysis(code)
+    tc = [f for f in findings if f.issue_type == "type_comparison"]
+    assert len(tc) == 1
+    assert tc[0].severity == "Med"
+
+
+def test_isinstance_not_flagged() -> None:
+    """``isinstance()`` does not produce a type_comparison finding."""
+    code = (
+        "def foo():\n"
+        '    """Doc."""\n'
+        "    if isinstance(x, int):\n"
+        "        pass\n"
+    )
+    findings, _ = run_static_analysis(code)
+    assert not any(f.issue_type == "type_comparison" for f in findings)
+
+
+# ---------------------------------------------------------------------------
+# Empty sequence check
+# ---------------------------------------------------------------------------
+
+
+def test_len_equals_zero_detected() -> None:
+    """``len(x) == 0`` produces an empty_sequence_check finding."""
+    code = (
+        "def foo():\n" '    """Doc."""\n' "    if len(items) == 0:\n" "        pass\n"
+    )
+    findings, _ = run_static_analysis(code)
+    es = [f for f in findings if f.issue_type == "empty_sequence_check"]
+    assert len(es) == 1
+
+
+def test_truthiness_not_flagged() -> None:
+    """``if not items:`` does not produce an empty_sequence_check."""
+    code = "def foo():\n" '    """Doc."""\n' "    if not items:\n" "        pass\n"
+    findings, _ = run_static_analysis(code)
+    assert not any(f.issue_type == "empty_sequence_check" for f in findings)
+
+
+# ---------------------------------------------------------------------------
+# Lambda assignment
+# ---------------------------------------------------------------------------
+
+
+def test_lambda_assignment_detected() -> None:
+    """``f = lambda x: x`` produces a lambda_assignment finding."""
+    code = "f = lambda x: x\n"
+    findings, _ = run_static_analysis(code)
+    la = [f for f in findings if f.issue_type == "lambda_assignment"]
+    assert len(la) == 1
+
+
+def test_lambda_in_call_not_flagged() -> None:
+    """A lambda passed as an argument is not flagged."""
+    code = 'def foo():\n    """Doc."""\n    sorted(items, key=lambda x: x)\n'
+    findings, _ = run_static_analysis(code)
+    assert not any(f.issue_type == "lambda_assignment" for f in findings)
+
+
+# ---------------------------------------------------------------------------
+# Import formatting
+# ---------------------------------------------------------------------------
+
+
+def test_multi_import_detected() -> None:
+    """``import os, sys`` produces an import_formatting finding."""
+    code = 'import os, sys\ndef foo():\n    """Doc."""\n    pass\n'
+    findings, _ = run_static_analysis(code)
+    imp = [f for f in findings if f.issue_type == "import_formatting"]
+    assert len(imp) == 1
+
+
+def test_separate_imports_not_flagged() -> None:
+    """Separate import statements are not flagged."""
+    code = "import os\nimport sys\n" 'def foo():\n    """Doc."""\n    pass\n'
+    findings, _ = run_static_analysis(code)
+    assert not any(f.issue_type == "import_formatting" for f in findings)
+
+
+def test_from_import_multi_names_not_flagged() -> None:
+    """``from os.path import join, exists`` is acceptable."""
+    code = "from os.path import join, exists\n" 'def foo():\n    """Doc."""\n    pass\n'
+    findings, _ = run_static_analysis(code)
+    assert not any(f.issue_type == "import_formatting" for f in findings)
+
+
+# ---------------------------------------------------------------------------
+# is not preference
+# ---------------------------------------------------------------------------
+
+
+def test_not_is_detected() -> None:
+    """``not x is y`` produces an is_not_preference finding."""
+    code = "def foo():\n" '    """Doc."""\n' "    if not x is None:\n" "        pass\n"
+    findings, _ = run_static_analysis(code)
+    inp = [f for f in findings if f.issue_type == "is_not_preference"]
+    assert len(inp) == 1
+
+
+def test_is_not_not_flagged() -> None:
+    """``x is not None`` does not produce an is_not_preference finding."""
+    code = "def foo():\n" '    """Doc."""\n' "    if x is not None:\n" "        pass\n"
+    findings, _ = run_static_analysis(code)
+    assert not any(f.issue_type == "is_not_preference" for f in findings)
+
+
+# ---------------------------------------------------------------------------
+# Return consistency
+# ---------------------------------------------------------------------------
+
+
+def test_inconsistent_returns_detected() -> None:
+    """Mixed return-with-value and bare return produces a finding."""
+    code = (
+        "def foo(x):\n"
+        '    """Doc."""\n'
+        "    if x:\n"
+        "        return 1\n"
+        "    return\n"
+    )
+    findings, _ = run_static_analysis(code)
+    rc = [f for f in findings if f.issue_type == "return_consistency"]
+    assert len(rc) == 1
+    assert rc[0].severity == "Med"
+
+
+def test_consistent_returns_not_flagged() -> None:
+    """All returns with values does not produce a finding."""
+    code = (
+        "def foo(x):\n"
+        '    """Doc."""\n'
+        "    if x:\n"
+        "        return 1\n"
+        "    return 0\n"
+    )
+    findings, _ = run_static_analysis(code)
+    assert not any(f.issue_type == "return_consistency" for f in findings)
+
+
+# ---------------------------------------------------------------------------
+# Exception inheritance
+# ---------------------------------------------------------------------------
+
+
+def test_base_exception_inheritance_detected() -> None:
+    """Inheriting from BaseException is flagged."""
+    code = "class MyError(BaseException):\n" '    """Doc."""\n' "    pass\n"
+    findings, _ = run_static_analysis(code)
+    ei = [f for f in findings if f.issue_type == "exception_inheritance"]
+    assert len(ei) == 1
+    assert "MyError" in ei[0].message
+
+
+def test_exception_inheritance_not_flagged() -> None:
+    """Inheriting from Exception is not flagged."""
+    code = "class MyError(Exception):\n" '    """Doc."""\n' "    pass\n"
+    findings, _ = run_static_analysis(code)
+    assert not any(f.issue_type == "exception_inheritance" for f in findings)
+
+
+# ---------------------------------------------------------------------------
+# String slicing
+# ---------------------------------------------------------------------------
+
+
+def test_string_prefix_slicing_detected() -> None:
+    """``s[:3] == 'foo'`` produces a string_slicing finding."""
+    code = (
+        "def foo():\n" '    """Doc."""\n' '    if name[:3] == "foo":\n' "        pass\n"
+    )
+    findings, _ = run_static_analysis(code)
+    ss = [f for f in findings if f.issue_type == "string_slicing"]
+    assert len(ss) == 1
+    assert "startswith" in ss[0].message
+
+
+def test_string_suffix_slicing_detected() -> None:
+    """``s[-3:] == 'bar'`` produces a string_slicing finding."""
+    code = (
+        "def foo():\n"
+        '    """Doc."""\n'
+        '    if name[-3:] == "bar":\n'
+        "        pass\n"
+    )
+    findings, _ = run_static_analysis(code)
+    ss = [f for f in findings if f.issue_type == "string_slicing"]
+    assert len(ss) == 1
+    assert "endswith" in ss[0].message
+
+
+def test_startswith_not_flagged() -> None:
+    """Using ``.startswith()`` does not produce a string_slicing finding."""
+    code = (
+        "def foo():\n"
+        '    """Doc."""\n'
+        '    if name.startswith("foo"):\n'
+        "        pass\n"
+    )
+    findings, _ = run_static_analysis(code)
+    assert not any(f.issue_type == "string_slicing" for f in findings)
+
+
+# ---------------------------------------------------------------------------
+# Trailing whitespace
+# ---------------------------------------------------------------------------
+
+
+def test_trailing_whitespace_detected() -> None:
+    """A line with trailing spaces produces a trailing_whitespace finding."""
+    code = "x = 1   \ny = 2\n"
+    findings, _ = run_static_analysis(code)
+    tw = [f for f in findings if f.issue_type == "trailing_whitespace"]
+    assert len(tw) == 1
+    assert tw[0].line_number == 1
+
+
+def test_no_trailing_whitespace_not_flagged() -> None:
+    """Clean lines produce no trailing_whitespace findings."""
+    code = 'def foo():\n    """Doc."""\n    return 1\n'
+    findings, _ = run_static_analysis(code)
+    assert not any(f.issue_type == "trailing_whitespace" for f in findings)
+
+
+# ---------------------------------------------------------------------------
+# Tab indentation
+# ---------------------------------------------------------------------------
+
+
+def test_tab_indentation_detected() -> None:
+    """A line indented with a tab produces a tab_indentation finding."""
+    code = 'def foo():\n\t"""Doc."""\n\tpass\n'
+    findings, _ = run_static_analysis(code)
+    ti = [f for f in findings if f.issue_type == "tab_indentation"]
+    assert len(ti) == 2
+    assert ti[0].severity == "Med"
+
+
+def test_space_indentation_not_flagged() -> None:
+    """Lines indented with spaces produce no tab_indentation findings."""
+    code = 'def foo():\n    """Doc."""\n    pass\n'
+    findings, _ = run_static_analysis(code)
+    assert not any(f.issue_type == "tab_indentation" for f in findings)
+
+
+# ---------------------------------------------------------------------------
+# Blank line spacing
+# ---------------------------------------------------------------------------
+
+
+def test_missing_blank_lines_before_top_level_def() -> None:
+    """A top-level def with < 2 blank lines before it is flagged."""
+    code = 'import os\n\ndef foo():\n    """Doc."""\n    pass\n'
+    findings, _ = run_static_analysis(code)
+    bl = [f for f in findings if f.issue_type == "blank_line_spacing"]
+    assert len(bl) == 1
+    assert "2 blank lines" in bl[0].message
+
+
+def test_correct_blank_lines_before_top_level_def() -> None:
+    """A top-level def with 2 blank lines before it is not flagged."""
+    code = "import os\n\n\n" 'def foo():\n    """Doc."""\n    pass\n'
+    findings, _ = run_static_analysis(code)
+    assert not any(f.issue_type == "blank_line_spacing" for f in findings)
+
+
+def test_missing_blank_line_between_methods() -> None:
+    """Methods without a blank line between them are flagged."""
+    code = (
+        "class Foo:\n"
+        '    """Doc."""\n'
+        "    def a(self):\n"
+        '        """Doc."""\n'
+        "        pass\n"
+        "    def b(self):\n"
+        '        """Doc."""\n'
+        "        pass\n"
+    )
+    findings, _ = run_static_analysis(code)
+    bl = [f for f in findings if f.issue_type == "blank_line_spacing"]
+    assert len(bl) == 1
+    assert "1 blank line" in bl[0].message
+
+
+def test_correct_blank_line_between_methods() -> None:
+    """Methods with 1 blank line between them are not flagged."""
+    code = (
+        "class Foo:\n"
+        '    """Doc."""\n'
+        "    def a(self):\n"
+        '        """Doc."""\n'
+        "        pass\n"
+        "\n"
+        "    def b(self):\n"
+        '        """Doc."""\n'
+        "        pass\n"
+    )
+    findings, _ = run_static_analysis(code)
+    assert not any(f.issue_type == "blank_line_spacing" for f in findings)
+
+
+# ---------------------------------------------------------------------------
+# Inline comment spacing
+# ---------------------------------------------------------------------------
+
+
+def test_inline_comment_too_close_detected() -> None:
+    """An inline comment with < 2 spaces before it is flagged."""
+    code = 'def foo():\n    """Doc."""\n    x = 1 # bad\n'
+    findings, _ = run_static_analysis(code)
+    ic = [f for f in findings if f.issue_type == "inline_comment_spacing"]
+    assert len(ic) == 1
+
+
+def test_inline_comment_proper_spacing_not_flagged() -> None:
+    """An inline comment with 2+ spaces before it is not flagged."""
+    code = 'def foo():\n    """Doc."""\n    x = 1  # good\n'
+    findings, _ = run_static_analysis(code)
+    assert not any(f.issue_type == "inline_comment_spacing" for f in findings)
+
+
+def test_block_comment_not_flagged_as_inline() -> None:
+    """A block comment is not flagged by the inline comment check."""
+    code = '# this is a block comment\ndef foo():\n    """Doc."""\n    pass\n'
+    findings, _ = run_static_analysis(code)
+    assert not any(f.issue_type == "inline_comment_spacing" for f in findings)
+
+
+# ---------------------------------------------------------------------------
+# Comment hash spacing
+# ---------------------------------------------------------------------------
+
+
+def test_comment_missing_space_after_hash() -> None:
+    """A comment without a space after # is flagged."""
+    code = "#bad comment\n"
+    findings, _ = run_static_analysis(code)
+    cs = [f for f in findings if f.issue_type == "comment_spacing"]
+    assert len(cs) == 1
+
+
+def test_comment_with_space_after_hash_not_flagged() -> None:
+    """A comment with a space after # is not flagged."""
+    code = '# good comment\ndef foo():\n    """Doc."""\n    pass\n'
+    findings, _ = run_static_analysis(code)
+    assert not any(f.issue_type == "comment_spacing" for f in findings)
+
+
+def test_shebang_not_flagged() -> None:
+    """A shebang line is not flagged for missing space after #."""
+    code = '#!/usr/bin/env python\ndef foo():\n    """Doc."""\n    pass\n'
+    findings, _ = run_static_analysis(code)
+    assert not any(f.issue_type == "comment_spacing" for f in findings)
+
+
+# ---------------------------------------------------------------------------
+# Triple quote style
+# ---------------------------------------------------------------------------
+
+
+def test_triple_single_quotes_detected() -> None:
+    """Triple single quotes produce a triple_quote_style finding."""
+    code = "def foo():\n    '''Bad docstring.'''\n    pass\n"
+    findings, _ = run_static_analysis(code)
+    tq = [f for f in findings if f.issue_type == "triple_quote_style"]
+    assert len(tq) >= 1
+
+
+def test_triple_double_quotes_not_flagged() -> None:
+    """Triple double quotes do not produce a triple_quote_style finding."""
+    code = 'def foo():\n    """Good docstring."""\n    pass\n'
+    findings, _ = run_static_analysis(code)
+    assert not any(f.issue_type == "triple_quote_style" for f in findings)
