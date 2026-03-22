@@ -94,7 +94,11 @@ def test_analyze_returns_correct_shape() -> None:
     assert resp.status_code == 200
     body = resp.json()
     required_keys = (
-        "overall_score", "summary", "findings", "predicted_bugs", "submission_id"
+        "overall_score",
+        "summary",
+        "findings",
+        "predicted_bugs",
+        "submission_id",
     )
     for key in required_keys:
         assert key in body, f"Missing key: {key}"

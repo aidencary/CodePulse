@@ -23,9 +23,9 @@ beforeEach(() => {
 const renderLoginPage = () =>
   render(<MemoryRouter><LoginPage /></MemoryRouter>)
 
-// Helper: submit the form via the email input's parent form
+// Helper: submit the form
 const submitForm = () =>
-  fireEvent.submit(screen.getByLabelText(/email/i).closest('form'))
+  fireEvent.submit(screen.getByRole('form', { name: /authentication/i }))
 
 describe('LoginPage', () => {
   it('renders Log In form by default without username field', () => {
@@ -72,8 +72,6 @@ describe('LoginPage', () => {
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'user@example.com' } })
     fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'wrongpassword' } })
     submitForm()
-    await waitFor(() =>
-      expect(screen.getByText('Invalid login credentials')).toBeInTheDocument()
-    )
+    expect(await screen.findByText('Invalid login credentials')).toBeInTheDocument()
   })
 })
