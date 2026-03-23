@@ -5,7 +5,7 @@ const STAR_PATH = 'M 0 -10 L 2.2 -2.2 L 10 0 L 2.2 2.2 L 0 10 L -2.2 2.2 L -10 0
 const RAND = (min, max) => Math.floor(Math.random() * (max - min + 1) + min)
 const SIGN = () => (Math.random() > 0.5 ? -1 : 1)
 
-function CodeEditor({ code, onCodeChange, onRun, loading, isDark }) {
+function CodeEditor({ code, onCodeChange, onRun, loading, isDark, submissionName, onNameChange }) {
   const btnRef = useRef(null)
 
   useEffect(() => {
@@ -23,7 +23,17 @@ function CodeEditor({ code, onCodeChange, onRun, loading, isDark }) {
   return (
     <div className="editor-panel">
       <div className="editor-toolbar">
-        <span className="editor-label">Editor</span>
+        <div className="editor-toolbar-left">
+          <span className="editor-label">Editor</span>
+          <input
+            className="submission-name-input"
+            type="text"
+            placeholder="Untitled Submission"
+            value={submissionName || ''}
+            onChange={(e) => onNameChange?.(e.target.value)}
+            maxLength={100}
+          />
+        </div>
         <button
           ref={btnRef}
           className="sparkle-btn"

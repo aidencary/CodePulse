@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { useToast } from '../components/Toast'
 import {
   getProfile,
   updateProfile,
@@ -8,7 +9,6 @@ import {
   changePassword,
   deleteAccount,
 } from '../services/accountService'
-import supabase from '../services/supabaseClient'
 import '../styles/dashboard.css'
 import '../styles/account.css'
 
@@ -34,8 +34,9 @@ function BackArrow() {
 }
 
 function AccountPage() {
-  const { session, signOut } = useAuth()
+  const { session, signOut, refreshSession } = useAuth()
   const navigate = useNavigate()
+  const toast = useToast()
   const fileInputRef = useRef(null)
   const token = session?.access_token
 
@@ -100,10 +101,11 @@ function AccountPage() {
       const updated = await updateProfile(token, { username })
       setProfile(updated)
       setProfileMsg('Profile updated')
-      // Refresh session so navbar reflects changes
-      await supabase.auth.refreshSession()
+      toast('Profile updated', 'success')
+      await refreshSession()
     } catch (err) {
       setProfileErr(err.message)
+      toast(err.message, 'error')
     } finally {
       setProfileSaving(false)
     }
@@ -133,9 +135,11 @@ function AccountPage() {
       setAvatarFile(null)
       setAvatarPreview(null)
       setAvatarMsg('Profile picture updated')
-      await supabase.auth.refreshSession()
+      toast('Profile picture updated', 'success')
+      await refreshSession()
     } catch (err) {
       setAvatarErr(err.message)
+      toast(err.message, 'error')
     } finally {
       setAvatarSaving(false)
     }
@@ -163,11 +167,13 @@ function AccountPage() {
         new_password: newPw,
       })
       setPwMsg('Password changed successfully')
+      toast('Password changed successfully', 'success')
       setCurrentPw('')
       setNewPw('')
       setConfirmPw('')
     } catch (err) {
       setPwErr(err.message)
+      toast(err.message, 'error')
     } finally {
       setPwSaving(false)
     }

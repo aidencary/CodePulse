@@ -904,3 +904,184 @@ body {
   0%, 100% { opacity: 0.4; }
   50%       { opacity: 0.9; }
 }
+
+/* ─── Editor toolbar layout ───────────────────────────────────── */
+.editor-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+  min-width: 0;
+}
+
+/* ─── Submission name input ────────────────────────────────────── */
+.submission-name-input {
+  padding: 0.25rem 0.5rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--text);
+  font-size: 0.82rem;
+  outline: none;
+  transition: border-color 0.15s;
+  max-width: 220px;
+  flex: 1;
+}
+
+.submission-name-input:focus {
+  border-color: var(--purple);
+}
+
+.submission-name-input::placeholder {
+  color: var(--muted);
+}
+
+/* ─── Submission item row (title + delete) ─────────────────────── */
+.submission-item-row {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.submission-item-row .submission-title {
+  flex: 1;
+  min-width: 0;
+}
+
+.submission-delete-btn {
+  width: 22px;
+  height: 22px;
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s;
+  padding: 0;
+}
+
+.submission-delete-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.submission-item:hover .submission-delete-btn {
+  opacity: 1;
+}
+
+.submission-delete-btn:hover {
+  color: var(--danger);
+}
+
+/* ─── Submission rename input ──────────────────────────────────── */
+.submission-rename-input {
+  flex: 1;
+  padding: 0.15rem 0.4rem;
+  background: var(--bg);
+  border: 1px solid var(--purple);
+  border-radius: 4px;
+  color: var(--text);
+  font-size: 0.83rem;
+  outline: none;
+  min-width: 0;
+}
+
+/* ─── Sidebar delete confirmation ──────────────────────────────── */
+.sidebar-delete-modal {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  padding: 0.75rem 1rem;
+  z-index: 50;
+}
+
+.sidebar-delete-modal p {
+  font-size: 0.82rem;
+  color: var(--text);
+  margin-bottom: 0.5rem;
+}
+
+.sidebar-delete-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.sidebar-delete-cancel,
+.sidebar-delete-confirm {
+  padding: 0.3rem 0.75rem;
+  border-radius: 5px;
+  border: 1px solid var(--border);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.sidebar-delete-cancel {
+  background: none;
+  color: var(--text);
+}
+
+.sidebar-delete-cancel:hover {
+  background: var(--bg);
+}
+
+.sidebar-delete-confirm {
+  background: var(--danger);
+  color: #ffffff;
+  border-color: var(--danger);
+}
+
+.sidebar-delete-confirm:hover {
+  opacity: 0.85;
+}
+
+/* ─── Toast notifications ──────────────────────────────────────── */
+.toast-container {
+  position: fixed;
+  bottom: 1.25rem;
+  right: 1.25rem;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  pointer-events: none;
+}
+
+.toast {
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  pointer-events: auto;
+  cursor: pointer;
+  animation: toast-in 0.25s ease-out;
+  max-width: 340px;
+}
+
+.toast--success {
+  background: #166534;
+  color: #bbf7d0;
+  border: 1px solid rgba(74, 222, 128, 0.3);
+}
+
+.toast--error {
+  background: #7f1d1d;
+  color: #fecaca;
+  border: 1px solid rgba(248, 113, 113, 0.3);
+}
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

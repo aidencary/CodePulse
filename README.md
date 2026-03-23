@@ -20,6 +20,8 @@ CodePulse analyzes your code in real-time and provides:
 - **Bug Prediction**: Uses a ChatGPT API to predict bugs
 - **Actionable Feedback**: Provides specific suggestions for code improvements
 - **Real-time Analysis**: Instant feedback as you type in the live editor
+- **Submission Management**: Name, rename, and delete submissions with GPT-generated default names
+- **Account Management**: Update username, upload profile picture, change password, delete account
 
 ## Tech Stack
 
@@ -73,13 +75,21 @@ The backend uses FastAPI with these main endpoints:
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
 | `GET` | `/` | None | Health check |
-| `POST` | `/api/v1/analyze` | Bearer JWT | Submit code for analysis — returns static findings, GPT-predicted bugs, and quality score |
+| `POST` | `/api/v1/analyze` | Bearer JWT | Submit code for analysis — returns static findings, GPT-predicted bugs, quality score, and submission name |
+| `GET` | `/api/v1/account/profile` | Bearer JWT | Get authenticated user's profile |
+| `PATCH` | `/api/v1/account/profile` | Bearer JWT | Update username and/or profile picture URL |
+| `POST` | `/api/v1/account/avatar` | Bearer JWT | Upload profile picture |
+| `POST` | `/api/v1/account/change-password` | Bearer JWT | Change password |
+| `DELETE` | `/api/v1/account` | Bearer JWT | Delete account (cascades all data) |
+| `GET` | `/api/v1/submissions` | Bearer JWT | List user's submissions |
+| `PATCH` | `/api/v1/submissions/{id}` | Bearer JWT | Rename a submission |
+| `DELETE` | `/api/v1/submissions/{id}` | Bearer JWT | Delete a submission |
 
 Full API docs available at `http://localhost:8000/docs` once the server is running (requires `DEBUG=true`).
 
 ### API Testing (Postman / Newman)
 
-A Postman collection is available at `postman/collections/codepulse-api.postman_collection.json` with 14 tests across 4 folders (Health Check, Auth Errors, Validation Errors, Happy Path). The collection auto-generates a valid JWT for authenticated requests using the `jwt_secret` and `supabase_url` variables from the CI environment. Import it into Postman or run via Newman:
+A Postman collection is available at `postman/collections/codepulse-api.postman_collection.json` with tests across multiple folders (Health Check, Auth Errors, Validation Errors, Happy Path, Account CRUD, Submission CRUD). The collection auto-generates a valid JWT for authenticated requests using the `jwt_secret` and `supabase_url` variables from the CI environment. Import it into Postman or run via Newman:
 
 ```bash
 npm install -g newman

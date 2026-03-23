@@ -35,8 +35,16 @@ export function AuthProvider({ children }) {
 
   const signOut = () => supabase.auth.signOut()
 
+  const refreshSession = async () => {
+    const { data } = await supabase.auth.refreshSession()
+    if (data?.session) {
+      setSession(data.session)
+      setUser(data.session.user)
+    }
+  }
+
   return (
-    <AuthContext.Provider value={{ user, session, loading, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, signUp, signIn, signOut, refreshSession }}>
       {children}
     </AuthContext.Provider>
   )

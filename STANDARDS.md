@@ -13,12 +13,15 @@ CodePulse/
 │   │   ├── dependencies.py   # get_current_user — Supabase JWT auth
 │   │   ├── database.py       # Supabase service-role client (cached singleton)
 │   │   ├── models/           # Pydantic models
-│   │   │   └── analysis.py   # AnalyzeRequest / AnalyzeResponse / Finding / PredictedBug
+│   │   │   ├── analysis.py   # AnalyzeRequest / AnalyzeResponse / Finding / PredictedBug / SubmissionListItem
+│   │   │   └── account.py    # ProfileResponse / ProfileUpdateRequest / ChangePasswordRequest / AvatarUploadResponse
 │   │   ├── routes/           # API route handlers (thin layer)
-│   │   │   └── analysis.py   # POST /api/v1/analyze
+│   │   │   ├── analysis.py   # POST /api/v1/analyze (with submission naming)
+│   │   │   ├── account.py    # Account CRUD (profile, avatar, password, delete)
+│   │   │   └── submissions.py # Submission CRUD (list, rename, delete)
 │   │   └── services/         # Business logic layer
 │   │       ├── analysis_engine.py    # AST-based static analyzer (24 PEP 8 checks)
-│   │       ├── gpt_predictor.py      # OpenAI GPT bug prediction
+│   │       ├── gpt_predictor.py      # OpenAI GPT bug prediction + submission name generation
 │   │       └── persistence_service.py # Supabase write sequence
 │   ├── database/
 │   │   └── schema.sql        # Supabase PostgreSQL schema (source of truth)
@@ -29,10 +32,10 @@ CodePulse/
 ├── frontend/                # JavaScript/React frontend
 │   ├── public/              # Static files
 │   └── src/                 # Source code
-│       ├── components/      # React components (CodeEditor, ResultsPanel, ProtectedRoute, ProfileDropdown, SubmissionSidebar)
-│       ├── context/         # React context (AuthContext)
-│       ├── pages/           # Page components (LoginPage, DashboardPage)
-│       ├── services/        # API service calls (supabaseClient, analysisService, submissionService)
+│       ├── components/      # React components (CodeEditor, ResultsPanel, ProtectedRoute, ProfileDropdown, SubmissionSidebar, Toast)
+│       ├── context/         # React context (AuthContext with refreshSession)
+│       ├── pages/           # Page components (LoginPage, DashboardPage, AccountPage)
+│       ├── services/        # API service calls (supabaseClient, analysisService, submissionService, accountService)
 │       ├── styles/          # CSS/styling files
 │       ├── setupTests.js    # Jest / Testing Library global setup
 │       ├── App.js           # Main app component

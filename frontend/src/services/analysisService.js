@@ -8,14 +8,17 @@ const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000'
  * @returns {Promise<Object>} Parsed JSON response from the backend.
  * @throws {Error} If the request fails or the server returns a non-2xx status.
  */
-export async function analyzeCode(code, token) {
+export async function analyzeCode(code, token, name) {
+  const body = { code }
+  if (name) body.name = name
+
   const response = await fetch(`${API_URL}/api/v1/analyze`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ code }),
+    body: JSON.stringify(body),
   })
 
   if (!response.ok) {

@@ -36,6 +36,7 @@ function DashboardPage() {
   const sidebarRef = useRef(null)
 
   const [code, setCode] = useState('')
+  const [submissionName, setSubmissionName] = useState('')
   const [results, setResults] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -61,8 +62,9 @@ function DashboardPage() {
     setResults(null)
 
     try {
-      const data = await analyzeCode(currentCode, session.access_token)
+      const data = await analyzeCode(currentCode, session.access_token, submissionName || undefined)
       setResults(data)
+      if (data.name) setSubmissionName(data.name)
 
       setActiveId(data.submission_id)
       sidebarRef.current?.refresh()
@@ -76,12 +78,14 @@ function DashboardPage() {
   const handleSelectSubmission = (submission) => {
     if (!submission) {
       setCode('')
+      setSubmissionName('')
       setResults(null)
       setError(null)
       setActiveId(null)
       return
     }
     setCode(submission.code)
+    setSubmissionName(submission.name || '')
     setResults(submission.analysis_reports ?? null)
     setError(null)
     setActiveId(submission.submission_id)
@@ -121,6 +125,8 @@ function DashboardPage() {
             onRun={handleRun}
             loading={loading}
             isDark={theme === 'dark'}
+            submissionName={submissionName}
+            onNameChange={setSubmissionName}
           />
           <ResultsPanel results={results} loading={loading} error={error} />
         </main>
