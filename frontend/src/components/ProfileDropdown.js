@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
 const AVATAR_PALETTE = [
@@ -15,6 +16,7 @@ function hashColor(str = '') {
 
 function ProfileDropdown({ user }) {
   const { signOut } = useAuth()
+  const navigate = useNavigate()
   const [open, setOpen] = useState(false)
   const ref = useRef(null)
 
@@ -64,7 +66,7 @@ function ProfileDropdown({ user }) {
 
       {open && (
         <div className="dropdown-menu" role="menu">
-          <button className="dropdown-item" role="menuitem" onClick={() => setOpen(false)}>
+          <button className="dropdown-item" role="menuitem" onClick={() => { setOpen(false); navigate('/account') }}>
             Account
           </button>
           <button
