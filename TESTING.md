@@ -101,10 +101,10 @@ All test files live in `backend/tests/` and follow the `test_<module>.py` naming
 
 | File | What It Tests |
 |------|--------------|
-| `tests/test_analyze_endpoint.py` | Health check, auth guard (missing header, malformed token, wrong Bearer prefix), valid JWT happy path, request body validation |
-| `tests/test_analyze_route.py` | Route integration tests — full response shape, score range, finding/bug schema, persistence failure resilience |
+| `tests/test_analyze_endpoint.py` | Health check, auth guard (missing header, malformed token, wrong Bearer prefix), valid JWT happy path, request body validation (6 tests) |
+| `tests/test_analyze_route.py` | Route integration tests — full response shape, score range, finding/bug schema, persistence failure resilience, max-length validation (6 tests) |
 | `tests/test_analysis_engine.py` | Static analyzer — 24 PEP 8 checks (naming conventions, self/cls, None/boolean/type comparisons, empty sequences, lambda assignment, import formatting, is-not preference, return consistency, exception inheritance, string slicing, trailing whitespace, tab indentation, blank line spacing, comment spacing, triple quote style, import ordering, try block scope, context manager usage), syntax errors, score computation (69 tests) |
-| `tests/test_gpt_predictor.py` | GPT predictor — valid responses, empty arrays, API errors, malformed JSON, schema validation, prompt construction |
+| `tests/test_gpt_predictor.py` | GPT predictor — valid responses, empty arrays, API errors, malformed JSON, schema validation, prompt construction (6 tests) |
 | `tests/test_placeholder.py` | Confirms the test runner is configured correctly |
 
 ### Writing New Backend Tests
@@ -147,22 +147,58 @@ A Postman collection at `postman/collections/codepulse-api.postman_collection.js
 
 Every response is also checked for security headers (`X-Content-Type-Options`, `X-Frame-Options`) via a collection-level test script.
 
+### Auto-Generated JWT for Local Testing
+
+The collection includes a pre-request script that auto-generates a valid HS256 JWT when `auth_token` is empty. It uses the `jwt_secret` and `supabase_url` variables from the environment file to sign the token. This means you can run the Health Check, Auth Errors, and Validation Errors folders locally without manually providing a token — just start the backend with matching placeholder env vars.
+
+**Important:** The backend must be started **without** a `.env` file (or with env vars matching the CI environment) so the JWT secret matches:
+
+```bash
+cd backend
+mv .env .env.bak   # temporarily hide real credentials
+SUPABASE_URL=https://placeholder.supabase.co \
+SUPABASE_ANON_KEY=placeholder-anon-key \
+SUPABASE_SERVICE_ROLE_KEY=placeholder-service-role-key \
+SUPABASE_JWT_SECRET=ci-test-jwt-secret-at-least-32-chars-long \
+OPENAI_API_KEY=placeholder-openai-key \
+ALLOWED_ORIGINS='*' \
+uvicorn app.main:app --reload
+# After testing: mv .env.bak .env
+```
+
 ### Running Locally with Newman
 
 ```bash
 # Install Newman
 npm install -g newman
 
-# Run all folders (requires a running backend and valid auth_token)
+# Run Health Check, Auth Errors, and Validation Errors (auto-generates JWT)
 newman run postman/collections/codepulse-api.postman_collection.json \
   --environment postman/environments/ci.postman_environment.json \
-  --env-var "auth_token=YOUR_JWT_HERE"
+  --folder "Health Check" --folder "Auth Errors" --folder "Validation Errors"
 
 # Run a specific folder
 newman run postman/collections/codepulse-api.postman_collection.json \
   --environment postman/environments/ci.postman_environment.json \
   --folder "Health Check"
+
+# Run with a manually provided token (e.g., a real Supabase JWT)
+newman run postman/collections/codepulse-api.postman_collection.json \
+  --environment postman/environments/ci.postman_environment.json \
+  --env-var "auth_token=YOUR_JWT_HERE"
 ```
+
+### Environment Variables
+
+The CI environment (`postman/environments/ci.postman_environment.json`) provides:
+
+| Variable | Purpose |
+|----------|---------|
+| `base_url` | Backend URL (default: `http://localhost:8000`) |
+| `auth_token` | JWT for authenticated requests (auto-generated if empty) |
+| `jwt_secret` | Secret used to sign auto-generated JWTs (must match backend's `SUPABASE_JWT_SECRET`) |
+| `supabase_url` | Supabase project URL used in JWT `iss` claim (must match backend's `SUPABASE_URL`) |
+| `expired_token` | Pre-built expired JWT for the "Expired JWT" auth error test |
 
 ### Importing into Postman
 

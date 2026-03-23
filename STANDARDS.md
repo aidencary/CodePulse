@@ -49,8 +49,12 @@ CodePulse/
 ├── postman/                  # API integration tests (Postman / Newman)
 │   ├── collections/
 │   │   └── codepulse-api.postman_collection.json
-│   └── environments/
-│       └── ci.postman_environment.json
+│   ├── environments/
+│   │   └── ci.postman_environment.json
+│   ├── flows/                # Postman flow definitions (placeholder)
+│   ├── globals/
+│   │   └── workspace.globals.yaml
+│   └── specs/                # OpenAPI spec files (placeholder)
 ├── .github/workflows/        # CI/CD pipelines
 │   ├── backend-ci.yml        # Black + flake8 + pytest
 │   ├── frontend-ci.yml       # npm audit + test + build
