@@ -79,13 +79,16 @@ Full API docs available at `http://localhost:8000/docs` once the server is runni
 
 ### API Testing (Postman / Newman)
 
-A Postman collection is available at `postman/collections/codepulse-api.postman_collection.json` with 14 tests across 4 folders (Health Check, Auth Errors, Validation Errors, Happy Path). Import it into Postman or run via Newman:
+A Postman collection is available at `postman/collections/codepulse-api.postman_collection.json` with 14 tests across 4 folders (Health Check, Auth Errors, Validation Errors, Happy Path). The collection auto-generates a valid JWT for authenticated requests using the `jwt_secret` and `supabase_url` variables from the CI environment. Import it into Postman or run via Newman:
 
 ```bash
 npm install -g newman
 newman run postman/collections/codepulse-api.postman_collection.json \
-  --environment postman/environments/ci.postman_environment.json
+  --environment postman/environments/ci.postman_environment.json \
+  --folder "Health Check" --folder "Auth Errors" --folder "Validation Errors"
 ```
+
+See [TESTING.md](TESTING.md) for instructions on starting the backend with matching placeholder env vars.
 
 ## Development Setup
 

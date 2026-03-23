@@ -17,7 +17,7 @@ CodePulse/
 │   │   ├── routes/           # API route handlers (thin layer)
 │   │   │   └── analysis.py   # POST /api/v1/analyze
 │   │   └── services/         # Business logic layer
-│   │       ├── analysis_engine.py    # AST-based static analyzer (21 PEP 8 checks)
+│   │       ├── analysis_engine.py    # AST-based static analyzer (24 PEP 8 checks)
 │   │       ├── gpt_predictor.py      # OpenAI GPT bug prediction
 │   │       └── persistence_service.py # Supabase write sequence
 │   ├── database/
@@ -49,8 +49,12 @@ CodePulse/
 ├── postman/                  # API integration tests (Postman / Newman)
 │   ├── collections/
 │   │   └── codepulse-api.postman_collection.json
-│   └── environments/
-│       └── ci.postman_environment.json
+│   ├── environments/
+│   │   └── ci.postman_environment.json
+│   ├── flows/                # Postman flow definitions (placeholder)
+│   ├── globals/
+│   │   └── workspace.globals.yaml
+│   └── specs/                # OpenAPI spec files (placeholder)
 ├── .github/workflows/        # CI/CD pipelines
 │   ├── backend-ci.yml        # Black + flake8 + pytest
 │   ├── frontend-ci.yml       # npm audit + test + build

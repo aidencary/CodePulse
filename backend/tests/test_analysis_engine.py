@@ -689,3 +689,112 @@ def test_triple_double_quotes_not_flagged() -> None:
     code = 'def foo():\n    """Good docstring."""\n    pass\n'
     findings, _ = run_static_analysis(code)
     assert not any(f.issue_type == "triple_quote_style" for f in findings)
+
+
+# ---------------------------------------------------------------------------
+# Import ordering
+# ---------------------------------------------------------------------------
+
+
+def test_stdlib_after_third_party_detected() -> None:
+    """A stdlib import after a third-party import is flagged."""
+    code = (
+        "import requests\n"
+        "import os\n"
+        "\n\n"
+        'def foo():\n    """Doc."""\n    pass\n'
+    )
+    findings, _ = run_static_analysis(code)
+    io = [f for f in findings if f.issue_type == "import_ordering"]
+    assert len(io) == 1
+    assert "os" in io[0].message
+    assert "stdlib" in io[0].message
+
+
+def test_properly_grouped_imports_not_flagged() -> None:
+    """Imports in correct order (stdlib then third-party) are not flagged."""
+    code = (
+        "import os\n"
+        "import sys\n"
+        "\n"
+        "import requests\n"
+        "\n\n"
+        'def foo():\n    """Doc."""\n    pass\n'
+    )
+    findings, _ = run_static_analysis(code)
+    assert not any(f.issue_type == "import_ordering" for f in findings)
+
+
+# ---------------------------------------------------------------------------
+# Try block scope
+# ---------------------------------------------------------------------------
+
+
+def test_broad_try_block_detected() -> None:
+    """A try block with >5 statements is flagged."""
+    code = (
+        "def foo():\n"
+        '    """Doc."""\n'
+        "    try:\n"
+        "        a = 1\n"
+        "        b = 2\n"
+        "        c = 3\n"
+        "        d = 4\n"
+        "        e = 5\n"
+        "        f = 6\n"
+        "    except Exception:\n"
+        "        pass\n"
+    )
+    findings, _ = run_static_analysis(code)
+    ts = [f for f in findings if f.issue_type == "try_block_scope"]
+    assert len(ts) == 1
+    assert "6 statements" in ts[0].message
+
+
+def test_narrow_try_block_not_flagged() -> None:
+    """A try block with <=5 statements is not flagged."""
+    code = (
+        "def foo():\n"
+        '    """Doc."""\n'
+        "    try:\n"
+        "        a = 1\n"
+        "        b = 2\n"
+        "    except Exception:\n"
+        "        pass\n"
+    )
+    findings, _ = run_static_analysis(code)
+    assert not any(f.issue_type == "try_block_scope" for f in findings)
+
+
+# ---------------------------------------------------------------------------
+# Context manager usage
+# ---------------------------------------------------------------------------
+
+
+def test_try_finally_close_detected() -> None:
+    """A try/finally with .close() is flagged."""
+    code = (
+        "def foo():\n"
+        '    """Doc."""\n'
+        "    f = open('test.txt')\n"
+        "    try:\n"
+        "        data = f.read()\n"
+        "    finally:\n"
+        "        f.close()\n"
+    )
+    findings, _ = run_static_analysis(code)
+    cm = [f for f in findings if f.issue_type == "context_manager_usage"]
+    assert len(cm) == 1
+    assert "with" in cm[0].message
+
+
+def test_with_statement_not_flagged() -> None:
+    """Using a with statement does not produce a context_manager_usage finding."""
+    code = (
+        "def foo():\n"
+        '    """Doc."""\n'
+        "    with open('test.txt') as f:\n"
+        "        data = f.read()\n"
+    )
+    findings, _ = run_static_analysis(code)
+    assert not any(f.issue_type == "context_manager_usage" for f in findings)
