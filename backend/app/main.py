@@ -6,7 +6,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 
-from app.routes import account, analysis
+from app.routes import account, analysis, submissions
 
 _debug = os.environ.get("DEBUG", "false").lower() == "true"
 
@@ -42,6 +42,7 @@ async def add_security_headers(request: Request, call_next) -> Response:
 
 app.include_router(analysis.router, prefix="/api/v1")
 app.include_router(account.router, prefix="/api/v1")
+app.include_router(submissions.router, prefix="/api/v1")
 
 
 @app.get("/", tags=["health"])

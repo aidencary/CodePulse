@@ -19,7 +19,8 @@ async def persist_analysis(
     summary: str,
     findings: list[Finding],
     predicted_bugs: list[PredictedBug],
-) -> str:
+    name: str | None = None,
+) -> tuple[str, str | None]:
     """Persist a complete analysis result to Supabase and return the submission ID.
 
     Writes rows in dependency order:
@@ -40,7 +41,7 @@ async def persist_analysis(
         predicted_bugs: GPT-predicted bugs.
 
     Returns:
-        The ``submission_id`` UUID string for the newly created submission.
+        A tuple of (``submission_id``, ``name``) for the newly created submission.
 
     Raises:
         PersistenceError: If any database write fails.
@@ -49,12 +50,16 @@ async def persist_analysis(
         client = get_supabase_client()
 
         # 1. Insert submission.
+        row = {"user_id": user_id, "code": code}
+        if name is not None:
+            row["name"] = name
         sub_result = (
             client.table("submissions")
-            .insert({"user_id": user_id, "code": code})
+            .insert(row)
             .execute()
         )
         submission_id: str = sub_result.data[0]["submission_id"]
+        persisted_name: str | None = sub_result.data[0].get("name")
 
         # 2. Insert analysis report.
         report_result = (
@@ -108,7 +113,7 @@ async def persist_analysis(
             len(findings),
             len(predicted_bugs),
         )
-        return submission_id
+        return submission_id, persisted_name
 
     except Exception as exc:
         logger.error("Failed to persist analysis for user %s: %s", user_id, exc)
