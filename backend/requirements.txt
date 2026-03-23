@@ -17,6 +17,9 @@ pytest==8.1.1
 pytest-asyncio==0.23.6
 httpx==0.27.0
 
+# File uploads
+python-multipart==0.0.9
+
 # AI / ML
 openai==1.30.1
 
