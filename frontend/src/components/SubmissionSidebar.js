@@ -61,18 +61,27 @@ function KebabMenu({ onRename, onDelete, onTogglePin, isPinned }) {
             className="kebab-option"
             onClick={(e) => { e.stopPropagation(); setOpen(false); onRename() }}
           >
+            <svg className="kebab-icon" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+              <path d="M11.013 1.427a1.75 1.75 0 0 1 2.474 0l1.086 1.086a1.75 1.75 0 0 1 0 2.474l-8.61 8.61c-.21.21-.47.364-.756.445l-3.251.93a.75.75 0 0 1-.927-.928l.929-3.25a1.75 1.75 0 0 1 .445-.758l8.61-8.61Zm1.414 1.06a.25.25 0 0 0-.354 0L3.463 11.1a.25.25 0 0 0-.064.108l-.563 1.97 1.971-.564a.25.25 0 0 0 .108-.064l8.61-8.61a.25.25 0 0 0 0-.354l-1.1-1.1Z" />
+            </svg>
             Rename
           </button>
           <button
-            className="kebab-option"
+            className={`kebab-option kebab-option--star${isPinned ? ' starred' : ''}`}
             onClick={(e) => { e.stopPropagation(); setOpen(false); onTogglePin() }}
           >
-            {isPinned ? 'Unpin' : 'Star'}
+            <svg className="kebab-icon kebab-star-icon" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+              <path d="M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.75.75 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 .25Z" />
+            </svg>
+            {isPinned ? 'Unstar' : 'Star'}
           </button>
           <button
             className="kebab-option kebab-option--danger"
             onClick={(e) => { e.stopPropagation(); setOpen(false); onDelete() }}
           >
+            <svg className="kebab-icon" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+              <path d="M11 1.75V3h2.25a.75.75 0 0 1 0 1.5H2.75a.75.75 0 0 1 0-1.5H5V1.75C5 .784 5.784 0 6.75 0h2.5C10.216 0 11 .784 11 1.75ZM6.5 1.75V3h3V1.75a.25.25 0 0 0-.25-.25h-2.5a.25.25 0 0 0-.25.25ZM3.613 5.5l.806 8.87A1.75 1.75 0 0 0 6.163 16h3.674a1.75 1.75 0 0 0 1.744-1.63l.806-8.87H3.613Z" />
+            </svg>
             Delete
           </button>
         </div>

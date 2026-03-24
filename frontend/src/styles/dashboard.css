@@ -1023,7 +1023,9 @@ body {
 }
 
 .kebab-option {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   width: 100%;
   padding: 0.5rem 0.75rem;
   background: none;
@@ -1035,8 +1037,33 @@ body {
   transition: background 0.1s;
 }
 
+.kebab-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
 .kebab-option:hover {
   background: var(--bg);
+}
+
+/* Star option — gray by default, yellow on hover */
+.kebab-option--star .kebab-star-icon {
+  color: #9ca3af;
+  transition: color 0.15s;
+}
+
+.kebab-option--star:hover .kebab-star-icon {
+  color: #facc15;
+}
+
+/* Starred (pinned) — yellow by default, gray on hover (unstar) */
+.kebab-option--star.starred .kebab-star-icon {
+  color: #facc15;
+}
+
+.kebab-option--star.starred:hover .kebab-star-icon {
+  color: #9ca3af;
 }
 
 .kebab-option--danger {
