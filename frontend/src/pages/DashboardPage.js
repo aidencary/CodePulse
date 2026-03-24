@@ -109,7 +109,13 @@ function DashboardPage() {
 
       <div className="dashboard-right">
         <nav className="dashboard-nav">
-          <span className="nav-brand">CodePulse</span>
+          <span
+            className="nav-brand"
+            onClick={() => handleSelectSubmission(null)}
+            role="button"
+            tabIndex={0}
+            style={{ cursor: 'pointer' }}
+          >CodePulse</span>
           <div className="nav-user">
             <span className="nav-username">{username}</span>
             <ProfileDropdown user={user} />
