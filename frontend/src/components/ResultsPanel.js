@@ -6,7 +6,27 @@
  * @param {boolean} props.loading - True while the API request is in flight.
  * @param {string|null} props.error - Error message to display on failure.
  */
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
+
+/** Severity rank maps (higher number = more severe). */
+const FINDING_SEV_RANK = { high: 3, med: 2, low: 1 }
+const BUG_SEV_RANK = { critical: 4, high: 3, medium: 2, low: 1 }
+
+/**
+ * Small sort-direction toggle shown next to a section title.
+ */
+function SortToggle({ direction, onToggle }) {
+  return (
+    <button
+      className="sort-toggle"
+      onClick={onToggle}
+      title={direction === 'desc' ? 'Sorted high → low' : 'Sorted low → high'}
+      aria-label={`Sort severity ${direction === 'desc' ? 'low to high' : 'high to low'}`}
+    >
+      {direction === 'desc' ? '↓' : '↑'}
+    </button>
+  )
+}
 
 /**
  * Collapsible card for a single AI-predicted bug.
@@ -44,11 +64,34 @@ function BugCard({ bug }) {
 }
 
 function ResultsPanel({ results, loading, error }) {
+  const [findingSort, setFindingSort] = useState('desc')
+  const [bugSort, setBugSort] = useState('desc')
+
   const scoreLevel = (score) => {
     if (score >= 80) return 'good'
     if (score >= 50) return 'fair'
     return 'poor'
   }
+
+  const sortedFindings = useMemo(() => {
+    const findings = results?.findings || []
+    const multiplier = findingSort === 'desc' ? -1 : 1
+    return [...findings].sort((a, b) => {
+      const aRank = FINDING_SEV_RANK[a.severity.toLowerCase()] || 0
+      const bRank = FINDING_SEV_RANK[b.severity.toLowerCase()] || 0
+      return multiplier * (aRank - bRank)
+    })
+  }, [results?.findings, findingSort])
+
+  const sortedBugs = useMemo(() => {
+    const bugs = results?.predicted_bugs || []
+    const multiplier = bugSort === 'desc' ? -1 : 1
+    return [...bugs].sort((a, b) => {
+      const aRank = BUG_SEV_RANK[a.severity.toLowerCase()] || 0
+      const bRank = BUG_SEV_RANK[b.severity.toLowerCase()] || 0
+      return multiplier * (aRank - bRank)
+    })
+  }, [results?.predicted_bugs, bugSort])
 
   const renderContent = () => {
     if (loading) {
@@ -65,8 +108,6 @@ function ResultsPanel({ results, loading, error }) {
       return <p className="results-error">{error}</p>
     }
     if (results) {
-      const findings = results.findings || []
-      const predictedBugs = results.predicted_bugs || []
       return (
         <>
           {/* Score */}
@@ -85,12 +126,18 @@ function ResultsPanel({ results, loading, error }) {
           <section className="results-section">
             <h3 className="section-title">
               Static Analysis{' '}
-              <span className="badge">{findings.length}</span>
+              <span className="badge">{sortedFindings.length}</span>
+              {sortedFindings.length > 1 && (
+                <SortToggle
+                  direction={findingSort}
+                  onToggle={() => setFindingSort((d) => d === 'desc' ? 'asc' : 'desc')}
+                />
+              )}
             </h3>
-            {findings.length === 0 ? (
+            {sortedFindings.length === 0 ? (
               <p className="results-placeholder">No issues found.</p>
             ) : (
-              findings.map((f, i) => (
+              sortedFindings.map((f, i) => (
                 <div key={i} className="finding-item">
                   <span
                     className={`severity-badge severity-${f.severity.toLowerCase()}`}
@@ -111,12 +158,18 @@ function ResultsPanel({ results, loading, error }) {
           <section className="results-section">
             <h3 className="section-title">
               AI Bug Predictions{' '}
-              <span className="badge">{predictedBugs.length}</span>
+              <span className="badge">{sortedBugs.length}</span>
+              {sortedBugs.length > 1 && (
+                <SortToggle
+                  direction={bugSort}
+                  onToggle={() => setBugSort((d) => d === 'desc' ? 'asc' : 'desc')}
+                />
+              )}
             </h3>
-            {predictedBugs.length === 0 ? (
+            {sortedBugs.length === 0 ? (
               <p className="results-placeholder">No predicted bugs found.</p>
             ) : (
-              predictedBugs.map((bug, i) => (
+              sortedBugs.map((bug, i) => (
                 <BugCard key={i} bug={bug} />
               ))
             )}
