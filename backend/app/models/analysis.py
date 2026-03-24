@@ -10,6 +10,7 @@ class AnalyzeRequest(BaseModel):
 
     code: str = Field(..., max_length=100_000)
     name: str | None = Field(None, max_length=100)
+    submission_id: str | None = Field(None, description="Reanalyze existing submission")
 
 
 class Finding(BaseModel):

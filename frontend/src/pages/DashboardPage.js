@@ -62,7 +62,12 @@ function DashboardPage() {
     setResults(null)
 
     try {
-      const data = await analyzeCode(currentCode, session.access_token, submissionName || undefined)
+      // If activeId is set, reanalyze existing submission (no name sent).
+      // If null, create new submission (send name for GPT generation).
+      const nameToSend = activeId ? undefined : (submissionName || undefined)
+      const data = await analyzeCode(
+        currentCode, session.access_token, nameToSend, activeId
+      )
       setResults(data)
       if (data.name) setSubmissionName(data.name)
 
