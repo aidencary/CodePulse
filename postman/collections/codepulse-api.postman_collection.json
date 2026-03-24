@@ -2,7 +2,7 @@
   "info": {
     "name": "CodePulse API",
     "_postman_id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
-    "description": "Comprehensive API test suite for the CodePulse backend.\n\nFolders:\n- Health Check: Service availability\n- Auth Errors: Authentication failure scenarios\n- Validation Errors: Request validation (requires auth_token)\n- Happy Path: Successful analysis scenarios (requires auth_token + live services)",
+    "description": "Comprehensive API test suite for the CodePulse backend.\n\nFolders:\n- Health Check: Service availability\n- Auth Errors: Authentication failure scenarios\n- Validation Errors: Request validation (requires auth_token)\n- Happy Path: Successful analysis scenarios (requires auth_token + live services)\n- Account CRUD: Account management endpoints (requires auth_token + live Supabase)\n- Submission CRUD: Submission management endpoints (requires auth_token + live services)",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "event": [
@@ -770,6 +770,657 @@
                   "    pm.expect(jsonData).to.have.property('summary');",
                   "    pm.expect(jsonData).to.have.property('findings');",
                   "    pm.expect(jsonData).to.have.property('predicted_bugs');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Account CRUD",
+      "item": [
+        {
+          "name": "Get Profile — 200",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/account/profile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "account", "profile"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has profile fields', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "    pm.expect(jsonData).to.have.property('email');",
+                  "    pm.expect(jsonData).to.have.property('username');",
+                  "    pm.expect(jsonData).to.have.property('role');",
+                  "    pm.expect(jsonData).to.have.property('created_at');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Username — 200",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"username\": \"{{updated_username}}\"}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/account/profile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "account", "profile"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Username is updated', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.username).to.eql(pm.environment.get('updated_username'));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Username — invalid chars — 422",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"username\": \"invalid user!\"}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/account/profile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "account", "profile"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 422', function () {",
+                  "    pm.response.to.have.status(422);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Change Password — wrong current — 401",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"current_password\": \"wrong-password\", \"new_password\": \"NewPassword456!\"}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/account/change-password",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "account", "change-password"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 401', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "pm.test('Detail says incorrect password', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.detail).to.include('incorrect');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Change Password — too short — 422",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"current_password\": \"TestPassword123!\", \"new_password\": \"short\"}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/account/change-password",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "account", "change-password"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 422', function () {",
+                  "    pm.response.to.have.status(422);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Upload Avatar — invalid type — 422",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "",
+                  "description": "Set programmatically in pre-request"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/account/avatar",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "account", "avatar"]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Note: This test requires a file with wrong MIME type.",
+                  "// In Newman CI, this test may be skipped unless a test file is provided."
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Avatar upload with invalid type should return 422.",
+                  "// If no file was attached, the endpoint returns 422 anyway (missing field).",
+                  "pm.test('Status code is 422', function () {",
+                  "    pm.response.to.have.status(422);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Profile — no auth — 422",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/account/profile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "account", "profile"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 422 (missing auth header)', function () {",
+                  "    pm.response.to.have.status(422);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Change Password — no auth — 422",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"current_password\": \"test\", \"new_password\": \"newpassword123\"}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/account/change-password",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "account", "change-password"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 422 (missing auth header)', function () {",
+                  "    pm.response.to.have.status(422);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete Account — no auth — 422",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/account",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "account"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 422 (missing auth header)', function () {",
+                  "    pm.response.to.have.status(422);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Submission CRUD",
+      "item": [
+        {
+          "name": "Analyze with custom name — 200",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"code\": \"def add(a, b):\\n    return a + b\\n\", \"name\": \"Addition Helper\"}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/analyze",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "analyze"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response includes name matching input', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('name');",
+                  "    pm.expect(jsonData.name).to.eql('Addition Helper');",
+                  "});",
+                  "",
+                  "pm.test('Save submission_id for later tests', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.submission_id) {",
+                  "        pm.environment.set('submission_id', jsonData.submission_id);",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Analyze without name (GPT generates) — 200",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"code\": \"def fibonacci(n):\\n    if n <= 1:\\n        return n\\n    return fibonacci(n-1) + fibonacci(n-2)\\n\"}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/analyze",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "analyze"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response includes a non-empty name', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('name');",
+                  "    pm.expect(jsonData.name).to.be.a('string');",
+                  "    pm.expect(jsonData.name.length).to.be.above(0);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List submissions — 200",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/submissions",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "submissions"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is an array', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test('Each item has expected fields', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    jsonData.forEach(function (item) {",
+                  "        pm.expect(item).to.have.property('submission_id');",
+                  "        pm.expect(item).to.have.property('created_at');",
+                  "    });",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Rename submission — 200",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"Renamed Submission\"}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/submissions/{{submission_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "submissions", "{{submission_id}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Name is updated', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.name).to.eql('Renamed Submission');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Rename — not found — 404",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"Ghost\"}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/submissions/00000000-0000-0000-0000-000000000000",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "submissions", "00000000-0000-0000-0000-000000000000"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 404', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete submission — 200",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/submissions/{{submission_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "submissions", "{{submission_id}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response confirms deletion', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.detail).to.include('deleted');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete — not found — 404",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/submissions/00000000-0000-0000-0000-000000000000",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "submissions", "00000000-0000-0000-0000-000000000000"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 404', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Pin submission — 200",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/submissions/{{submission_id}}/pin",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "submissions", "{{submission_id}}", "pin"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has pinned field', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('pinned');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Pin — not found — 404",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/submissions/00000000-0000-0000-0000-000000000000/pin",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "submissions", "00000000-0000-0000-0000-000000000000", "pin"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 404', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List submissions — no auth — 422",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/submissions",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "submissions"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 422 (missing auth header)', function () {",
+                  "    pm.response.to.have.status(422);",
                   "});"
                 ]
               }

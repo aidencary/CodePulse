@@ -27,9 +27,12 @@ backend/
 │   ├── dependencies.py         # get_current_user — Supabase JWT auth
 │   ├── database.py             # Supabase service-role client (cached singleton)
 │   ├── models/
-│   │   └── analysis.py         # AnalyzeRequest / AnalyzeResponse / Finding / PredictedBug
+│   │   ├── analysis.py         # AnalyzeRequest / AnalyzeResponse / Finding / PredictedBug / SubmissionListItem / SubmissionRenameRequest
+│   │   └── account.py          # ProfileResponse / ProfileUpdateRequest / ChangePasswordRequest / AvatarUploadResponse
 │   ├── routes/
-│   │   └── analysis.py         # POST /api/v1/analyze
+│   │   ├── analysis.py         # POST /api/v1/analyze (with submission naming + reanalyze)
+│   │   ├── account.py          # GET/PATCH/DELETE /api/v1/account + avatar upload + password change
+│   │   └── submissions.py      # GET/PATCH/DELETE /api/v1/submissions + pin toggle
 │   └── services/
 │       ├── analysis_engine.py  # AST-based static analyzer (24 PEP 8 checks) + score computation
 │       ├── gpt_predictor.py    # OpenAI GPT bug prediction with graceful fallback
@@ -37,9 +40,11 @@ backend/
 ├── tests/
 │   ├── test_placeholder.py
 │   ├── test_analyze_endpoint.py
-│   ├── test_analyze_route.py   # Route integration tests (mocked services)
-│   ├── test_analysis_engine.py # Static analyzer unit tests (69 tests — 24 PEP 8 checks)
-│   └── test_gpt_predictor.py   # GPT predictor unit tests (mocked OpenAI)
+│   ├── test_analyze_route.py       # Route integration tests (mocked services)
+│   ├── test_analysis_engine.py     # Static analyzer unit tests (69 tests — 24 PEP 8 checks)
+│   ├── test_gpt_predictor.py       # GPT predictor unit tests (mocked OpenAI)
+│   ├── test_account_routes.py      # Account CRUD route tests (13 tests)
+│   └── test_submission_routes.py   # Submission CRUD route tests (13 tests)
 ├── database/
 │   └── schema.sql              # Supabase PostgreSQL schema (source of truth)
 ├── Dockerfile
@@ -160,6 +165,15 @@ docker run -p 8000:8000 --env-file .env codepulse-backend
 |--------|------|------|-------------|
 | `GET` | `/` | None | Health check → `{"status": "ok"}` |
 | `POST` | `/api/v1/analyze` | Bearer JWT | Submit code; returns static findings + GPT-predicted bugs + quality score |
+| `GET` | `/api/v1/account/profile` | Bearer JWT | Get authenticated user's profile |
+| `PATCH` | `/api/v1/account/profile` | Bearer JWT | Update username and/or profile picture URL |
+| `POST` | `/api/v1/account/avatar` | Bearer JWT | Upload profile picture (multipart, ≤2 MB) |
+| `POST` | `/api/v1/account/change-password` | Bearer JWT | Change password (verifies current password) |
+| `DELETE` | `/api/v1/account` | Bearer JWT | Delete account (cascades all user data) |
+| `GET` | `/api/v1/submissions` | Bearer JWT | List user's submissions with scores |
+| `PATCH` | `/api/v1/submissions/{id}` | Bearer JWT | Rename a submission |
+| `DELETE` | `/api/v1/submissions/{id}` | Bearer JWT | Delete a submission |
+| `PATCH` | `/api/v1/submissions/{id}/pin` | Bearer JWT | Toggle pin/star on a submission |
 
 Full API docs available at `http://localhost:8000/docs` when running locally with `DEBUG=true`. Disabled in production.
 
@@ -181,7 +195,7 @@ pytest tests/test_gpt_predictor.py -v    # GPT predictor tests (mocked)
 pytest tests/test_analyze_route.py -v    # Route integration tests
 ```
 
-88 tests, all passing. Add a corresponding test file in `tests/` for each new service module.
+114 tests, all passing. Add a corresponding test file in `tests/` for each new service module.
 
 ---
 
@@ -226,4 +240,6 @@ A pull request cannot be merged if any CI step fails. All new code must be Black
 | GPT bug prediction (`app/services/gpt_predictor.py`) | Done |
 | Submission persistence to Supabase (`app/services/persistence_service.py`) | Done |
 | Postman collection + Newman CI | Done |
-| Results endpoints | Not started |
+| Account CRUD endpoints (profile, avatar, password, delete) | Done |
+| Submission CRUD endpoints (list, rename, delete, pin) | Done |
+| Submission naming (user-provided or GPT-generated) | Done |

@@ -29,22 +29,26 @@ frontend/
     ├── setupTests.js           # Jest / Testing Library global setup
     ├── services/
     │   ├── supabaseClient.js   # Supabase client singleton
-    │   ├── analysisService.js  # analyzeCode() — POST /api/v1/analyze
-    │   └── submissionService.js # Submission history fetch
+    │   ├── analysisService.js  # analyzeCode() — POST /api/v1/analyze (with name + reanalyze)
+    │   ├── submissionService.js # Submission CRUD (list, save, rename, delete, pin)
+    │   └── accountService.js   # Account CRUD (profile, avatar, password, delete)
     ├── context/
-    │   └── AuthContext.js      # Auth state, useAuth hook, signIn/signUp/signOut
+    │   └── AuthContext.js      # Auth state, useAuth hook, signIn/signUp/signOut, refreshSession
     ├── components/
     │   ├── ProtectedRoute.js   # Redirects unauthenticated users to /login
-    │   ├── CodeEditor.js       # Monaco editor + Run Analysis button
-    │   ├── ResultsPanel.js     # Score circle, static findings, AI bug prediction cards
-    │   ├── ProfileDropdown.js  # User avatar and dropdown menu
-    │   └── SubmissionSidebar.js # Collapsible submission history sidebar
+    │   ├── CodeEditor.js       # Monaco editor + submission name input + Run Analysis button
+    │   ├── ResultsPanel.js     # Score circle, static findings (severity-sorted), AI bug prediction cards (severity-sorted with toggle)
+    │   ├── ProfileDropdown.js  # User avatar and dropdown menu (links to /account)
+    │   ├── SubmissionSidebar.js # Collapsible sidebar with rename/delete/pin via kebab menu
+    │   └── Toast.js            # Toast notification system (ToastProvider + useToast)
     ├── pages/
     │   ├── LoginPage.js        # Log In / Sign Up form (toggled)
-    │   └── DashboardPage.js    # Dashboard shell — editor + results
+    │   ├── DashboardPage.js    # Dashboard shell — editor + results + submission naming
+    │   └── AccountPage.js      # Account settings — profile, avatar, password, delete
     └── styles/
         ├── auth.css            # Login/sign-up form styles
-        └── dashboard.css       # Dashboard layout styles
+        ├── dashboard.css       # Dashboard + toast + submission naming styles
+        └── account.css         # Account settings page styles
 ```
 
 ---
@@ -56,6 +60,7 @@ frontend/
 | `/` | Public | Redirects to `/dashboard` |
 | `/login` | Public | Log In and Sign Up forms |
 | `/dashboard` | Protected | Main dashboard — requires authentication |
+| `/account` | Protected | Account settings — profile, avatar, password, delete |
 
 ---
 
@@ -118,9 +123,13 @@ npm test -- --watchAll=false   # Run once and exit (used in CI)
 |-----------|----------|
 | `components/__tests__/ProtectedRoute.test.js` | Loading state, unauthenticated redirect, authenticated render |
 | `context/__tests__/AuthContext.test.js` | Auth lifecycle, signIn / signUp / signOut calls |
-| `pages/__tests__/LoginPage.test.js` | Form toggle, submission handlers, error display |
+| `pages/__tests__/LoginPage.test.js` | Form toggle, submission handlers, error display, sign-up success banner |
 | `components/__tests__/CodeEditor.test.js` | Renders editor, button click fires onRun, disabled during loading |
-| `components/__tests__/ResultsPanel.test.js` | Idle, loading, error, score, findings, predicted bugs (expand/collapse), empty states (17 tests) |
+| `components/__tests__/ResultsPanel.test.js` | Idle, loading, error, score, findings, predicted bugs (expand/collapse), empty states, severity sorting with toggle (17 tests) |
+| `components/__tests__/SubmissionSidebar.test.js` | Render names, fallback, search, rename, delete, pin/star, collapse (11 tests) |
+| `pages/__tests__/AccountPage.test.js` | Profile load/display, username validation, password change, delete modal (10 tests) |
+
+53 tests, all passing.
 
 ---
 
@@ -155,9 +164,15 @@ A pull request cannot be merged if any step fails.
 | React app bootstrap | Done |
 | Supabase client setup | Done |
 | Auth context + session observer | Done |
-| Login / Sign Up UI | Done |
+| Login / Sign Up UI (green success banner on account creation) | Done |
 | Protected routes | Done |
 | JWT token hand-off pattern | Done |
 | Dashboard UI | Done |
 | Code editor / submission flow | Done |
-| Results display | Done |
+| Results display (severity sorting with high-to-low default, toggle for low-to-high) | Done |
+| Account settings page (profile, avatar, password, delete) | Done |
+| Submission sidebar (rename, delete, pin/star via kebab menu) | Done |
+| Submission naming (name input, GPT auto-generation) | Done |
+| Toast notification system | Done |
+| Session refresh after profile updates | Done |
+| Dark/light theme toggle | Done |

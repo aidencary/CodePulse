@@ -95,8 +95,12 @@ def test_analyze_valid_token_returns_analysis() -> None:
         patch("app.routes.analysis.run_static_analysis", return_value=([], 100)),
         patch("app.routes.analysis.predict_bugs", new=AsyncMock(return_value=[])),
         patch(
+            "app.routes.analysis.generate_submission_name",
+            new=AsyncMock(return_value="Test Submission"),
+        ),
+        patch(
             "app.routes.analysis.persist_analysis",
-            new=AsyncMock(return_value="sub-test-id"),
+            new=AsyncMock(return_value=("sub-test-id", "Test Submission")),
         ),
     ):
         response = client.post(

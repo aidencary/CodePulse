@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { analyzeCode } from '../services/analysisService'
+import { getSubmissionDetail } from '../services/submissionService'
 import CodeEditor from '../components/CodeEditor'
 import ResultsPanel from '../components/ResultsPanel'
 import SubmissionSidebar from '../components/SubmissionSidebar'
@@ -61,9 +62,10 @@ function DashboardPage() {
     setResults(null)
 
     try {
-      const data = await analyzeCode(currentCode, session.access_token)
+      const data = await analyzeCode(
+        currentCode, session.access_token, undefined, activeId
+      )
       setResults(data)
-
       setActiveId(data.submission_id)
       sidebarRef.current?.refresh()
     } catch (err) {
@@ -73,7 +75,7 @@ function DashboardPage() {
     }
   }
 
-  const handleSelectSubmission = (submission) => {
+  const handleSelectSubmission = async (submission) => {
     if (!submission) {
       setCode('')
       setResults(null)
@@ -81,10 +83,31 @@ function DashboardPage() {
       setActiveId(null)
       return
     }
+
     setCode(submission.code)
-    setResults(submission.analysis_reports ?? null)
     setError(null)
     setActiveId(submission.submission_id)
+
+    // Fetch full analysis (findings + predicted bugs) from the database.
+    try {
+      const detail = await getSubmissionDetail(submission.submission_id)
+      const report = detail.analysis_reports
+      if (report) {
+        setResults({
+          overall_score: report.overall_score,
+          summary: report.summary,
+          findings: (report.findings || []).map((f) => ({
+            ...f,
+            severity: f.line_severity ?? f.severity,
+          })),
+          predicted_bugs: report.predicted_bugs || [],
+        })
+      } else {
+        setResults(null)
+      }
+    } catch {
+      setResults(null)
+    }
   }
 
   return (
@@ -100,7 +123,13 @@ function DashboardPage() {
 
       <div className="dashboard-right">
         <nav className="dashboard-nav">
-          <span className="nav-brand">CodePulse</span>
+          <span
+            className="nav-brand"
+            onClick={() => handleSelectSubmission(null)}
+            role="button"
+            tabIndex={0}
+            style={{ cursor: 'pointer' }}
+          >CodePulse</span>
           <div className="nav-user">
             <span className="nav-username">{username}</span>
             <ProfileDropdown user={user} />

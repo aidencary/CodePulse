@@ -126,6 +126,16 @@ body {
   border-radius: 6px;
 }
 
+/* ─── Success banner ────────────────────────────────────────────── */
+.auth-success {
+  font-size: 0.85rem;
+  color: #4ade80;
+  background: rgba(74, 222, 128, 0.07);
+  border: 1px solid rgba(74, 222, 128, 0.25);
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+}
+
 /* ─── Submit button ─────────────────────────────────────────────── */
 .auth-submit {
   padding: 0.7rem;

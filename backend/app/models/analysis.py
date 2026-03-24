@@ -9,6 +9,8 @@ class AnalyzeRequest(BaseModel):
     """Payload sent by the client to the /analyze endpoint."""
 
     code: str = Field(..., max_length=100_000)
+    name: str | None = Field(None, max_length=100)
+    submission_id: str | None = Field(None, description="Reanalyze existing submission")
 
 
 class Finding(BaseModel):
@@ -38,3 +40,20 @@ class AnalyzeResponse(BaseModel):
     findings: list[Finding]
     predicted_bugs: list[PredictedBug]
     submission_id: str | None = None
+    name: str | None = None
+
+
+class SubmissionListItem(BaseModel):
+    """A single submission in the user's submission list."""
+
+    submission_id: str
+    name: str | None = None
+    created_at: str
+    overall_score: int | None = None
+    pinned_at: str | None = None
+
+
+class SubmissionRenameRequest(BaseModel):
+    """Payload for renaming a submission."""
+
+    name: str = Field(..., min_length=1, max_length=100)

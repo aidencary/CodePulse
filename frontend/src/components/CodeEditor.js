@@ -23,7 +23,9 @@ function CodeEditor({ code, onCodeChange, onRun, loading, isDark }) {
   return (
     <div className="editor-panel">
       <div className="editor-toolbar">
-        <span className="editor-label">Editor</span>
+        <div className="editor-toolbar-left">
+          <span className="editor-label">Editor</span>
+        </div>
         <button
           ref={btnRef}
           className="sparkle-btn"

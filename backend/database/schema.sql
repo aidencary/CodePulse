@@ -25,7 +25,9 @@ CREATE TABLE profiles (
 CREATE TABLE submissions (
     submission_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id       UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+    name          TEXT,
     code          TEXT NOT NULL,
+    pinned_at     TIMESTAMP WITH TIME ZONE,
     created_at    TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -101,6 +103,10 @@ CREATE POLICY "Users can insert own submissions"
 CREATE POLICY "Users can delete own profile"
     ON profiles FOR DELETE
     USING (auth.uid() = id);
+
+CREATE POLICY "Users can update own submissions"
+    ON submissions FOR UPDATE
+    USING (auth.uid() = user_id);
 
 CREATE POLICY "Users can delete own submissions"
     ON submissions FOR DELETE
@@ -181,3 +187,56 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE OR REPLACE TRIGGER on_auth_user_created
     AFTER INSERT ON auth.users
     FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- ============================================================
+-- Avatars Storage Bucket
+-- ============================================================
+-- NOTE: Run the INSERT below in the SQL Editor.
+--       The storage policies use Supabase's storage schema.
+-- ============================================================
+
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES (
+    'avatars',
+    'avatars',
+    true,
+    2097152,  -- 2 MB
+    ARRAY['image/png', 'image/jpeg', 'image/webp']
+)
+ON CONFLICT (id) DO UPDATE SET
+    public             = EXCLUDED.public,
+    file_size_limit    = EXCLUDED.file_size_limit,
+    allowed_mime_types = EXCLUDED.allowed_mime_types;
+
+-- Policy: authenticated users can upload to their own folder
+CREATE POLICY "Users can upload own avatar"
+    ON storage.objects FOR INSERT
+    TO authenticated
+    WITH CHECK (
+        bucket_id = 'avatars'
+        AND (storage.foldername(name))[1] = auth.uid()::text
+    );
+
+-- Policy: authenticated users can update (overwrite) their own avatar
+CREATE POLICY "Users can update own avatar"
+    ON storage.objects FOR UPDATE
+    TO authenticated
+    USING (
+        bucket_id = 'avatars'
+        AND (storage.foldername(name))[1] = auth.uid()::text
+    );
+
+-- Policy: authenticated users can delete their own avatar
+CREATE POLICY "Users can delete own avatar"
+    ON storage.objects FOR DELETE
+    TO authenticated
+    USING (
+        bucket_id = 'avatars'
+        AND (storage.foldername(name))[1] = auth.uid()::text
+    );
+
+-- Policy: anyone can view avatars (public bucket)
+CREATE POLICY "Anyone can view avatars"
+    ON storage.objects FOR SELECT
+    TO public
+    USING (bucket_id = 'avatars');
