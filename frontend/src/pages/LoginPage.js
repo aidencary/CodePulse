@@ -9,6 +9,7 @@ function LoginPage() {
   const [password, setPassword] = useState('')
   const [username, setUsername] = useState('')
   const [error, setError] = useState(null)
+  const [success, setSuccess] = useState(null)
   const [submitting, setSubmitting] = useState(false)
 
   const { signIn, signUp } = useAuth()
@@ -17,6 +18,7 @@ function LoginPage() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError(null)
+    setSuccess(null)
     setSubmitting(true)
 
     const { error } = mode === 'login'
@@ -30,13 +32,14 @@ function LoginPage() {
     } else if (mode === 'login') {
       navigate('/dashboard')
     } else {
-      setError('Account created! Check your email to confirm before logging in.')
+      setSuccess('Account created! Check your email to confirm before logging in.')
     }
   }
 
   const switchMode = (newMode) => {
     setMode(newMode)
     setError(null)
+    setSuccess(null)
   }
 
   return (
@@ -107,6 +110,7 @@ function LoginPage() {
           </div>
 
           {error && <p className="auth-error">{error}</p>}
+          {success && <p className="auth-success">{success}</p>}
 
           <button type="submit" className="auth-submit" disabled={submitting}>
             {submitting

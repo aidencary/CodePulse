@@ -218,7 +218,7 @@ const SubmissionSidebar = forwardRef(function SubmissionSidebar(
       <div className="sidebar-search">
         <input
           type="search"
-          placeholder="Search\u2026"
+          placeholder="Search"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="search-input"

@@ -88,7 +88,6 @@ body {
 .submission-sidebar.sidebar-collapsed {
   width: 52px;
   align-items: center;
-  padding-top: 0.75rem;
   gap: 0.65rem;
 }
 
@@ -136,6 +135,12 @@ body {
   flex-shrink: 0;
 }
 
+.sidebar-collapsed .sidebar-top {
+  justify-content: center;
+  padding: 0;
+  width: 100%;
+}
+
 /* Logo button — resets dashboard */
 .sidebar-logo-btn {
   background: none;
@@ -156,8 +161,8 @@ body {
 }
 
 .sidebar-logo-img {
-  width: 22px;
-  height: 22px;
+  width: 28px;
+  height: 28px;
   object-fit: contain;
 }
 
@@ -486,6 +491,17 @@ body {
 
 .search-input::placeholder {
   color: var(--muted);
+}
+
+.search-input::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  margin-right: -2px;
+  background: var(--purple);
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath stroke='black' stroke-width='1.5' stroke-linecap='round' d='M4 4l8 8M12 4l-8 8'/%3E%3C/svg%3E") center / contain no-repeat;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath stroke='black' stroke-width='1.5' stroke-linecap='round' d='M4 4l8 8M12 4l-8 8'/%3E%3C/svg%3E") center / contain no-repeat;
+  cursor: pointer;
 }
 
 .submission-list {
