@@ -29,9 +29,8 @@ function ProfileDropdown({ user }) {
   const avatarUrl = (() => {
     if (!rawAvatarUrl) return null
     try {
-      const { protocol, hostname } = new URL(rawAvatarUrl)
-      const allowedHosts = ['lh3.googleusercontent.com', 'avatars.githubusercontent.com', 's.gravatar.com']
-      return protocol === 'https:' && allowedHosts.includes(hostname) ? rawAvatarUrl : null
+      const { protocol } = new URL(rawAvatarUrl)
+      return protocol === 'https:' ? rawAvatarUrl : null
     } catch {
       return null
     }
