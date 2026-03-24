@@ -92,6 +92,22 @@ body {
   gap: 0.65rem;
 }
 
+/* Expandable content wrapper — fades with sidebar */
+.sidebar-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+  opacity: 1;
+  transition: opacity 0.18s ease;
+}
+
+.sidebar-collapsed .sidebar-content {
+  opacity: 0;
+  pointer-events: none;
+}
+
+
 .sidebar-mini-logo {
   background: none;
   border: none;

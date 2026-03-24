@@ -161,50 +161,44 @@ const SubmissionSidebar = forwardRef(function SubmissionSidebar(
 
   const deletingSubmission = submissions.find((s) => s.submission_id === deletingId)
 
-  if (!open) {
-    return (
-      <aside className="submission-sidebar sidebar-collapsed">
+  return (
+    <aside className={`submission-sidebar${open ? '' : ' sidebar-collapsed'}`}>
+      {/* Top row — logo + toggle */}
+      <div className="sidebar-top">
         <button
-          className="sidebar-logo-btn sidebar-logo-crossfade"
-          onClick={onOpen}
-          aria-label="Open submissions"
-          title="Open submissions"
+          className="sidebar-logo-btn"
+          onClick={open ? () => onSelect(null) : onOpen}
+          aria-label={open ? 'New submission' : 'Open submissions'}
+          title={open ? 'New submission' : 'Open submissions'}
         >
           <img src="/favicon.png" className="sidebar-logo-img" alt="" aria-hidden="true" />
-          <span className="sidebar-toggle-icon">{SIDEBAR_ICON}</span>
+          {!open && <span className="sidebar-toggle-icon">{SIDEBAR_ICON}</span>}
         </button>
+        {open && (
+          <button
+            className="sidebar-close-icon-btn"
+            onClick={onClose}
+            aria-label="Close submissions"
+            title="Close submissions"
+          >
+            {SIDEBAR_ICON}
+          </button>
+        )}
+      </div>
+
+      {/* Collapsed new-btn — only visible when collapsed */}
+      {!open && (
         <button
-          className="new-btn"
+          className="new-btn collapsed-new-btn"
           onClick={() => { onOpen(); onSelect(null) }}
           title="New submission"
         >
           +
         </button>
-      </aside>
-    )
-  }
+      )}
 
-  return (
-    <aside className="submission-sidebar">
-      <div className="sidebar-top">
-        <button
-          className="sidebar-logo-btn sidebar-logo-home"
-          onClick={() => onSelect(null)}
-          aria-label="New submission"
-          title="New submission"
-        >
-          <img src="/favicon.png" className="sidebar-logo-img" alt="" aria-hidden="true" />
-        </button>
-        <button
-          className="sidebar-close-icon-btn"
-          onClick={onClose}
-          aria-label="Close submissions"
-          title="Close submissions"
-        >
-          {SIDEBAR_ICON}
-        </button>
-      </div>
-
+      {/* Expandable content — fades out when collapsed */}
+      <div className="sidebar-content">
       <div className="sidebar-header">
         <span className="sidebar-title">Submissions</span>
         <button className="new-btn" onClick={() => onSelect(null)} title="New submission">
@@ -263,6 +257,7 @@ const SubmissionSidebar = forwardRef(function SubmissionSidebar(
           </li>
         ))}
       </ul>
+      </div>{/* end sidebar-content */}
 
       {/* Centered delete confirmation modal */}
       {deletingId && (
