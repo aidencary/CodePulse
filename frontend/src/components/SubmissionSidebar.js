@@ -227,7 +227,9 @@ const SubmissionSidebar = forwardRef(function SubmissionSidebar(
 
       <ul className="submission-list">
         {filtered.length === 0 && (
-          <li className="submission-empty">No submissions yet</li>
+          <li className="submission-empty">
+            {search ? 'No submissions found' : 'No submissions yet'}
+          </li>
         )}
         {filtered.map((s) => (
           <li

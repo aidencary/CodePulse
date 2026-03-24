@@ -27,6 +27,7 @@ CREATE TABLE submissions (
     user_id       UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
     name          TEXT,
     code          TEXT NOT NULL,
+    pinned_at     TIMESTAMP WITH TIME ZONE,
     created_at    TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
