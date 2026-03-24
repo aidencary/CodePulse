@@ -66,9 +66,13 @@ async def rename_submission(
         .execute()
     )
     if not existing.data:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Submission not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Submission not found"
+        )
     if existing.data[0]["user_id"] != user_id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not your submission")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Not your submission"
+        )
 
     # Update the name
     result = (
@@ -101,7 +105,10 @@ async def delete_submission(
     submission_id: str,
     user_id: str = Depends(get_current_user),
 ):
-    """Delete a submission. The caller must own the submission. Cascade handles related rows."""
+    """Delete a submission owned by the caller.
+
+    Cascade handles related rows.
+    """
     sb = get_supabase_client()
 
     # Verify ownership
@@ -112,9 +119,13 @@ async def delete_submission(
         .execute()
     )
     if not existing.data:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Submission not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Submission not found"
+        )
     if existing.data[0]["user_id"] != user_id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not your submission")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Not your submission"
+        )
 
     sb.table("submissions").delete().eq("submission_id", submission_id).execute()
 

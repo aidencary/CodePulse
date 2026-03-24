@@ -28,8 +28,17 @@ class ProfileUpdateRequest(BaseModel):
     def validate_username(cls, v: str | None) -> str | None:
         if v is not None and not re.match(r"^[a-zA-Z0-9_-]+$", v):
             raise ValueError(
-                "Username may only contain letters, numbers, underscores, and hyphens"
+                "Username may only contain letters, numbers,"
+                " underscores, and hyphens"
             )
+        return v
+
+    @field_validator("profile_picture")
+    @classmethod
+    def validate_profile_picture(cls, v: str | None) -> str | None:
+        """Only allow HTTPS URLs for profile pictures."""
+        if v is not None and not v.startswith("https://"):
+            raise ValueError("Profile picture must be a valid HTTPS URL")
         return v
 
 

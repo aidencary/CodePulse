@@ -53,11 +53,7 @@ async def persist_analysis(
         row = {"user_id": user_id, "code": code}
         if name is not None:
             row["name"] = name
-        sub_result = (
-            client.table("submissions")
-            .insert(row)
-            .execute()
-        )
+        sub_result = client.table("submissions").insert(row).execute()
         submission_id: str = sub_result.data[0]["submission_id"]
         persisted_name: str | None = sub_result.data[0].get("name")
 

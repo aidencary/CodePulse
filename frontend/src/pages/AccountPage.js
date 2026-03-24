@@ -222,8 +222,9 @@ function AccountPage() {
           {profileErr && <div className="account-error">{profileErr}</div>}
           <form onSubmit={handleProfileSave}>
             <div className="account-field">
-              <label className="account-label">Email</label>
+              <label className="account-label" htmlFor="account-email">Email</label>
               <input
+                id="account-email"
                 className="account-input account-input--readonly"
                 type="email"
                 value={profile?.email || ''}
@@ -231,8 +232,9 @@ function AccountPage() {
               />
             </div>
             <div className="account-field">
-              <label className="account-label">Username</label>
+              <label className="account-label" htmlFor="account-username">Username</label>
               <input
+                id="account-username"
                 className="account-input"
                 type="text"
                 value={username}
@@ -241,8 +243,9 @@ function AccountPage() {
               />
             </div>
             <div className="account-field">
-              <label className="account-label">Role</label>
+              <label className="account-label" htmlFor="account-role">Role</label>
               <input
+                id="account-role"
                 className="account-input account-input--readonly"
                 type="text"
                 value={profile?.role || 'developer'}
@@ -312,8 +315,9 @@ function AccountPage() {
           {pwErr && <div className="account-error">{pwErr}</div>}
           <form onSubmit={handlePasswordChange}>
             <div className="account-field">
-              <label className="account-label">Current Password</label>
+              <label className="account-label" htmlFor="current-password">Current Password</label>
               <input
+                id="current-password"
                 className="account-input"
                 type="password"
                 value={currentPw}
@@ -322,8 +326,9 @@ function AccountPage() {
               />
             </div>
             <div className="account-field">
-              <label className="account-label">New Password</label>
+              <label className="account-label" htmlFor="new-password">New Password</label>
               <input
+                id="new-password"
                 className="account-input"
                 type="password"
                 value={newPw}
@@ -333,8 +338,9 @@ function AccountPage() {
               />
             </div>
             <div className="account-field">
-              <label className="account-label">Confirm New Password</label>
+              <label className="account-label" htmlFor="confirm-password">Confirm New Password</label>
               <input
+                id="confirm-password"
                 className="account-input"
                 type="password"
                 value={confirmPw}

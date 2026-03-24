@@ -133,10 +133,12 @@ async def generate_submission_name(code: str) -> str:
                 {
                     "role": "system",
                     "content": (
-                        "You are a helpful assistant. Given a code snippet, respond with "
-                        "ONLY a short, descriptive name (2-5 words) for the code. "
-                        "No quotes, no punctuation, no explanation. Examples: "
-                        "Fibonacci Calculator, CSV Parser, Todo List API"
+                        "You are a helpful assistant. Given a "
+                        "code snippet, respond with ONLY a short, "
+                        "descriptive name (2-5 words) for the code. "
+                        "No quotes, no punctuation, no explanation. "
+                        "Examples: Fibonacci Calculator, "
+                        "CSV Parser, Todo List API"
                     ),
                 },
                 {"role": "user", "content": code[:2000]},
@@ -144,7 +146,7 @@ async def generate_submission_name(code: str) -> str:
             temperature=0.3,
             max_tokens=20,
         )
-        name = response.choices[0].message.content.strip().strip('"\'')
+        name = response.choices[0].message.content.strip().strip("\"'")
         return name if name else "Untitled Submission"
     except Exception as exc:  # noqa: BLE001
         logger.warning("GPT name generation failed: %s", exc)

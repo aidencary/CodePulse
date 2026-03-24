@@ -65,6 +65,8 @@ function ResultsPanel({ results, loading, error }) {
       return <p className="results-error">{error}</p>
     }
     if (results) {
+      const findings = results.findings || []
+      const predictedBugs = results.predicted_bugs || []
       return (
         <>
           {/* Score */}
@@ -83,12 +85,12 @@ function ResultsPanel({ results, loading, error }) {
           <section className="results-section">
             <h3 className="section-title">
               Static Analysis{' '}
-              <span className="badge">{results.findings.length}</span>
+              <span className="badge">{findings.length}</span>
             </h3>
-            {results.findings.length === 0 ? (
+            {findings.length === 0 ? (
               <p className="results-placeholder">No issues found.</p>
             ) : (
-              results.findings.map((f, i) => (
+              findings.map((f, i) => (
                 <div key={i} className="finding-item">
                   <span
                     className={`severity-badge severity-${f.severity.toLowerCase()}`}
@@ -109,12 +111,12 @@ function ResultsPanel({ results, loading, error }) {
           <section className="results-section">
             <h3 className="section-title">
               AI Bug Predictions{' '}
-              <span className="badge">{results.predicted_bugs.length}</span>
+              <span className="badge">{predictedBugs.length}</span>
             </h3>
-            {results.predicted_bugs.length === 0 ? (
+            {predictedBugs.length === 0 ? (
               <p className="results-placeholder">No predicted bugs found.</p>
             ) : (
-              results.predicted_bugs.map((bug, i) => (
+              predictedBugs.map((bug, i) => (
                 <BugCard key={i} bug={bug} />
               ))
             )}

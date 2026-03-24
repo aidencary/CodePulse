@@ -32,7 +32,9 @@ async def get_profile(user_id: str = Depends(get_current_user)):
     # Fetch profile row
     result = sb.table("profiles").select("*").eq("id", user_id).execute()
     if not result.data:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Profile not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Profile not found"
+        )
 
     profile = result.data[0]
 
@@ -96,9 +98,7 @@ async def update_profile(
 
     # Keep auth user_metadata in sync
     if metadata_updates:
-        sb.auth.admin.update_user_by_id(
-            user_id, {"user_metadata": metadata_updates}
-        )
+        sb.auth.admin.update_user_by_id(user_id, {"user_metadata": metadata_updates})
 
     # Return the updated profile
     return await get_profile(user_id)
@@ -116,7 +116,10 @@ async def upload_avatar(
     if file.content_type not in ALLOWED_MIME_TYPES:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Unsupported file type: {file.content_type}. Allowed: png, jpeg, webp",
+            detail=(
+                f"Unsupported file type: {file.content_type}. "
+                "Allowed: png, jpeg, webp"
+            ),
         )
 
     contents = await file.read()
@@ -144,7 +147,9 @@ async def upload_avatar(
     public_url = sb.storage.from_("avatars").get_public_url(storage_path)
 
     # Update profile and auth metadata
-    sb.table("profiles").update({"profile_picture": public_url}).eq("id", user_id).execute()
+    sb.table("profiles").update({"profile_picture": public_url}).eq(
+        "id", user_id
+    ).execute()
     sb.auth.admin.update_user_by_id(
         user_id, {"user_metadata": {"avatar_url": public_url}}
     )
@@ -173,7 +178,9 @@ async def change_password(
 
     # Verify current password by attempting a sign-in
     try:
-        sb.auth.sign_in_with_password({"email": email, "password": body.current_password})
+        sb.auth.sign_in_with_password(
+            {"email": email, "password": body.current_password}
+        )
     except Exception:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

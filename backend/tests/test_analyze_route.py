@@ -81,8 +81,12 @@ def test_analyze_returns_correct_shape() -> None:
             new=AsyncMock(return_value=[_MOCK_BUG]),
         ),
         patch(
+            "app.routes.analysis.generate_submission_name",
+            new=AsyncMock(return_value="Test Submission"),
+        ),
+        patch(
             "app.routes.analysis.persist_analysis",
-            new=AsyncMock(return_value="sub-uuid-1234"),
+            new=AsyncMock(return_value=("sub-uuid-1234", "Test Submission")),
         ),
     ):
         resp = client.post(
@@ -110,8 +114,12 @@ def test_analyze_score_in_range() -> None:
         patch("app.routes.analysis.run_static_analysis", return_value=([], 100)),
         patch("app.routes.analysis.predict_bugs", new=AsyncMock(return_value=[])),
         patch(
+            "app.routes.analysis.generate_submission_name",
+            new=AsyncMock(return_value="Test Submission"),
+        ),
+        patch(
             "app.routes.analysis.persist_analysis",
-            new=AsyncMock(return_value="sub-1"),
+            new=AsyncMock(return_value=("sub-1", "Test Submission")),
         ),
     ):
         resp = client.post(
@@ -133,8 +141,12 @@ def test_analyze_findings_have_required_fields() -> None:
         ),
         patch("app.routes.analysis.predict_bugs", new=AsyncMock(return_value=[])),
         patch(
+            "app.routes.analysis.generate_submission_name",
+            new=AsyncMock(return_value="Test Submission"),
+        ),
+        patch(
             "app.routes.analysis.persist_analysis",
-            new=AsyncMock(return_value="sub-1"),
+            new=AsyncMock(return_value=("sub-1", "Test Submission")),
         ),
     ):
         resp = client.post(
@@ -157,8 +169,12 @@ def test_analyze_predicted_bugs_have_required_fields() -> None:
             new=AsyncMock(return_value=[_MOCK_BUG]),
         ),
         patch(
+            "app.routes.analysis.generate_submission_name",
+            new=AsyncMock(return_value="Test Submission"),
+        ),
+        patch(
             "app.routes.analysis.persist_analysis",
-            new=AsyncMock(return_value="sub-1"),
+            new=AsyncMock(return_value=("sub-1", "Test Submission")),
         ),
     ):
         resp = client.post(
