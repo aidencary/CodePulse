@@ -47,7 +47,7 @@ All test files live in `__tests__/` directories next to the code they test.
 | `src/context/__tests__/AuthContext.test.js` | `onAuthStateChange` lifecycle and cleanup, `signIn` / `signUp` / `signOut` call correct Supabase methods with correct arguments |
 | `src/pages/__tests__/LoginPage.test.js` | Log In / Sign Up form toggle, form submission handlers, error message display |
 | `src/pages/__tests__/AccountPage.test.js` | Profile load/display, username validation, update profile, change password validation/success, delete modal and confirmation (10 tests) |
-| `src/components/__tests__/SubmissionSidebar.test.js` | Render names, fallback to code, search filter, rename (double-click/Enter/Escape), delete confirmation, collapsed state (9 tests) |
+| `src/components/__tests__/SubmissionSidebar.test.js` | Render names, fallback to code, search filter, rename (kebab menu/Enter/Escape), delete confirmation, pin/star toggle, pinned icon display, collapsed state (11 tests) |
 
 ### Mocking Strategy
 
@@ -108,7 +108,7 @@ All test files live in `backend/tests/` and follow the `test_<module>.py` naming
 | `tests/test_analysis_engine.py` | Static analyzer — 24 PEP 8 checks (naming conventions, self/cls, None/boolean/type comparisons, empty sequences, lambda assignment, import formatting, is-not preference, return consistency, exception inheritance, string slicing, trailing whitespace, tab indentation, blank line spacing, comment spacing, triple quote style, import ordering, try block scope, context manager usage), syntax errors, score computation (69 tests) |
 | `tests/test_gpt_predictor.py` | GPT predictor — valid responses, empty arrays, API errors, malformed JSON, schema validation, prompt construction (6 tests) |
 | `tests/test_account_routes.py` | Account CRUD — get profile, update username, duplicate username 409, invalid chars 422, change password (success/wrong/short), avatar upload (success/invalid type), delete account (13 tests) |
-| `tests/test_submission_routes.py` | Submission CRUD — list submissions, rename (success/not-found/not-owner/empty-name), delete (success/not-found/not-owner) (9 tests) |
+| `tests/test_submission_routes.py` | Submission CRUD — list submissions, rename (success/not-found/not-owner/empty-name), delete (success/not-found/not-owner), pin toggle (pin/unpin/not-found/not-owner) (13 tests) |
 | `tests/test_placeholder.py` | Confirms the test runner is configured correctly |
 
 ### Writing New Backend Tests
@@ -149,7 +149,7 @@ A Postman collection at `postman/collections/codepulse-api.postman_collection.js
 | Validation Errors | 4 | Yes | Missing code field, wrong type, max length exceeded, empty body |
 | Happy Path | 5 | Yes | Valid code, empty string, syntax errors, unicode, non-Python code |
 | Account CRUD | 9 | Yes | Get profile, update username, invalid username, wrong/short password, invalid avatar type, no-auth guards |
-| Submission CRUD | 8 | Yes | Analyze with/without name, list, rename, rename not-found, delete, delete not-found, list no-auth |
+| Submission CRUD | 10 | Yes | Analyze with/without name, list, rename, rename not-found, delete, delete not-found, pin, pin not-found, list no-auth |
 
 Every response is also checked for security headers (`X-Content-Type-Options`, `X-Frame-Options`) via a collection-level test script.
 

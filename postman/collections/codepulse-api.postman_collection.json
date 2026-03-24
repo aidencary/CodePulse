@@ -1344,6 +1344,65 @@
           ]
         },
         {
+          "name": "Pin submission — 200",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/submissions/{{submission_id}}/pin",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "submissions", "{{submission_id}}", "pin"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has pinned field', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('pinned');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Pin — not found — 404",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/submissions/00000000-0000-0000-0000-000000000000/pin",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "submissions", "00000000-0000-0000-0000-000000000000", "pin"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 404', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
           "name": "List submissions — no auth — 422",
           "request": {
             "method": "GET",

@@ -5,6 +5,7 @@ import {
   getSubmissions,
   renameSubmission,
   deleteSubmission,
+  pinSubmission,
 } from '../../services/submissionService'
 import { useToast } from '../Toast'
 
@@ -16,6 +17,7 @@ jest.mock('../../services/submissionService', () => ({
   getSubmissions: jest.fn(),
   renameSubmission: jest.fn(),
   deleteSubmission: jest.fn(),
+  pinSubmission: jest.fn(),
 }))
 
 jest.mock('../Toast', () => ({
@@ -154,5 +156,27 @@ describe('SubmissionSidebar', () => {
     renderSidebar({ open: false })
     const sidebar = screen.getByRole('complementary')
     expect(sidebar).toHaveClass('sidebar-collapsed')
+  })
+
+  it('calls pinSubmission via kebab Star option', async () => {
+    pinSubmission.mockResolvedValue({ pinned: true })
+    renderSidebar()
+    await screen.findByText('Calculator')
+    openKebab(0)
+    fireEvent.click(screen.getByText('Star'))
+    await waitFor(() => {
+      expect(pinSubmission).toHaveBeenCalledWith('sub-1', 'fake-token')
+    })
+  })
+
+  it('shows pin star icon on pinned submissions', async () => {
+    const pinnedSubmissions = [
+      { ...mockSubmissions[0], pinned_at: '2025-06-01T00:00:00Z' },
+      mockSubmissions[1],
+    ]
+    getSubmissions.mockResolvedValue(pinnedSubmissions)
+    renderSidebar()
+    await screen.findByText('Calculator')
+    expect(screen.getByLabelText('Pinned')).toBeInTheDocument()
   })
 })

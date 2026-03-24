@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { analyzeCode } from '../services/analysisService'
+import { getSubmissionDetail } from '../services/submissionService'
 import CodeEditor from '../components/CodeEditor'
 import ResultsPanel from '../components/ResultsPanel'
 import SubmissionSidebar from '../components/SubmissionSidebar'
@@ -36,7 +37,6 @@ function DashboardPage() {
   const sidebarRef = useRef(null)
 
   const [code, setCode] = useState('')
-  const [submissionName, setSubmissionName] = useState('')
   const [results, setResults] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -62,15 +62,10 @@ function DashboardPage() {
     setResults(null)
 
     try {
-      // If activeId is set, reanalyze existing submission (no name sent).
-      // If null, create new submission (send name for GPT generation).
-      const nameToSend = activeId ? undefined : (submissionName || undefined)
       const data = await analyzeCode(
-        currentCode, session.access_token, nameToSend, activeId
+        currentCode, session.access_token, undefined, activeId
       )
       setResults(data)
-      if (data.name) setSubmissionName(data.name)
-
       setActiveId(data.submission_id)
       sidebarRef.current?.refresh()
     } catch (err) {
@@ -80,20 +75,39 @@ function DashboardPage() {
     }
   }
 
-  const handleSelectSubmission = (submission) => {
+  const handleSelectSubmission = async (submission) => {
     if (!submission) {
       setCode('')
-      setSubmissionName('')
       setResults(null)
       setError(null)
       setActiveId(null)
       return
     }
+
     setCode(submission.code)
-    setSubmissionName(submission.name || '')
-    setResults(submission.analysis_reports ?? null)
     setError(null)
     setActiveId(submission.submission_id)
+
+    // Fetch full analysis (findings + predicted bugs) from the database.
+    try {
+      const detail = await getSubmissionDetail(submission.submission_id)
+      const report = detail.analysis_reports
+      if (report) {
+        setResults({
+          overall_score: report.overall_score,
+          summary: report.summary,
+          findings: (report.findings || []).map((f) => ({
+            ...f,
+            severity: f.line_severity ?? f.severity,
+          })),
+          predicted_bugs: report.predicted_bugs || [],
+        })
+      } else {
+        setResults(null)
+      }
+    } catch {
+      setResults(null)
+    }
   }
 
   return (
@@ -136,8 +150,6 @@ function DashboardPage() {
             onRun={handleRun}
             loading={loading}
             isDark={theme === 'dark'}
-            submissionName={submissionName}
-            onNameChange={setSubmissionName}
           />
           <ResultsPanel results={results} loading={loading} error={error} />
         </main>

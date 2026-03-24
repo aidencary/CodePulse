@@ -23,6 +23,23 @@ export async function getSubmissions(userId) {
   return data
 }
 
+export async function getSubmissionDetail(submissionId) {
+  const { data, error } = await supabase
+    .from('submissions')
+    .select(
+      'submission_id, name, code, created_at, pinned_at, '
+      + 'analysis_reports(overall_score, summary, '
+      + 'findings(finding_id, issue_type, line_number, line_severity, message, '
+      + 'actionable_fixes(original_snippet, suggested_snippet, rationale, tags)), '
+      + 'predicted_bugs(bug_id, bug_type, severity, description, suggested_fix, line_number))'
+    )
+    .eq('submission_id', submissionId)
+    .single()
+
+  if (error) throw error
+  return data
+}
+
 export async function saveSubmission(userId, code) {
   const { data, error } = await supabase
     .from('submissions')

@@ -231,3 +231,97 @@ def test_delete_submission_not_owner() -> None:
         )
 
     assert resp.status_code == 403
+
+
+# ------------------------------------------------------------------
+# PATCH /api/v1/submissions/{id}/pin
+# ------------------------------------------------------------------
+
+
+def test_toggle_pin_success() -> None:
+    """PATCH /submissions/{id}/pin toggles pin and returns 200."""
+    sb, builder = _make_mock_supabase()
+
+    call_count = {"n": 0}
+
+    def _execute_side_effect(*args, **kwargs):
+        call_count["n"] += 1
+        if call_count["n"] == 1:
+            # Ownership check — unpinned submission
+            return MagicMock(data=[{"user_id": _USER_ID, "pinned_at": None}])
+        # Update call
+        return MagicMock(data=[])
+
+    builder.execute.side_effect = _execute_side_effect
+
+    with patch("app.routes.submissions.get_supabase_client", return_value=sb):
+        resp = client.patch(
+            f"/api/v1/submissions/{_SUBMISSION_ID}/pin",
+            headers=_make_headers(),
+        )
+
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["pinned"] is True
+    assert body["pinned_at"] is not None
+
+
+def test_toggle_unpin_success() -> None:
+    """PATCH /submissions/{id}/pin unpins a pinned submission."""
+    sb, builder = _make_mock_supabase()
+
+    call_count = {"n": 0}
+
+    def _execute_side_effect(*args, **kwargs):
+        call_count["n"] += 1
+        if call_count["n"] == 1:
+            return MagicMock(
+                data=[
+                    {
+                        "user_id": _USER_ID,
+                        "pinned_at": "2025-06-01T12:00:00+00:00",
+                    }
+                ]
+            )
+        return MagicMock(data=[])
+
+    builder.execute.side_effect = _execute_side_effect
+
+    with patch("app.routes.submissions.get_supabase_client", return_value=sb):
+        resp = client.patch(
+            f"/api/v1/submissions/{_SUBMISSION_ID}/pin",
+            headers=_make_headers(),
+        )
+
+    assert resp.status_code == 200
+    assert resp.json()["pinned"] is False
+
+
+def test_toggle_pin_not_found() -> None:
+    """PATCH /submissions/{id}/pin for a missing submission returns 404."""
+    sb, builder = _make_mock_supabase()
+    builder.execute.return_value = MagicMock(data=[])
+
+    with patch("app.routes.submissions.get_supabase_client", return_value=sb):
+        resp = client.patch(
+            f"/api/v1/submissions/{_SUBMISSION_ID}/pin",
+            headers=_make_headers(),
+        )
+
+    assert resp.status_code == 404
+
+
+def test_toggle_pin_not_owner() -> None:
+    """PATCH /submissions/{id}/pin by a non-owner returns 403."""
+    sb, builder = _make_mock_supabase()
+    builder.execute.return_value = MagicMock(
+        data=[{"user_id": _OTHER_USER_ID, "pinned_at": None}]
+    )
+
+    with patch("app.routes.submissions.get_supabase_client", return_value=sb):
+        resp = client.patch(
+            f"/api/v1/submissions/{_SUBMISSION_ID}/pin",
+            headers=_make_headers(),
+        )
+
+    assert resp.status_code == 403
