@@ -62,6 +62,12 @@ const renderSidebar = (props = {}) =>
     />
   )
 
+/** Helper: open the kebab menu for the first submission */
+async function openKebab(index = 0) {
+  const kebabs = screen.getAllByLabelText('Submission options')
+  fireEvent.click(kebabs[index])
+}
+
 describe('SubmissionSidebar', () => {
   it('renders submissions with names', async () => {
     renderSidebar()
@@ -82,18 +88,20 @@ describe('SubmissionSidebar', () => {
     expect(screen.queryByText('def foo(): pass')).not.toBeInTheDocument()
   })
 
-  it('shows rename input on double-click', async () => {
+  it('shows rename input via kebab menu', async () => {
     renderSidebar()
-    const title = await screen.findByText('Calculator')
-    fireEvent.doubleClick(title)
+    await screen.findByText('Calculator')
+    openKebab(0)
+    fireEvent.click(screen.getByText('Rename'))
     expect(screen.getByDisplayValue('Calculator')).toBeInTheDocument()
   })
 
   it('saves rename on Enter key', async () => {
     renameSubmission.mockResolvedValue()
     renderSidebar()
-    const title = await screen.findByText('Calculator')
-    fireEvent.doubleClick(title)
+    await screen.findByText('Calculator')
+    openKebab(0)
+    fireEvent.click(screen.getByText('Rename'))
     const input = screen.getByDisplayValue('Calculator')
     fireEvent.change(input, { target: { value: 'My Calc' } })
     fireEvent.keyDown(input, { key: 'Enter' })
@@ -108,8 +116,9 @@ describe('SubmissionSidebar', () => {
 
   it('cancels rename on Escape key without calling API', async () => {
     renderSidebar()
-    const title = await screen.findByText('Calculator')
-    fireEvent.doubleClick(title)
+    await screen.findByText('Calculator')
+    openKebab(0)
+    fireEvent.click(screen.getByText('Rename'))
     const input = screen.getByDisplayValue('Calculator')
     fireEvent.keyDown(input, { key: 'Escape' })
     await waitFor(() => {
@@ -118,21 +127,24 @@ describe('SubmissionSidebar', () => {
     expect(renameSubmission).not.toHaveBeenCalled()
   })
 
-  it('shows delete confirmation when trash button is clicked', async () => {
+  it('shows centered delete modal via kebab menu', async () => {
     renderSidebar()
     await screen.findByText('Calculator')
-    const deleteButtons = screen.getAllByLabelText('Delete submission')
-    fireEvent.click(deleteButtons[0])
-    expect(screen.getByText('Delete this submission?')).toBeInTheDocument()
+    openKebab(0)
+    fireEvent.click(screen.getByText('Delete'))
+    expect(screen.getByText('Delete Submission?')).toBeInTheDocument()
+    expect(screen.getByText(/This will delete/)).toBeInTheDocument()
   })
 
   it('calls deleteSubmission when delete is confirmed', async () => {
     deleteSubmission.mockResolvedValue()
     renderSidebar()
     await screen.findByText('Calculator')
-    const deleteButtons = screen.getAllByLabelText('Delete submission')
-    fireEvent.click(deleteButtons[0])
-    fireEvent.click(screen.getByRole('button', { name: 'Delete' }))
+    openKebab(0)
+    fireEvent.click(screen.getByText('Delete'))
+    // Click the confirm button in the modal
+    const confirmBtn = screen.getAllByRole('button', { name: 'Delete' })
+    fireEvent.click(confirmBtn[confirmBtn.length - 1])
     await waitFor(() => {
       expect(deleteSubmission).toHaveBeenCalledWith('sub-1', 'fake-token')
     })

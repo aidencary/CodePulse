@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useImperativeHandle, useState } from 'react'
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { getSubmissions, renameSubmission, deleteSubmission } from '../services/submissionService'
 import { useToast } from './Toast'
@@ -9,9 +9,11 @@ const SIDEBAR_ICON = (
   </svg>
 )
 
-const TRASH_ICON = (
-  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden="true">
-    <path d="M2 4h12M5.33 4V2.67a1.33 1.33 0 0 1 1.34-1.34h2.66a1.33 1.33 0 0 1 1.34 1.34V4m2 0v9.33a1.33 1.33 0 0 1-1.34 1.34H4.67a1.33 1.33 0 0 1-1.34-1.34V4h9.34z" />
+const KEBAB_ICON = (
+  <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" width="14" height="14">
+    <circle cx="8" cy="3" r="1.5" />
+    <circle cx="8" cy="8" r="1.5" />
+    <circle cx="8" cy="13" r="1.5" />
   </svg>
 )
 
@@ -23,6 +25,54 @@ function getTitle(submission) {
 
 function formatDate(iso) {
   return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+}
+
+/**
+ * Kebab dropdown menu for a single submission item.
+ */
+function KebabMenu({ onRename, onDelete }) {
+  const [open, setOpen] = useState(false)
+  const menuRef = useRef(null)
+
+  useEffect(() => {
+    if (!open) return
+    const handleOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleOutside)
+    return () => document.removeEventListener('mousedown', handleOutside)
+  }, [open])
+
+  return (
+    <div className="kebab-wrapper" ref={menuRef}>
+      <button
+        className="kebab-btn"
+        onClick={(e) => { e.stopPropagation(); setOpen((o) => !o) }}
+        aria-label="Submission options"
+        title="Options"
+      >
+        {KEBAB_ICON}
+      </button>
+      {open && (
+        <div className="kebab-dropdown">
+          <button
+            className="kebab-option"
+            onClick={(e) => { e.stopPropagation(); setOpen(false); onRename() }}
+          >
+            Rename
+          </button>
+          <button
+            className="kebab-option kebab-option--danger"
+            onClick={(e) => { e.stopPropagation(); setOpen(false); onDelete() }}
+          >
+            Delete
+          </button>
+        </div>
+      )}
+    </div>
+  )
 }
 
 const SubmissionSidebar = forwardRef(function SubmissionSidebar(
@@ -53,8 +103,7 @@ const SubmissionSidebar = forwardRef(function SubmissionSidebar(
 
   useImperativeHandle(ref, () => ({ refresh: load }))
 
-  const handleRenameStart = (e, s) => {
-    e.stopPropagation()
+  const handleRenameStart = (s) => {
     setEditingId(s.submission_id)
     setEditValue(s.name || '')
   }
@@ -79,11 +128,6 @@ const SubmissionSidebar = forwardRef(function SubmissionSidebar(
     if (e.key === 'Escape') setEditingId(null)
   }
 
-  const handleDeleteClick = (e, submissionId) => {
-    e.stopPropagation()
-    setDeletingId(submissionId)
-  }
-
   const handleDeleteConfirm = async () => {
     try {
       await deleteSubmission(deletingId, token)
@@ -99,6 +143,8 @@ const SubmissionSidebar = forwardRef(function SubmissionSidebar(
   const filtered = submissions.filter((s) =>
     getTitle(s).toLowerCase().includes(search.toLowerCase())
   )
+
+  const deletingSubmission = submissions.find((s) => s.submission_id === deletingId)
 
   if (!open) {
     return (
@@ -184,35 +230,38 @@ const SubmissionSidebar = forwardRef(function SubmissionSidebar(
                   maxLength={100}
                 />
               ) : (
-                <span
-                  className="submission-title"
-                  onDoubleClick={(e) => handleRenameStart(e, s)}
-                  title="Double-click to rename"
-                >
-                  {getTitle(s)}
-                </span>
+                <>
+                  <span className="submission-title">
+                    {getTitle(s)}
+                  </span>
+                  <KebabMenu
+                    onRename={() => handleRenameStart(s)}
+                    onDelete={() => setDeletingId(s.submission_id)}
+                  />
+                </>
               )}
-              <button
-                className="submission-delete-btn"
-                onClick={(e) => handleDeleteClick(e, s.submission_id)}
-                title="Delete submission"
-                aria-label="Delete submission"
-              >
-                {TRASH_ICON}
-              </button>
             </div>
             <span className="submission-date">{formatDate(s.created_at)}</span>
           </li>
         ))}
       </ul>
 
-      {/* Delete confirmation modal */}
+      {/* Centered delete confirmation modal */}
       {deletingId && (
-        <div className="sidebar-delete-modal">
-          <p>Delete this submission?</p>
-          <div className="sidebar-delete-actions">
-            <button className="sidebar-delete-cancel" onClick={() => setDeletingId(null)}>Cancel</button>
-            <button className="sidebar-delete-confirm" onClick={handleDeleteConfirm}>Delete</button>
+        <div className="delete-modal-overlay" onClick={() => setDeletingId(null)}>
+          <div className="delete-modal" onClick={(e) => e.stopPropagation()}>
+            <h3 className="delete-modal-title">Delete Submission?</h3>
+            <p className="delete-modal-message">
+              This will delete <strong>{getTitle(deletingSubmission || {})}</strong>.
+            </p>
+            <div className="delete-modal-actions">
+              <button className="delete-modal-cancel" onClick={() => setDeletingId(null)}>
+                Cancel
+              </button>
+              <button className="delete-modal-confirm" onClick={handleDeleteConfirm}>
+                Delete
+              </button>
+            </div>
           </div>
         </div>
       )}

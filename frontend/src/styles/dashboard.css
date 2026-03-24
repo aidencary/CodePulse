@@ -936,7 +936,7 @@ body {
   color: var(--muted);
 }
 
-/* ─── Submission item row (title + delete) ─────────────────────── */
+/* ─── Submission item row (title + kebab) ──────────────────────── */
 .submission-item-row {
   display: flex;
   align-items: center;
@@ -948,7 +948,13 @@ body {
   min-width: 0;
 }
 
-.submission-delete-btn {
+/* ─── Kebab menu ───────────────────────────────────────────────── */
+.kebab-wrapper {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.kebab-btn {
   width: 22px;
   height: 22px;
   background: none;
@@ -965,17 +971,56 @@ body {
   padding: 0;
 }
 
-.submission-delete-btn svg {
+.kebab-btn svg {
   width: 14px;
   height: 14px;
 }
 
-.submission-item:hover .submission-delete-btn {
+.submission-item:hover .kebab-btn {
   opacity: 1;
 }
 
-.submission-delete-btn:hover {
+.kebab-btn:hover {
+  color: var(--text);
+  background: var(--bg);
+}
+
+.kebab-dropdown {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  min-width: 120px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 100;
+  overflow: hidden;
+}
+
+.kebab-option {
+  display: block;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  background: none;
+  border: none;
+  color: var(--text);
+  font-size: 0.82rem;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.kebab-option:hover {
+  background: var(--bg);
+}
+
+.kebab-option--danger {
   color: var(--danger);
+}
+
+.kebab-option--danger:hover {
+  background: rgba(239, 68, 68, 0.1);
 }
 
 /* ─── Submission rename input ──────────────────────────────────── */
@@ -991,57 +1036,78 @@ body {
   min-width: 0;
 }
 
-/* ─── Sidebar delete confirmation ──────────────────────────────── */
-.sidebar-delete-modal {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: var(--surface);
-  border-top: 1px solid var(--border);
-  padding: 0.75rem 1rem;
-  z-index: 50;
-}
-
-.sidebar-delete-modal p {
-  font-size: 0.82rem;
-  color: var(--text);
-  margin-bottom: 0.5rem;
-}
-
-.sidebar-delete-actions {
+/* ─── Centered delete modal overlay ────────────────────────────── */
+.delete-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
   display: flex;
-  gap: 0.5rem;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.delete-modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.5rem 2rem;
+  max-width: 380px;
+  width: 90%;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.delete-modal-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 0.5rem;
+}
+
+.delete-modal-message {
+  font-size: 0.88rem;
+  color: var(--muted);
+  margin: 0 0 1.25rem;
+  line-height: 1.4;
+}
+
+.delete-modal-message strong {
+  color: var(--text);
+}
+
+.delete-modal-actions {
+  display: flex;
+  gap: 0.6rem;
   justify-content: flex-end;
 }
 
-.sidebar-delete-cancel,
-.sidebar-delete-confirm {
-  padding: 0.3rem 0.75rem;
-  border-radius: 5px;
+.delete-modal-cancel,
+.delete-modal-confirm {
+  padding: 0.45rem 1rem;
+  border-radius: 6px;
   border: 1px solid var(--border);
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
   transition: background 0.12s;
 }
 
-.sidebar-delete-cancel {
+.delete-modal-cancel {
   background: none;
   color: var(--text);
 }
 
-.sidebar-delete-cancel:hover {
+.delete-modal-cancel:hover {
   background: var(--bg);
 }
 
-.sidebar-delete-confirm {
+.delete-modal-confirm {
   background: var(--danger);
   color: #ffffff;
   border-color: var(--danger);
 }
 
-.sidebar-delete-confirm:hover {
+.delete-modal-confirm:hover {
   opacity: 0.85;
 }
 
