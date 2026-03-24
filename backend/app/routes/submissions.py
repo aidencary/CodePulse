@@ -1,6 +1,7 @@
-"""Submissions CRUD endpoints — list, rename, and delete submissions."""
+"""Submissions CRUD endpoints — list, rename, delete, and pin submissions."""
 
 import logging
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
@@ -20,7 +21,10 @@ async def list_submissions(user_id: str = Depends(get_current_user)):
 
     result = (
         sb.table("submissions")
-        .select("submission_id, name, created_at, analysis_reports(overall_score)")
+        .select(
+            "submission_id, name, created_at, pinned_at,"
+            " analysis_reports(overall_score)"
+        )
         .eq("user_id", user_id)
         .order("created_at", desc=True)
         .execute()
@@ -43,8 +47,15 @@ async def list_submissions(user_id: str = Depends(get_current_user)):
                 name=row.get("name"),
                 created_at=row["created_at"],
                 overall_score=score,
+                pinned_at=row.get("pinned_at"),
             )
         )
+
+    # Sort: pinned first (by pinned_at desc), then unpinned (by created_at desc).
+    items.sort(
+        key=lambda s: (s.pinned_at is not None, s.pinned_at or ""),
+        reverse=True,
+    )
 
     return items
 
@@ -130,3 +141,40 @@ async def delete_submission(
     sb.table("submissions").delete().eq("submission_id", submission_id).execute()
 
     return {"detail": "Submission deleted"}
+
+
+@router.patch("/{submission_id}/pin")
+async def toggle_pin(
+    submission_id: str,
+    user_id: str = Depends(get_current_user),
+):
+    """Toggle the pinned status of a submission."""
+    sb = get_supabase_client()
+
+    # Verify ownership.
+    existing = (
+        sb.table("submissions")
+        .select("user_id, pinned_at")
+        .eq("submission_id", submission_id)
+        .execute()
+    )
+    if not existing.data:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Submission not found",
+        )
+    if existing.data[0]["user_id"] != user_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not your submission",
+        )
+
+    # Toggle: if currently pinned, unpin; otherwise pin.
+    currently_pinned = existing.data[0].get("pinned_at")
+    new_value = None if currently_pinned else datetime.now(timezone.utc).isoformat()
+
+    sb.table("submissions").update({"pinned_at": new_value}).eq(
+        "submission_id", submission_id
+    ).execute()
+
+    return {"pinned": new_value is not None, "pinned_at": new_value}

@@ -1,6 +1,6 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
-import { getSubmissions, renameSubmission, deleteSubmission } from '../services/submissionService'
+import { getSubmissions, renameSubmission, deleteSubmission, pinSubmission } from '../services/submissionService'
 import { useToast } from './Toast'
 
 const SIDEBAR_ICON = (
@@ -30,7 +30,7 @@ function formatDate(iso) {
 /**
  * Kebab dropdown menu for a single submission item.
  */
-function KebabMenu({ onRename, onDelete }) {
+function KebabMenu({ onRename, onDelete, onTogglePin, isPinned }) {
   const [open, setOpen] = useState(false)
   const menuRef = useRef(null)
 
@@ -62,6 +62,12 @@ function KebabMenu({ onRename, onDelete }) {
             onClick={(e) => { e.stopPropagation(); setOpen(false); onRename() }}
           >
             Rename
+          </button>
+          <button
+            className="kebab-option"
+            onClick={(e) => { e.stopPropagation(); setOpen(false); onTogglePin() }}
+          >
+            {isPinned ? 'Unpin' : 'Star'}
           </button>
           <button
             className="kebab-option kebab-option--danger"
@@ -126,6 +132,15 @@ const SubmissionSidebar = forwardRef(function SubmissionSidebar(
   const handleRenameKey = (e, submissionId) => {
     if (e.key === 'Enter') handleRenameSubmit(submissionId)
     if (e.key === 'Escape') setEditingId(null)
+  }
+
+  const handleTogglePin = async (submissionId) => {
+    try {
+      await pinSubmission(submissionId, token)
+      await load()
+    } catch {
+      toast('Failed to update pin', 'error')
+    }
   }
 
   const handleDeleteConfirm = async () => {
@@ -231,12 +246,15 @@ const SubmissionSidebar = forwardRef(function SubmissionSidebar(
                 />
               ) : (
                 <>
+                  {s.pinned_at && <span className="pin-star" aria-label="Pinned">&#9733;</span>}
                   <span className="submission-title">
                     {getTitle(s)}
                   </span>
                   <KebabMenu
                     onRename={() => handleRenameStart(s)}
                     onDelete={() => setDeletingId(s.submission_id)}
+                    onTogglePin={() => handleTogglePin(s.submission_id)}
+                    isPinned={!!s.pinned_at}
                   />
                 </>
               )}

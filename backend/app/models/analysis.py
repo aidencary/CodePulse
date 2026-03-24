@@ -50,6 +50,7 @@ class SubmissionListItem(BaseModel):
     name: str | None = None
     created_at: str
     overall_score: int | None = None
+    pinned_at: str | None = None
 
 
 class SubmissionRenameRequest(BaseModel):

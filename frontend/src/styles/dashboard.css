@@ -937,6 +937,14 @@ body {
 }
 
 /* ─── Submission item row (title + kebab) ──────────────────────── */
+/* ─── Pin star ─────────────────────────────────────────────────── */
+.pin-star {
+  color: #facc15;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
 .submission-item-row {
   display: flex;
   align-items: center;
