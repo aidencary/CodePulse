@@ -66,7 +66,6 @@ CodePulse/
 ├── README.md                 # Project overview
 ├── STANDARDS.md              # This file
 ├── TESTING.md                # Testing and CI/CD guide
-└── CLAUDE.md                 # AI assistant guide
 ```
 
 ## Documentation
@@ -76,7 +75,7 @@ The `docs/` folder contains project documentation and diagrams:
 - **CodePulse Class Diagram.drawio.png** - UML class diagram showing system architecture and relationships
 - **CodePulse Deployment Diagram.drawio.png** - Deployment diagram showing infrastructure layout
 - **CodePulse Engine Pipeline Flowchart.png** - Analysis engine pipeline flowchart
-- **CodePulse Sequence Diagram.png** - Sequence diagram showing request/response flow
+- **CodePulse Sequence Diagram.png** - Sequence diagram showing request/response flow # Remove this later
 - **CodePulse_Design_&_Architecture.pdf** - Detailed design and architecture specifications
 - **CodePulse_ER_Diagram.png** - Entity-Relationship diagram for database schema
 - **CodePulse_Requirements_Analysis.pdf** - Project requirements and analysis documentation
