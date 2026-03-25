@@ -57,7 +57,6 @@ CodePulse/
 ├── README.md         # This file
 ├── STANDARDS.md      # Coding standards and guidelines
 ├── TESTING.md        # Testing and CI/CD guide
-└── CLAUDE.md         # AI assistant guide
 ```
 
 For detailed project structure, see [STANDARDS.md](STANDARDS.md).
@@ -89,8 +88,15 @@ Full API docs available at `http://localhost:8000/docs` once the server is runni
 
 ### API Testing (Postman / Newman)
 
-A Postman collection is available at `postman/collections/codepulse-api.postman_collection.json` with tests across multiple folders (Health Check, Auth Errors, Validation Errors, Happy Path, Account CRUD, Submission CRUD). The collection auto-generates a valid JWT for authenticated requests using the `jwt_secret` and `supabase_url` variables from the CI environment. Import it into Postman or run via Newman:
+A Postman collection is available at `postman/collections/codepulse-api.postman_collection.json` with tests across multiple folders (Health Check, Auth Errors, Validation Errors, Happy Path, Account CRUD, Submission CRUD). The collection auto-generates a valid JWT for authenticated requests using the `jwt_secret` and `supabase_url` variables from the CI environment. 
+Import it into Postman:
+- Press three dots '...' and then import
+- Paste the JSON code or drop `postman/collections/codepulse-api.postman_collection.json` into the import box
+- Repeat for environment variables JSON `postman/environments/ci.postman_environment.json`
+- Add your authorization token to the environment variables and then set them to be active
+- Press the three dots '...' next to the collection and click "Run"
 
+Run via Newman:
 ```bash
 npm install -g newman
 newman run postman/collections/codepulse-api.postman_collection.json \
@@ -120,7 +126,7 @@ See [TESTING.md](TESTING.md) for instructions on starting the backend with match
    ```bash
    cd backend
    python -m venv venv
-   source venv/bin/activate        # Windows: venv\Scripts\activate
+   venv\Scripts\activate           # Linux: source venv/bin/activate  
    pip install -r requirements.txt
    cp .env.example .env            # Fill in your Supabase credentials
    uvicorn app.main:app --reload
@@ -169,7 +175,7 @@ See the [docs](docs/) folder for:
 - Class diagram
 - Deployment diagram
 - Engine pipeline flowchart
-- Sequence diagram
+- Sequence diagram # Remove this later
 - ER diagram
 - Design and architecture documentation
 - Requirements analysis
