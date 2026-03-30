@@ -54,8 +54,9 @@ function SortControls({ field, direction, onFieldChange, onDirectionToggle }) {
  *
  * @param {Object} props
  * @param {Object} props.bug - A PredictedBug object from the backend.
+ * @param {Function} props.onIgnore - Called when the ignore button is clicked.
  */
-function BugCard({ bug }) {
+function BugCard({ bug, onIgnore }) {
   const [expanded, setExpanded] = useState(false)
 
   return (
@@ -68,6 +69,7 @@ function BugCard({ bug }) {
         {bug.line_number != null && (
           <span className="finding-line">L{bug.line_number}</span>
         )}
+        <button className="ignore-btn" onClick={onIgnore} title="Ignore this bug">✕</button>
       </div>
       <p className="bug-description">{bug.description}</p>
       <button
@@ -89,14 +91,21 @@ function ResultsPanel({ results, loading, error }) {
   const [findingSortField, setFindingSortField] = useState('severity')
   const [bugSort, setBugSort] = useState('desc')
   const [bugSortField, setBugSortField] = useState('severity')
+  const [ignoredFindings, setIgnoredFindings] = useState(new Set())
+  const [ignoredBugs, setIgnoredBugs] = useState(new Set())
 
-  // Reset sort state when a new submission is loaded
+  // Reset sort and ignore state when a new submission is loaded
   useEffect(() => {
     setFindingSort('desc')
     setFindingSortField('severity')
     setBugSort('desc')
     setBugSortField('severity')
+    setIgnoredFindings(new Set())
+    setIgnoredBugs(new Set())
   }, [results])
+
+  const findingKey = (f) => `${f.issue_type}|${f.line_number}|${f.message}`
+  const bugKey = (b) => `${b.bug_type}|${b.line_number}`
 
   const scoreLevel = (score) => {
     if (score >= 80) return 'good'
@@ -104,8 +113,16 @@ function ResultsPanel({ results, loading, error }) {
     return 'poor'
   }
 
+  const visibleFindings = useMemo(() => {
+    return (results?.findings || []).filter((f) => !ignoredFindings.has(findingKey(f)))
+  }, [results?.findings, ignoredFindings]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const visibleBugs = useMemo(() => {
+    return (results?.predicted_bugs || []).filter((b) => !ignoredBugs.has(bugKey(b)))
+  }, [results?.predicted_bugs, ignoredBugs]) // eslint-disable-line react-hooks/exhaustive-deps
+
   const sortedFindings = useMemo(() => {
-    const findings = results?.findings || []
+    const findings = visibleFindings
     const dir = findingSort === 'desc' ? -1 : 1
     return [...findings].sort((a, b) => {
       if (findingSortField === 'severity') {
@@ -132,10 +149,10 @@ function ResultsPanel({ results, loading, error }) {
         )
       }
     })
-  }, [results?.findings, findingSort, findingSortField])
+  }, [visibleFindings, findingSort, findingSortField])
 
   const sortedBugs = useMemo(() => {
-    const bugs = results?.predicted_bugs || []
+    const bugs = visibleBugs
     const dir = bugSort === 'desc' ? -1 : 1
     return [...bugs].sort((a, b) => {
       if (bugSortField === 'severity') {
@@ -162,7 +179,7 @@ function ResultsPanel({ results, loading, error }) {
         )
       }
     })
-  }, [results?.predicted_bugs, bugSort, bugSortField])
+  }, [visibleBugs, bugSort, bugSortField])
 
   const renderContent = () => {
     if (loading) {
@@ -210,8 +227,8 @@ function ResultsPanel({ results, loading, error }) {
             {sortedFindings.length === 0 ? (
               <p className="results-placeholder">No issues found.</p>
             ) : (
-              sortedFindings.map((f, i) => (
-                <div key={i} className="finding-item">
+              sortedFindings.map((f) => (
+                <div key={findingKey(f)} className="finding-item">
                   <span
                     className={`severity-badge severity-${f.severity.toLowerCase()}`}
                   >
@@ -221,6 +238,11 @@ function ResultsPanel({ results, loading, error }) {
                   {f.line_number != null && (
                     <span className="finding-line">L{f.line_number}</span>
                   )}
+                  <button
+                    className="ignore-btn"
+                    onClick={() => setIgnoredFindings((prev) => new Set([...prev, findingKey(f)]))}
+                    title="Ignore this finding"
+                  >✕</button>
                   <p className="finding-message">{f.message}</p>
                 </div>
               ))
@@ -244,8 +266,12 @@ function ResultsPanel({ results, loading, error }) {
             {sortedBugs.length === 0 ? (
               <p className="results-placeholder">No predicted bugs found.</p>
             ) : (
-              sortedBugs.map((bug, i) => (
-                <BugCard key={i} bug={bug} />
+              sortedBugs.map((bug) => (
+                <BugCard
+                  key={bugKey(bug)}
+                  bug={bug}
+                  onIgnore={() => setIgnoredBugs((prev) => new Set([...prev, bugKey(bug)]))}
+                />
               ))
             )}
           </section>

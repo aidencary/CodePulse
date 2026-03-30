@@ -868,6 +868,26 @@ body {
 .severity-medium   { background: rgba(250, 204, 21, 0.15);  color: #facc15; }
 .severity-critical { background: rgba(248, 113, 113, 0.25); color: #ff4444; }
 
+/* ─── Ignore button ─────────────────────────────────────────────── */
+.ignore-btn {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: var(--text-muted, #888);
+  cursor: pointer;
+  font-size: 0.75rem;
+  line-height: 1;
+  padding: 0 0.15rem;
+  opacity: 0.4;
+  transition: opacity 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+
+.ignore-btn:hover {
+  opacity: 1;
+  color: var(--text);
+}
+
 /* ─── Finding items ─────────────────────────────────────────────── */
 .finding-item {
   padding: 0.5rem 0;
