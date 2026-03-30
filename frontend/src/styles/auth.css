@@ -190,3 +190,11 @@ body {
   color: var(--muted);
   padding: 1rem 0;
 }
+
+/* ─── MFA hint ──────────────────────────────────────────────────── */
+.auth-mfa-hint {
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}

@@ -13,6 +13,9 @@ function LoginPage() {
   const [success, setSuccess] = useState(null)
   const [submitting, setSubmitting] = useState(false)
   const [loginFailed, setLoginFailed] = useState(false)
+  const [step, setStep] = useState('credentials') // 'credentials' | 'mfa'
+  const [mfaFactorId, setMfaFactorId] = useState(null)
+  const [mfaCode, setMfaCode] = useState('')
 
   const { signIn, signUp } = useAuth()
   const navigate = useNavigate()
@@ -22,6 +25,29 @@ function LoginPage() {
     setError(null)
     setSuccess(null)
     setSubmitting(true)
+
+    if (step === 'mfa') {
+      const { data: challenge, error: cErr } = await supabase.auth.mfa.challenge({
+        factorId: mfaFactorId,
+      })
+      if (cErr) {
+        setError(cErr.message)
+        setSubmitting(false)
+        return
+      }
+      const { error: vErr } = await supabase.auth.mfa.verify({
+        factorId: mfaFactorId,
+        challengeId: challenge.id,
+        code: mfaCode.trim(),
+      })
+      setSubmitting(false)
+      if (vErr) {
+        setError('Invalid code — please try again')
+        return
+      }
+      navigate('/dashboard')
+      return
+    }
 
     if (mode === 'forgot') {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -41,14 +67,30 @@ function LoginPage() {
       ? await signIn(email, password)
       : await signUp(email, password, username)
 
-    setSubmitting(false)
-
     if (error) {
+      setSubmitting(false)
       setError(error.message)
       if (mode === 'login') setLoginFailed(true)
-    } else if (mode === 'login') {
+      return
+    }
+
+    if (mode === 'login') {
+      // Check if MFA step-up is required
+      const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
+      if (aalData?.nextLevel === 'aal2' && aalData?.currentLevel !== 'aal2') {
+        const { data: factors } = await supabase.auth.mfa.listFactors()
+        const totp = factors?.totp?.find((f) => f.status === 'verified')
+        if (totp) {
+          setMfaFactorId(totp.id)
+          setStep('mfa')
+          setSubmitting(false)
+          return
+        }
+      }
+      setSubmitting(false)
       navigate('/dashboard')
     } else {
+      setSubmitting(false)
       setSuccess('Account created! Check your email to confirm before logging in.')
     }
   }
@@ -58,6 +100,51 @@ function LoginPage() {
     setError(null)
     setSuccess(null)
     setLoginFailed(false)
+  }
+
+  const handleMfaBack = async () => {
+    await supabase.auth.signOut()
+    setStep('credentials')
+    setMfaFactorId(null)
+    setMfaCode('')
+    setError(null)
+  }
+
+  if (step === 'mfa') {
+    return (
+      <div className="auth-container">
+        <div className="auth-card">
+          <h1 className="auth-title">CodePulse</h1>
+          <p className="auth-mfa-hint">
+            Enter the 6-digit code from your authenticator app.
+          </p>
+          <form onSubmit={handleSubmit} className="auth-form" aria-label="two-factor authentication">
+            <div className="form-group">
+              <label htmlFor="mfa-code">Authentication Code</label>
+              <input
+                id="mfa-code"
+                type="text"
+                inputMode="numeric"
+                value={mfaCode}
+                onChange={(e) => setMfaCode(e.target.value)}
+                required
+                maxLength={6}
+                placeholder="000000"
+                autoComplete="one-time-code"
+                autoFocus
+              />
+            </div>
+            {error && <p className="auth-error">{error}</p>}
+            <button type="submit" className="auth-submit" disabled={submitting}>
+              {submitting ? 'Please wait...' : 'Verify'}
+            </button>
+            <button type="button" className="auth-link" onClick={handleMfaBack}>
+              Back to Log In
+            </button>
+          </form>
+        </div>
+      </div>
+    )
   }
 
   return (

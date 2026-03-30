@@ -13,11 +13,24 @@ jest.mock('react-router-dom', () => ({
 }))
 
 const mockResetPasswordForEmail = jest.fn()
+const mockGetAAL = jest.fn()
+const mockListFactors = jest.fn()
+const mockChallenge = jest.fn()
+const mockVerify = jest.fn()
+const mockSignOut = jest.fn()
+
 jest.mock('../../services/supabaseClient', () => ({
   __esModule: true,
   default: {
     auth: {
       resetPasswordForEmail: (...args) => mockResetPasswordForEmail(...args),
+      signOut: (...args) => mockSignOut(...args),
+      mfa: {
+        getAuthenticatorAssuranceLevel: (...args) => mockGetAAL(...args),
+        listFactors: (...args) => mockListFactors(...args),
+        challenge: (...args) => mockChallenge(...args),
+        verify: (...args) => mockVerify(...args),
+      },
     },
   },
 }))
@@ -28,6 +41,10 @@ const mockSignUp = jest.fn()
 beforeEach(() => {
   jest.clearAllMocks()
   useAuth.mockReturnValue({ signIn: mockSignIn, signUp: mockSignUp })
+  // Default: no MFA enrolled — aal1 only, no step-up required
+  mockGetAAL.mockResolvedValue({ data: { currentLevel: 'aal1', nextLevel: 'aal1' } })
+  mockListFactors.mockResolvedValue({ data: { totp: [] } })
+  mockSignOut.mockResolvedValue({})
 })
 
 const renderLoginPage = () =>
@@ -159,5 +176,72 @@ describe('LoginPage — forgot password', () => {
     fireEvent.click(screen.getByRole('button', { name: /back to log in/i }))
     expect(screen.getByLabelText(/password/i)).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /send reset email/i })).not.toBeInTheDocument()
+  })
+})
+
+describe('LoginPage — MFA step-up', () => {
+  const mfaFactor = { id: 'factor-1', status: 'verified', factor_type: 'totp' }
+
+  /** Sign in successfully, then set mocks so MFA step-up is triggered */
+  async function signInWithMfa() {
+    mockSignIn.mockResolvedValue({ error: null })
+    mockGetAAL.mockResolvedValue({ data: { currentLevel: 'aal1', nextLevel: 'aal2' } })
+    mockListFactors.mockResolvedValue({ data: { totp: [mfaFactor] } })
+    renderLoginPage()
+    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'user@example.com' } })
+    fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'password123' } })
+    submitForm()
+    // Wait for MFA form
+    await screen.findByRole('form', { name: /two-factor authentication/i })
+  }
+
+  it('shows MFA code input after successful login when AAL step-up is required', async () => {
+    await signInWithMfa()
+    expect(screen.getByLabelText(/authentication code/i)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^verify$/i })).toBeInTheDocument()
+  })
+
+  it('does not show MFA step when nextLevel is aal1', async () => {
+    mockSignIn.mockResolvedValue({ error: null })
+    // Default mocks already set nextLevel: 'aal1' — no MFA step-up
+    renderLoginPage()
+    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'user@example.com' } })
+    fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'password123' } })
+    submitForm()
+    // MFA form should never appear
+    await waitFor(() => expect(mockGetAAL).toHaveBeenCalled())
+    expect(screen.queryByRole('form', { name: /two-factor authentication/i })).not.toBeInTheDocument()
+  })
+
+  it('calls challenge and verify with factorId and code on MFA submit', async () => {
+    mockChallenge.mockResolvedValue({ data: { id: 'challenge-1' }, error: null })
+    mockVerify.mockResolvedValue({ error: null })
+    await signInWithMfa()
+    fireEvent.change(screen.getByLabelText(/authentication code/i), { target: { value: '123456' } })
+    fireEvent.submit(screen.getByRole('form', { name: /two-factor authentication/i }))
+    await waitFor(() => expect(mockChallenge).toHaveBeenCalledWith({ factorId: 'factor-1' }))
+    await waitFor(() =>
+      expect(mockVerify).toHaveBeenCalledWith({
+        factorId: 'factor-1',
+        challengeId: 'challenge-1',
+        code: '123456',
+      })
+    )
+  })
+
+  it('shows "Invalid code" error on verify failure', async () => {
+    mockChallenge.mockResolvedValue({ data: { id: 'challenge-1' }, error: null })
+    mockVerify.mockResolvedValue({ error: { message: 'Invalid TOTP token' } })
+    await signInWithMfa()
+    fireEvent.change(screen.getByLabelText(/authentication code/i), { target: { value: '000000' } })
+    fireEvent.submit(screen.getByRole('form', { name: /two-factor authentication/i }))
+    expect(await screen.findByText(/invalid code/i)).toBeInTheDocument()
+  })
+
+  it('signs out and returns to credentials when "Back to Log In" is clicked', async () => {
+    await signInWithMfa()
+    fireEvent.click(screen.getByRole('button', { name: /back to log in/i }))
+    await waitFor(() => expect(mockSignOut).toHaveBeenCalled())
+    expect(screen.getByRole('form', { name: /authentication/i })).toBeInTheDocument()
   })
 })
