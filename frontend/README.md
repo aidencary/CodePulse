@@ -37,7 +37,7 @@ frontend/
     ├── components/
     │   ├── ProtectedRoute.js   # Redirects unauthenticated users to /login
     │   ├── CodeEditor.js       # Monaco editor + submission name input + Run Analysis button
-    │   ├── ResultsPanel.js     # Score circle, static findings (severity-sorted), AI bug prediction cards (severity-sorted with toggle)
+    │   ├── ResultsPanel.js     # Score circle, static findings and AI bug cards; SortControls with Severity|Line pills + ↑/↓ direction toggle; combined two-key sort
     │   ├── ProfileDropdown.js  # User avatar and dropdown menu (links to /account)
     │   ├── SubmissionSidebar.js # Collapsible sidebar with rename/delete/pin via kebab menu
     │   └── Toast.js            # Toast notification system (ToastProvider + useToast)
@@ -125,11 +125,11 @@ npm test -- --watchAll=false   # Run once and exit (used in CI)
 | `context/__tests__/AuthContext.test.js` | Auth lifecycle, signIn / signUp / signOut calls |
 | `pages/__tests__/LoginPage.test.js` | Form toggle, submission handlers, error display, sign-up success banner |
 | `components/__tests__/CodeEditor.test.js` | Renders editor, button click fires onRun, disabled during loading |
-| `components/__tests__/ResultsPanel.test.js` | Idle, loading, error, score, findings, predicted bugs (expand/collapse), empty states, severity sorting with toggle (17 tests) |
+| `components/__tests__/ResultsPanel.test.js` | Idle, loading, error, score, findings, predicted bugs (expand/collapse), empty states, severity sort, line-number sort, combined tiebreaker, null-line sort (21 tests) |
 | `components/__tests__/SubmissionSidebar.test.js` | Render names, fallback, search, rename, delete, pin/star, collapse (11 tests) |
 | `pages/__tests__/AccountPage.test.js` | Profile load/display, username validation, password change, delete modal (10 tests) |
 
-53 tests, all passing.
+57 tests, all passing.
 
 ---
 
@@ -169,7 +169,7 @@ A pull request cannot be merged if any step fails.
 | JWT token hand-off pattern | Done |
 | Dashboard UI | Done |
 | Code editor / submission flow | Done |
-| Results display (severity sorting with high-to-low default, toggle for low-to-high) | Done |
+| Results display (Severity/Line field selector pills + ↑/↓ direction toggle; two-key combined sort; resets on submission change) | Done |
 | Account settings page (profile, avatar, password, delete) | Done |
 | Submission sidebar (rename, delete, pin/star via kebab menu) | Done |
 | Submission naming (name input, GPT auto-generation) | Done |

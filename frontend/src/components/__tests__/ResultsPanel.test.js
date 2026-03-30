@@ -151,3 +151,69 @@ describe('ResultsPanel — predicted bugs section', () => {
     expect(screen.getByText(/no predicted bugs found/i)).toBeInTheDocument()
   })
 })
+
+// Sort controls
+describe('ResultsPanel — sort controls', () => {
+  // Three findings: two share severity 'Low' so line-number tiebreaking is testable.
+  const sortResults = {
+    ...mockResults,
+    findings: [
+      { issue_type: 'long_line',   line_number: 10, severity: 'Low', message: 'msg-a' },
+      { issue_type: 'bare_except', line_number: 2,  severity: 'Med', message: 'msg-b' },
+      { issue_type: 'wildcard',    line_number: 7,  severity: 'Low', message: 'msg-c' },
+    ],
+    predicted_bugs: [
+      { line_number: 5,  bug_type: 'alpha', severity: 'high',   description: 'desc-x', suggested_fix: '' },
+      { line_number: 1,  bug_type: 'beta',  severity: 'medium', description: 'desc-y', suggested_fix: '' },
+    ],
+  }
+
+  it('clicking the "Line" pill re-orders findings by line number ascending', () => {
+    render(<ResultsPanel results={sortResults} loading={false} error={null} />)
+    fireEvent.click(screen.getAllByRole('button', { name: /^Line$/i })[0])
+    const lines = screen.getAllByText(/^L\d+$/)
+    // First three L-tags belong to findings; they should be L2, L7, L10
+    const findingLines = lines.slice(0, 3).map((el) => el.textContent)
+    expect(findingLines).toEqual(['L2', 'L7', 'L10'])
+  })
+
+  it('direction toggle reverses line sort to descending', () => {
+    render(<ResultsPanel results={sortResults} loading={false} error={null} />)
+    // Switch to Line sort
+    fireEvent.click(screen.getAllByRole('button', { name: /^Line$/i })[0])
+    // Flip direction
+    fireEvent.click(screen.getAllByRole('button', { name: /low to high/i })[0])
+    const lines = screen.getAllByText(/^L\d+$/)
+    const findingLines = lines.slice(0, 3).map((el) => el.textContent)
+    expect(findingLines).toEqual(['L10', 'L7', 'L2'])
+  })
+
+  it('equal-severity findings are tiebroken by line number ascending', () => {
+    render(<ResultsPanel results={sortResults} loading={false} error={null} />)
+    // Default is Severity desc: Med first, then the two Low findings ordered by line
+    const lines = screen.getAllByText(/^L\d+$/)
+    const findingLines = lines.slice(0, 3).map((el) => el.textContent)
+    // bare_except (Med, L2) first, then Low findings sorted L7 before L10
+    expect(findingLines).toEqual(['L2', 'L7', 'L10'])
+  })
+
+  it('null line_number findings sort last when Line sort is active', () => {
+    const nullLineResults = {
+      ...sortResults,
+      findings: [
+        { issue_type: 'no_line',   line_number: null, severity: 'High', message: 'msg-null' },
+        { issue_type: 'has_line',  line_number: 3,    severity: 'Low',  message: 'msg-has' },
+        { issue_type: 'also_line', line_number: 1,    severity: 'Med',  message: 'msg-also' },
+      ],
+    }
+    render(<ResultsPanel results={nullLineResults} loading={false} error={null} />)
+    fireEvent.click(screen.getAllByRole('button', { name: /^Line$/i })[0])
+    // L1 and L3 should appear before the null-line item (which has no L-tag)
+    const lines = screen.getAllByText(/^L\d+$/)
+    expect(lines[0].textContent).toBe('L1')
+    expect(lines[1].textContent).toBe('L3')
+    // The null-line finding's issue type still renders, just last
+    const items = screen.getAllByText(/msg-null|msg-has|msg-also/)
+    expect(items[items.length - 1].textContent).toBe('msg-null')
+  })
+})

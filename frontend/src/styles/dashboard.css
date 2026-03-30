@@ -805,6 +805,40 @@ body {
   color: var(--bg);
 }
 
+.sort-controls {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.sort-pill {
+  background: var(--border);
+  color: var(--muted);
+  border: none;
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.sort-pill:hover {
+  background: var(--muted);
+  color: var(--bg);
+}
+
+.sort-pill--active {
+  background: var(--purple);
+  color: #fff;
+}
+
+.sort-pill--active:hover {
+  background: var(--purple-lite);
+  color: var(--bg);
+}
+
 .badge {
   background: var(--border);
   color: var(--text);
