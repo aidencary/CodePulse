@@ -116,6 +116,20 @@ describe('SubmissionSidebar', () => {
     })
   })
 
+  it('does not call renameSubmission when name is unchanged', async () => {
+    renderSidebar()
+    await screen.findByText('Calculator')
+    openKebab(0)
+    fireEvent.click(screen.getByText('Rename'))
+    const input = screen.getByDisplayValue('Calculator')
+    // Submit without changing the value
+    fireEvent.keyDown(input, { key: 'Enter' })
+    await waitFor(() => {
+      expect(screen.queryByDisplayValue('Calculator')).not.toBeInTheDocument()
+    })
+    expect(renameSubmission).not.toHaveBeenCalled()
+  })
+
   it('cancels rename on Escape key without calling API', async () => {
     renderSidebar()
     await screen.findByText('Calculator')

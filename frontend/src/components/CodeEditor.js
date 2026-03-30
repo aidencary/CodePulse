@@ -5,8 +5,10 @@ const STAR_PATH = 'M 0 -10 L 2.2 -2.2 L 10 0 L 2.2 2.2 L 0 10 L -2.2 2.2 L -10 0
 const RAND = (min, max) => Math.floor(Math.random() * (max - min + 1) + min)
 const SIGN = () => (Math.random() > 0.5 ? -1 : 1)
 
-function CodeEditor({ code, onCodeChange, onRun, loading, isDark }) {
+function CodeEditor({ code, onCodeChange, onRun, loading, isDark, highlightLine }) {
   const btnRef = useRef(null)
+  const editorRef = useRef(null)
+  const decorationsRef = useRef([])
   const [copied, setCopied] = useState(false)
 
   const handleCopy = () => {
@@ -16,6 +18,19 @@ function CodeEditor({ code, onCodeChange, onRun, loading, isDark }) {
       setTimeout(() => setCopied(false), 1500)
     })
   }
+
+  useEffect(() => {
+    const editor = editorRef.current
+    if (!editor) return
+    if (highlightLine != null) {
+      decorationsRef.current = editor.deltaDecorations(decorationsRef.current, [{
+        range: { startLineNumber: highlightLine, endLineNumber: highlightLine, startColumn: 1, endColumn: 1 },
+        options: { isWholeLine: true, className: 'editor-highlight-line' },
+      }])
+    } else {
+      decorationsRef.current = editor.deltaDecorations(decorationsRef.current, [])
+    }
+  }, [highlightLine])
 
   useEffect(() => {
     if (!btnRef.current) return
@@ -67,6 +82,7 @@ function CodeEditor({ code, onCodeChange, onRun, loading, isDark }) {
           defaultLanguage="python"
           theme={isDark ? 'vs-dark' : 'vs'}
           value={code}
+          onMount={(editor) => { editorRef.current = editor }}
           onChange={(value) => onCodeChange(value ?? '')}
           options={{
             minimap: { enabled: false },

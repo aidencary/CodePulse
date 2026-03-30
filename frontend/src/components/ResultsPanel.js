@@ -1,12 +1,5 @@
-/**
- * Results panel that displays the structured analysis output from the backend.
- *
- * @param {Object} props
- * @param {Object|null} props.results - Parsed JSON response from the backend.
- * @param {boolean} props.loading - True while the API request is in flight.
- * @param {string|null} props.error - Error message to display on failure.
- */
 import { useState, useMemo, useEffect } from 'react'
+import BugCard from './BugCard'
 
 /** Severity rank maps (higher number = more severe). */
 const FINDING_SEV_RANK = { high: 3, med: 2, low: 1 }
@@ -49,44 +42,8 @@ function SortControls({ field, direction, onFieldChange, onDirectionToggle }) {
   )
 }
 
-/**
- * Collapsible card for a single AI-predicted bug.
- *
- * @param {Object} props
- * @param {Object} props.bug - A PredictedBug object from the backend.
- * @param {Function} props.onIgnore - Called when the ignore button is clicked.
- */
-function BugCard({ bug, onIgnore }) {
-  const [expanded, setExpanded] = useState(false)
 
-  return (
-    <div className={`bug-card bug-sev-${bug.severity}`}>
-      <div className="bug-card-header">
-        <span className={`severity-badge severity-${bug.severity}`}>
-          {bug.severity}
-        </span>
-        <span className="bug-type">{bug.bug_type}</span>
-        {bug.line_number != null && (
-          <span className="finding-line">L{bug.line_number}</span>
-        )}
-        <button className="ignore-btn" onClick={onIgnore} title="Ignore this bug">✕</button>
-      </div>
-      <p className="bug-description">{bug.description}</p>
-      <button
-        className="bug-fix-toggle"
-        onClick={() => setExpanded((e) => !e)}
-        aria-expanded={expanded}
-      >
-        {expanded ? 'Hide fix' : 'Show suggested fix'}
-      </button>
-      {expanded && (
-        <pre className="bug-fix-code">{bug.suggested_fix}</pre>
-      )}
-    </div>
-  )
-}
-
-function ResultsPanel({ results, loading, error }) {
+function ResultsPanel({ results, loading, error, onHoverLine }) {
   const [findingSort, setFindingSort] = useState('desc')
   const [findingSortField, setFindingSortField] = useState('severity')
   const [bugSort, setBugSort] = useState('desc')
@@ -228,7 +185,12 @@ function ResultsPanel({ results, loading, error }) {
               <p className="results-placeholder">No issues found.</p>
             ) : (
               sortedFindings.map((f) => (
-                <div key={findingKey(f)} className="finding-item">
+                <div
+                  key={findingKey(f)}
+                  className="finding-item"
+                  onMouseEnter={() => f.line_number != null && onHoverLine?.(f.line_number)}
+                  onMouseLeave={() => onHoverLine?.(null)}
+                >
                   <span
                     className={`severity-badge severity-${f.severity.toLowerCase()}`}
                   >
@@ -271,6 +233,7 @@ function ResultsPanel({ results, loading, error }) {
                   key={bugKey(bug)}
                   bug={bug}
                   onIgnore={() => setIgnoredBugs((prev) => new Set([...prev, bugKey(bug)]))}
+                  onHoverLine={onHoverLine}
                 />
               ))
             )}

@@ -152,6 +152,89 @@ describe('ResultsPanel — predicted bugs section', () => {
   })
 })
 
+// Ignore / dismiss
+describe('ResultsPanel — ignore buttons', () => {
+  it('ignoring a finding removes it from the list', () => {
+    render(<ResultsPanel results={mockResults} loading={false} error={null} />)
+    // Default sort is severity desc: bare_except (Med) renders first, long_line (Low) second.
+    // Click the first ignore button to dismiss bare_except.
+    const ignoreButtons = screen.getAllByTitle('Ignore this finding')
+    fireEvent.click(ignoreButtons[0])
+    expect(screen.queryByText('bare_except')).not.toBeInTheDocument()
+    // long_line (Low) is still present
+    expect(screen.getByText('long_line')).toBeInTheDocument()
+  })
+
+  it('ignoring a bug removes it from the list', () => {
+    render(<ResultsPanel results={mockResults} loading={false} error={null} />)
+    fireEvent.click(screen.getByTitle('Ignore this bug'))
+    expect(screen.queryByText('null_dereference')).not.toBeInTheDocument()
+    expect(screen.getByText(/no predicted bugs found/i)).toBeInTheDocument()
+  })
+
+  it('ignored items reappear when results are reset', () => {
+    const { rerender } = render(
+      <ResultsPanel results={mockResults} loading={false} error={null} />
+    )
+    // Ignore the first finding (bare_except at index 0 in severity-desc order)
+    fireEvent.click(screen.getAllByTitle('Ignore this finding')[0])
+    expect(screen.queryByText('bare_except')).not.toBeInTheDocument()
+
+    // Simulate new analysis result (new object reference resets ignore state)
+    rerender(
+      <ResultsPanel results={{ ...mockResults }} loading={false} error={null} />
+    )
+    expect(screen.getByText('bare_except')).toBeInTheDocument()
+  })
+})
+
+// Hover line highlight
+describe('ResultsPanel — hover line highlight', () => {
+  it('calls onHoverLine with line number when hovering a finding', () => {
+    const onHoverLine = jest.fn()
+    render(
+      <ResultsPanel results={mockResults} loading={false} error={null} onHoverLine={onHoverLine} />
+    )
+    const findingItem = screen.getByText('long_line').closest('.finding-item')
+    fireEvent.mouseEnter(findingItem)
+    expect(onHoverLine).toHaveBeenCalledWith(5)
+  })
+
+  it('calls onHoverLine with null when leaving a finding', () => {
+    const onHoverLine = jest.fn()
+    render(
+      <ResultsPanel results={mockResults} loading={false} error={null} onHoverLine={onHoverLine} />
+    )
+    const findingItem = screen.getByText('long_line').closest('.finding-item')
+    fireEvent.mouseLeave(findingItem)
+    expect(onHoverLine).toHaveBeenCalledWith(null)
+  })
+
+  it('calls onHoverLine with line number when hovering a bug card', () => {
+    const onHoverLine = jest.fn()
+    render(
+      <ResultsPanel results={mockResults} loading={false} error={null} onHoverLine={onHoverLine} />
+    )
+    const bugCard = screen.getByText('null_dereference').closest('.bug-card')
+    fireEvent.mouseEnter(bugCard)
+    expect(onHoverLine).toHaveBeenCalledWith(8)
+  })
+
+  it('does not call onHoverLine when bug has no line number', () => {
+    const onHoverLine = jest.fn()
+    const noLineResults = {
+      ...mockResults,
+      predicted_bugs: [{ ...mockResults.predicted_bugs[0], line_number: null }],
+    }
+    render(
+      <ResultsPanel results={noLineResults} loading={false} error={null} onHoverLine={onHoverLine} />
+    )
+    const bugCard = screen.getByText('null_dereference').closest('.bug-card')
+    fireEvent.mouseEnter(bugCard)
+    expect(onHoverLine).not.toHaveBeenCalledWith(expect.any(Number))
+  })
+})
+
 // Sort controls
 describe('ResultsPanel — sort controls', () => {
   // Three findings: two share severity 'Low' so line-number tiebreaking is testable.

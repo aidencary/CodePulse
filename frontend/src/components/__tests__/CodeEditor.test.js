@@ -30,7 +30,12 @@ describe('CodeEditor', () => {
   })
 
   it('disables the run button when loading is true', () => {
-    render(<CodeEditor code="" onCodeChange={() => {}} onRun={() => {}} loading={true} />)
-    expect(screen.getByRole('button')).toBeDisabled()
+    render(<CodeEditor code="x = 1" onCodeChange={() => {}} onRun={() => {}} loading={true} />)
+    expect(screen.getByRole('button', { name: /analyzing/i })).toBeDisabled()
+  })
+
+  it('renders the copy button and it is disabled when code is empty', () => {
+    render(<CodeEditor code="" onCodeChange={() => {}} onRun={() => {}} loading={false} />)
+    expect(screen.getByRole('button', { name: /copy/i })).toBeDisabled()
   })
 })
