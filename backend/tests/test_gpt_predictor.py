@@ -7,7 +7,7 @@ import pytest
 
 from app.config import Settings
 from app.models.analysis import Finding, PredictedBug
-from app.services.gpt_predictor import predict_bugs
+from app.services.gpt_predictor import _build_user_message, predict_bugs
 
 # Shared fixtures
 _MOCK_SETTINGS = Settings.model_construct(
@@ -158,3 +158,22 @@ async def test_system_prompt_includes_static_findings() -> None:
         m["content"] for m in call_kwargs["messages"] if m["role"] == "system"
     )
     assert "bare_except" in system_message
+
+
+# User message format
+def test_user_message_prefixes_each_line_with_line_number() -> None:
+    """Each line of the code is prefixed with its 1-based line number."""
+    code = "x = 1\ny = 2\nz = 3"
+    message = _build_user_message(code, "python")
+    assert "1: x = 1" in message
+    assert "2: y = 2" in message
+    assert "3: z = 3" in message
+
+
+def test_user_message_preserves_blank_lines() -> None:
+    """Blank lines are numbered so GPT line numbers match the editor."""
+    code = "x = 1\n\nz = 3"
+    message = _build_user_message(code, "python")
+    assert "1: x = 1" in message
+    assert "2: " in message
+    assert "3: z = 3" in message

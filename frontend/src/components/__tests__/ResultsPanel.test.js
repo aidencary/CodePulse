@@ -151,3 +151,152 @@ describe('ResultsPanel — predicted bugs section', () => {
     expect(screen.getByText(/no predicted bugs found/i)).toBeInTheDocument()
   })
 })
+
+// Ignore / dismiss
+describe('ResultsPanel — ignore buttons', () => {
+  it('ignoring a finding removes it from the list', () => {
+    render(<ResultsPanel results={mockResults} loading={false} error={null} />)
+    // Default sort is severity desc: bare_except (Med) renders first, long_line (Low) second.
+    // Click the first ignore button to dismiss bare_except.
+    const ignoreButtons = screen.getAllByTitle('Ignore this finding')
+    fireEvent.click(ignoreButtons[0])
+    expect(screen.queryByText('bare_except')).not.toBeInTheDocument()
+    // long_line (Low) is still present
+    expect(screen.getByText('long_line')).toBeInTheDocument()
+  })
+
+  it('ignoring a bug removes it from the list', () => {
+    render(<ResultsPanel results={mockResults} loading={false} error={null} />)
+    fireEvent.click(screen.getByTitle('Ignore this bug'))
+    expect(screen.queryByText('null_dereference')).not.toBeInTheDocument()
+    expect(screen.getByText(/no predicted bugs found/i)).toBeInTheDocument()
+  })
+
+  it('ignored items reappear when results are reset', () => {
+    const { rerender } = render(
+      <ResultsPanel results={mockResults} loading={false} error={null} />
+    )
+    // Ignore the first finding (bare_except at index 0 in severity-desc order)
+    fireEvent.click(screen.getAllByTitle('Ignore this finding')[0])
+    expect(screen.queryByText('bare_except')).not.toBeInTheDocument()
+
+    // Simulate new analysis result (new object reference resets ignore state)
+    rerender(
+      <ResultsPanel results={{ ...mockResults }} loading={false} error={null} />
+    )
+    expect(screen.getByText('bare_except')).toBeInTheDocument()
+  })
+})
+
+// Hover line highlight
+describe('ResultsPanel — hover line highlight', () => {
+  it('calls onHoverLine with line number when hovering a finding', () => {
+    const onHoverLine = jest.fn()
+    render(
+      <ResultsPanel results={mockResults} loading={false} error={null} onHoverLine={onHoverLine} />
+    )
+    const findingItem = screen.getByText('long_line').closest('.finding-item')
+    fireEvent.mouseEnter(findingItem)
+    expect(onHoverLine).toHaveBeenCalledWith(5)
+  })
+
+  it('calls onHoverLine with null when leaving a finding', () => {
+    const onHoverLine = jest.fn()
+    render(
+      <ResultsPanel results={mockResults} loading={false} error={null} onHoverLine={onHoverLine} />
+    )
+    const findingItem = screen.getByText('long_line').closest('.finding-item')
+    fireEvent.mouseLeave(findingItem)
+    expect(onHoverLine).toHaveBeenCalledWith(null)
+  })
+
+  it('calls onHoverLine with line number when hovering a bug card', () => {
+    const onHoverLine = jest.fn()
+    render(
+      <ResultsPanel results={mockResults} loading={false} error={null} onHoverLine={onHoverLine} />
+    )
+    const bugCard = screen.getByText('null_dereference').closest('.bug-card')
+    fireEvent.mouseEnter(bugCard)
+    expect(onHoverLine).toHaveBeenCalledWith(8)
+  })
+
+  it('does not call onHoverLine when bug has no line number', () => {
+    const onHoverLine = jest.fn()
+    const noLineResults = {
+      ...mockResults,
+      predicted_bugs: [{ ...mockResults.predicted_bugs[0], line_number: null }],
+    }
+    render(
+      <ResultsPanel results={noLineResults} loading={false} error={null} onHoverLine={onHoverLine} />
+    )
+    const bugCard = screen.getByText('null_dereference').closest('.bug-card')
+    fireEvent.mouseEnter(bugCard)
+    expect(onHoverLine).not.toHaveBeenCalledWith(expect.any(Number))
+  })
+})
+
+// Sort controls
+describe('ResultsPanel — sort controls', () => {
+  // Three findings: two share severity 'Low' so line-number tiebreaking is testable.
+  const sortResults = {
+    ...mockResults,
+    findings: [
+      { issue_type: 'long_line',   line_number: 10, severity: 'Low', message: 'msg-a' },
+      { issue_type: 'bare_except', line_number: 2,  severity: 'Med', message: 'msg-b' },
+      { issue_type: 'wildcard',    line_number: 7,  severity: 'Low', message: 'msg-c' },
+    ],
+    predicted_bugs: [
+      { line_number: 5,  bug_type: 'alpha', severity: 'high',   description: 'desc-x', suggested_fix: '' },
+      { line_number: 1,  bug_type: 'beta',  severity: 'medium', description: 'desc-y', suggested_fix: '' },
+    ],
+  }
+
+  it('clicking the "Line" pill re-orders findings by line number ascending', () => {
+    render(<ResultsPanel results={sortResults} loading={false} error={null} />)
+    fireEvent.click(screen.getAllByRole('button', { name: /^Line$/i })[0])
+    const lines = screen.getAllByText(/^L\d+$/)
+    // First three L-tags belong to findings; they should be L2, L7, L10
+    const findingLines = lines.slice(0, 3).map((el) => el.textContent)
+    expect(findingLines).toEqual(['L2', 'L7', 'L10'])
+  })
+
+  it('direction toggle reverses line sort to descending', () => {
+    render(<ResultsPanel results={sortResults} loading={false} error={null} />)
+    // Switch to Line sort
+    fireEvent.click(screen.getAllByRole('button', { name: /^Line$/i })[0])
+    // Flip direction
+    fireEvent.click(screen.getAllByRole('button', { name: /low to high/i })[0])
+    const lines = screen.getAllByText(/^L\d+$/)
+    const findingLines = lines.slice(0, 3).map((el) => el.textContent)
+    expect(findingLines).toEqual(['L10', 'L7', 'L2'])
+  })
+
+  it('equal-severity findings are tiebroken by line number ascending', () => {
+    render(<ResultsPanel results={sortResults} loading={false} error={null} />)
+    // Default is Severity desc: Med first, then the two Low findings ordered by line
+    const lines = screen.getAllByText(/^L\d+$/)
+    const findingLines = lines.slice(0, 3).map((el) => el.textContent)
+    // bare_except (Med, L2) first, then Low findings sorted L7 before L10
+    expect(findingLines).toEqual(['L2', 'L7', 'L10'])
+  })
+
+  it('null line_number findings sort last when Line sort is active', () => {
+    const nullLineResults = {
+      ...sortResults,
+      findings: [
+        { issue_type: 'no_line',   line_number: null, severity: 'High', message: 'msg-null' },
+        { issue_type: 'has_line',  line_number: 3,    severity: 'Low',  message: 'msg-has' },
+        { issue_type: 'also_line', line_number: 1,    severity: 'Med',  message: 'msg-also' },
+      ],
+    }
+    render(<ResultsPanel results={nullLineResults} loading={false} error={null} />)
+    fireEvent.click(screen.getAllByRole('button', { name: /^Line$/i })[0])
+    // L1 and L3 should appear before the null-line item (which has no L-tag)
+    const lines = screen.getAllByText(/^L\d+$/)
+    expect(lines[0].textContent).toBe('L1')
+    expect(lines[1].textContent).toBe('L3')
+    // The null-line finding's issue type still renders, just last
+    const items = screen.getAllByText(/msg-null|msg-has|msg-also/)
+    expect(items[items.length - 1].textContent).toBe('msg-null')
+  })
+})

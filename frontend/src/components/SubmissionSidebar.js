@@ -128,6 +128,11 @@ const SubmissionSidebar = forwardRef(function SubmissionSidebar(
       setEditingId(null)
       return
     }
+    const original = submissions.find((s) => s.submission_id === submissionId)
+    if (editValue.trim() === (original?.name || '')) {
+      setEditingId(null)
+      return
+    }
     try {
       await renameSubmission(submissionId, editValue.trim(), token)
       toast('Submission renamed', 'success')

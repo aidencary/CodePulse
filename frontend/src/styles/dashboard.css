@@ -15,10 +15,10 @@
 
 /* ─── Light mode overrides ─────────────────────────────────────── */
 :root[data-theme="light"] {
-  --bg:          #f0f0f0;
-  --surface:     #e8e8e6;
+  --bg:          #e4e4e4;
+  --surface:     #d8d8d6;
   --editor-bg:   #ffffff;
-  --border:      #d0d0ce;
+  --border:      #c0c0be;
   --text:        #1a1a18;
   --muted:       #737370;
   --accent:      #1a1a18;
@@ -243,6 +243,7 @@ body {
 }
 
 .nav-brand {
+  cursor: pointer;
   font-size: 1rem;
   font-weight: 700;
   letter-spacing: 0.02em;
@@ -657,6 +658,11 @@ body {
   overflow: hidden;
 }
 
+.editor-highlight-line {
+  background: rgba(255, 200, 0, 0.12);
+  border-left: 2px solid rgba(255, 200, 0, 0.6);
+}
+
 /* ─── Results panel ────────────────────────────────────────────── */
 .results-panel {
   width: 320px;
@@ -805,6 +811,40 @@ body {
   color: var(--bg);
 }
 
+.sort-controls {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.sort-pill {
+  background: var(--border);
+  color: var(--muted);
+  border: none;
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.sort-pill:hover {
+  background: var(--muted);
+  color: var(--bg);
+}
+
+.sort-pill--active {
+  background: var(--purple);
+  color: #fff;
+}
+
+.sort-pill--active:hover {
+  background: var(--purple-lite);
+  color: var(--bg);
+}
+
 .badge {
   background: var(--border);
   color: var(--text);
@@ -833,6 +873,26 @@ body {
 /* Predicted bugs: medium / critical (low and high reuse above) */
 .severity-medium   { background: rgba(250, 204, 21, 0.15);  color: #facc15; }
 .severity-critical { background: rgba(248, 113, 113, 0.25); color: #ff4444; }
+
+/* ─── Ignore button ─────────────────────────────────────────────── */
+.ignore-btn {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: var(--text-muted, #888);
+  cursor: pointer;
+  font-size: 0.75rem;
+  line-height: 1;
+  padding: 0 0.15rem;
+  opacity: 0.4;
+  transition: opacity 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+
+.ignore-btn:hover {
+  opacity: 1;
+  color: var(--text);
+}
 
 /* ─── Finding items ─────────────────────────────────────────────── */
 .finding-item {
@@ -957,6 +1017,32 @@ body {
 }
 
 /* ─── Editor toolbar layout ───────────────────────────────────── */
+.editor-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.copy-btn {
+  padding: 0.45rem 0.9rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.copy-btn:hover:not(:disabled) {
+  background: var(--border);
+}
+
+.copy-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 .editor-toolbar-left {
   display: flex;
   align-items: center;

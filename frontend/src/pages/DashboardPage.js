@@ -41,6 +41,7 @@ function DashboardPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [activeId, setActiveId] = useState(null)
+  const [hoveredLine, setHoveredLine] = useState(null)
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [theme, setTheme] = useState(
     () => localStorage.getItem('cp-theme') || 'dark'
@@ -128,7 +129,6 @@ function DashboardPage() {
             onClick={() => handleSelectSubmission(null)}
             role="button"
             tabIndex={0}
-            style={{ cursor: 'pointer' }}
           >CodePulse</span>
           <div className="nav-user">
             <span className="nav-username">{username}</span>
@@ -150,8 +150,9 @@ function DashboardPage() {
             onRun={handleRun}
             loading={loading}
             isDark={theme === 'dark'}
+            highlightLine={hoveredLine}
           />
-          <ResultsPanel results={results} loading={loading} error={error} />
+          <ResultsPanel results={results} loading={loading} error={error} onHoverLine={setHoveredLine} />
         </main>
       </div>
     </div>

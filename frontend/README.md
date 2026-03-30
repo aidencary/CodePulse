@@ -36,10 +36,11 @@ frontend/
     │   └── AuthContext.js      # Auth state, useAuth hook, signIn/signUp/signOut, refreshSession
     ├── components/
     │   ├── ProtectedRoute.js   # Redirects unauthenticated users to /login
-    │   ├── CodeEditor.js       # Monaco editor + submission name input + Run Analysis button
-    │   ├── ResultsPanel.js     # Score circle, static findings (severity-sorted), AI bug prediction cards (severity-sorted with toggle)
+    │   ├── CodeEditor.js       # Monaco editor + Copy button + Run Analysis button; highlights hovered finding line
+    │   ├── ResultsPanel.js     # Score circle, static findings and AI bug cards; SortControls with Severity|Line pills + ↑/↓ direction toggle; combined two-key sort; per-item ignore/dismiss
+    │   ├── BugCard.js          # Collapsible AI bug prediction card with ignore and hover-highlight support
     │   ├── ProfileDropdown.js  # User avatar and dropdown menu (links to /account)
-    │   ├── SubmissionSidebar.js # Collapsible sidebar with rename/delete/pin via kebab menu
+    │   ├── SubmissionSidebar.js # Collapsible sidebar with rename/delete/pin via kebab menu; skips API call if name unchanged
     │   └── Toast.js            # Toast notification system (ToastProvider + useToast)
     ├── pages/
     │   ├── LoginPage.js        # Log In / Sign Up form (toggled)
@@ -124,12 +125,12 @@ npm test -- --watchAll=false   # Run once and exit (used in CI)
 | `components/__tests__/ProtectedRoute.test.js` | Loading state, unauthenticated redirect, authenticated render |
 | `context/__tests__/AuthContext.test.js` | Auth lifecycle, signIn / signUp / signOut calls |
 | `pages/__tests__/LoginPage.test.js` | Form toggle, submission handlers, error display, sign-up success banner |
-| `components/__tests__/CodeEditor.test.js` | Renders editor, button click fires onRun, disabled during loading |
-| `components/__tests__/ResultsPanel.test.js` | Idle, loading, error, score, findings, predicted bugs (expand/collapse), empty states, severity sorting with toggle (17 tests) |
-| `components/__tests__/SubmissionSidebar.test.js` | Render names, fallback, search, rename, delete, pin/star, collapse (11 tests) |
+| `components/__tests__/CodeEditor.test.js` | Renders editor, button click fires onRun, disabled during loading, copy button disabled when empty (4 tests) |
+| `components/__tests__/ResultsPanel.test.js` | Idle, loading, error, score, findings, bugs (expand/collapse), empty states, ignore/dismiss, hover line, severity sort, line sort, tiebreaker, null-line sort (29 tests) |
+| `components/__tests__/SubmissionSidebar.test.js` | Render names, fallback, search, rename no-op, rename, delete, pin/star, collapse (12 tests) |
 | `pages/__tests__/AccountPage.test.js` | Profile load/display, username validation, password change, delete modal (10 tests) |
 
-53 tests, all passing.
+66 tests, all passing.
 
 ---
 
@@ -169,7 +170,10 @@ A pull request cannot be merged if any step fails.
 | JWT token hand-off pattern | Done |
 | Dashboard UI | Done |
 | Code editor / submission flow | Done |
-| Results display (severity sorting with high-to-low default, toggle for low-to-high) | Done |
+| Results display (Severity/Line field selector pills + ↑/↓ direction toggle; two-key combined sort; resets on submission change) | Done |
+| Copy-to-clipboard button in editor toolbar | Done |
+| Hover finding/bug to highlight corresponding editor line | Done |
+| Ignore/dismiss individual findings and bugs | Done |
 | Account settings page (profile, avatar, password, delete) | Done |
 | Submission sidebar (rename, delete, pin/star via kebab menu) | Done |
 | Submission naming (name input, GPT auto-generation) | Done |
