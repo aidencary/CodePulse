@@ -59,8 +59,9 @@ Return at most {MAX_BUGS_RETURNED} bugs. Return an empty array if no bugs are fo
 
 
 def _build_user_message(code: str, language: str) -> str:
-    """Wrap the user's code in a clear prompt."""
-    return f"Analyse the following {language} code:\n\n```{language}\n{code}\n```"
+    """Wrap the user's code in a clear prompt, with line numbers so GPT references them accurately."""
+    numbered = "\n".join(f"{i + 1}: {line}" for i, line in enumerate(code.splitlines()))
+    return f"Analyse the following {language} code:\n\n```\n{numbered}\n```"
 
 
 # Public API
