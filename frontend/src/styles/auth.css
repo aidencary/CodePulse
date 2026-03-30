@@ -169,3 +169,32 @@ body {
   color: var(--muted);
   background: var(--bg);
 }
+
+
+/* ─── Inline link button ────────────────────────────────────────── */
+.auth-link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--accent);
+  cursor: pointer;
+  font-size: 0.85rem;
+  text-decoration: underline;
+  display: block;
+  margin-top: 0.5rem;
+}
+
+/* ─── Reset page loading state ──────────────────────────────────── */
+.auth-loading {
+  text-align: center;
+  color: var(--muted);
+  padding: 1rem 0;
+}
+
+/* ─── MFA hint ──────────────────────────────────────────────────── */
+.auth-mfa-hint {
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}

@@ -9,6 +9,7 @@ import {
   changePassword,
   deleteAccount,
 } from '../services/accountService'
+import TwoFactorSection from '../components/TwoFactorSection'
 import '../styles/dashboard.css'
 import '../styles/account.css'
 
@@ -357,6 +358,9 @@ function AccountPage() {
             </button>
           </form>
         </section>
+
+        {/* ── Security Section ── */}
+        <TwoFactorSection />
 
         {/* ── Danger Zone ── */}
         <section className="account-section danger-zone">

@@ -195,7 +195,7 @@ pytest tests/test_gpt_predictor.py -v    # GPT predictor tests (mocked)
 pytest tests/test_analyze_route.py -v    # Route integration tests
 ```
 
-114 tests, all passing. Add a corresponding test file in `tests/` for each new service module.
+116 tests, all passing. Add a corresponding test file in `tests/` for each new service module.
 
 ---
 
