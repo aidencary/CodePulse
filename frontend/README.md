@@ -43,9 +43,10 @@ frontend/
     │   ├── SubmissionSidebar.js # Collapsible sidebar with rename/delete/pin via kebab menu; skips API call if name unchanged
     │   └── Toast.js            # Toast notification system (ToastProvider + useToast)
     ├── pages/
-    │   ├── LoginPage.js        # Log In / Sign Up form (toggled)
+    │   ├── LoginPage.js        # Log In / Sign Up / Forgot Password form (toggled)
     │   ├── DashboardPage.js    # Dashboard shell — editor + results + submission naming
-    │   └── AccountPage.js      # Account settings — profile, avatar, password, delete
+    │   ├── AccountPage.js      # Account settings — profile, avatar, password, delete
+    │   └── ResetPasswordPage.js # Password reset form — validates token, updates password
     └── styles/
         ├── auth.css            # Login/sign-up form styles
         ├── dashboard.css       # Dashboard + toast + submission naming styles
@@ -60,6 +61,7 @@ frontend/
 |------|--------|-------------|
 | `/` | Public | Redirects to `/dashboard` |
 | `/login` | Public | Log In and Sign Up forms |
+| `/reset-password` | Public | Set a new password after clicking a reset email link |
 | `/dashboard` | Protected | Main dashboard — requires authentication |
 | `/account` | Protected | Account settings — profile, avatar, password, delete |
 
@@ -124,7 +126,8 @@ npm test -- --watchAll=false   # Run once and exit (used in CI)
 |-----------|----------|
 | `components/__tests__/ProtectedRoute.test.js` | Loading state, unauthenticated redirect, authenticated render |
 | `context/__tests__/AuthContext.test.js` | Auth lifecycle, signIn / signUp / signOut calls |
-| `pages/__tests__/LoginPage.test.js` | Form toggle, submission handlers, error display, sign-up success banner |
+| `pages/__tests__/LoginPage.test.js` | Form toggle, submission handlers, error display, sign-up success banner, forgot password flow (5 tests) |
+| `pages/__tests__/ResetPasswordPage.test.js` | Loading state, PASSWORD_RECOVERY trigger, validation, updateUser call, toast + navigation, error on expired link, submit disabled while pending (8 tests) |
 | `components/__tests__/CodeEditor.test.js` | Renders editor, button click fires onRun, disabled during loading, copy button disabled when empty (4 tests) |
 | `components/__tests__/ResultsPanel.test.js` | Idle, loading, error, score, findings, bugs (expand/collapse), empty states, ignore/dismiss, hover line, severity sort, line sort, tiebreaker, null-line sort (29 tests) |
 | `components/__tests__/SubmissionSidebar.test.js` | Render names, fallback, search, rename no-op, rename, delete, pin/star, collapse (12 tests) |

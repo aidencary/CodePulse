@@ -1,16 +1,18 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import supabase from '../services/supabaseClient'
 import '../styles/auth.css'
 
 function LoginPage() {
-  const [mode, setMode] = useState('login') // 'login' | 'signup'
+  const [mode, setMode] = useState('login') // 'login' | 'signup' | 'forgot'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [username, setUsername] = useState('')
   const [error, setError] = useState(null)
   const [success, setSuccess] = useState(null)
   const [submitting, setSubmitting] = useState(false)
+  const [loginFailed, setLoginFailed] = useState(false)
 
   const { signIn, signUp } = useAuth()
   const navigate = useNavigate()
@@ -21,6 +23,20 @@ function LoginPage() {
     setSuccess(null)
     setSubmitting(true)
 
+    if (mode === 'forgot') {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      })
+      setSubmitting(false)
+      if (error) {
+        setError(error.message)
+      } else {
+        setSuccess('Check your email for a password reset link.')
+        setEmail('')
+      }
+      return
+    }
+
     const { error } = mode === 'login'
       ? await signIn(email, password)
       : await signUp(email, password, username)
@@ -29,6 +45,7 @@ function LoginPage() {
 
     if (error) {
       setError(error.message)
+      if (mode === 'login') setLoginFailed(true)
     } else if (mode === 'login') {
       navigate('/dashboard')
     } else {
@@ -40,6 +57,7 @@ function LoginPage() {
     setMode(newMode)
     setError(null)
     setSuccess(null)
+    setLoginFailed(false)
   }
 
   return (
@@ -47,20 +65,22 @@ function LoginPage() {
       <div className="auth-card">
         <h1 className="auth-title">CodePulse</h1>
 
-        <div className="auth-toggle">
-          <button
-            className={mode === 'login' ? 'active' : ''}
-            onClick={() => switchMode('login')}
-          >
-            Log In
-          </button>
-          <button
-            className={mode === 'signup' ? 'active' : ''}
-            onClick={() => switchMode('signup')}
-          >
-            Sign Up
-          </button>
-        </div>
+        {mode !== 'forgot' && (
+          <div className="auth-toggle">
+            <button
+              className={mode === 'login' ? 'active' : ''}
+              onClick={() => switchMode('login')}
+            >
+              Log In
+            </button>
+            <button
+              className={mode === 'signup' ? 'active' : ''}
+              onClick={() => switchMode('signup')}
+            >
+              Sign Up
+            </button>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="auth-form" aria-label="authentication">
           {mode === 'signup' && (
@@ -94,20 +114,32 @@ function LoginPage() {
             />
           </div>
 
-          <div className="form-group">
-            <label htmlFor="password">Password</label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-              minLength={8}
-              maxLength={128}
-              placeholder="••••••••"
-            />
-          </div>
+          {mode !== 'forgot' && (
+            <div className="form-group">
+              <label htmlFor="password">Password</label>
+              <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+                minLength={8}
+                maxLength={128}
+                placeholder="••••••••"
+              />
+            </div>
+          )}
+
+          {mode === 'login' && loginFailed && (
+            <button
+              type="button"
+              className="auth-link"
+              onClick={() => switchMode('forgot')}
+            >
+              Forgot password?
+            </button>
+          )}
 
           {error && <p className="auth-error">{error}</p>}
           {success && <p className="auth-success">{success}</p>}
@@ -115,8 +147,22 @@ function LoginPage() {
           <button type="submit" className="auth-submit" disabled={submitting}>
             {submitting
               ? 'Please wait...'
-              : mode === 'login' ? 'Log In' : 'Create Account'}
+              : mode === 'login'
+              ? 'Log In'
+              : mode === 'signup'
+              ? 'Create Account'
+              : 'Send Reset Email'}
           </button>
+
+          {mode === 'forgot' && (
+            <button
+              type="button"
+              className="auth-link"
+              onClick={() => switchMode('login')}
+            >
+              Back to Log In
+            </button>
+          )}
         </form>
       </div>
     </div>
