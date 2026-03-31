@@ -4,11 +4,13 @@ import logging
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 
+from app.config import get_settings
 from app.database import get_supabase_client
 from app.dependencies import get_current_user
 from app.models.account import (
     AvatarUploadResponse,
     ChangePasswordRequest,
+    InviteUserRequest,
     ProfileResponse,
     ProfileUpdateRequest,
 )
@@ -191,6 +193,33 @@ async def change_password(
     sb.auth.admin.update_user_by_id(user_id, {"password": body.new_password})
 
     return {"detail": "Password changed successfully"}
+
+
+# ------------------------------------------------------------------
+# POST /account/invite
+# ------------------------------------------------------------------
+@router.post("/invite", status_code=status.HTTP_200_OK)
+async def invite_user(
+    body: InviteUserRequest,
+    user_id: str = Depends(get_current_user),
+):
+    """Send a Supabase invite email to the given address."""
+    sb = get_supabase_client()
+    settings = get_settings()
+
+    try:
+        sb.auth.admin.invite_user_by_email(
+            body.email,
+            options={"redirect_to": settings.site_url},
+        )
+    except Exception as exc:
+        logger.error("Failed to invite %s: %s", body.email, exc)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(exc),
+        )
+
+    return {"detail": f"Invite sent to {body.email}"}
 
 
 # ------------------------------------------------------------------

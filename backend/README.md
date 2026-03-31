@@ -28,10 +28,10 @@ backend/
 │   ├── database.py             # Supabase service-role client (cached singleton)
 │   ├── models/
 │   │   ├── analysis.py         # AnalyzeRequest / AnalyzeResponse / Finding / PredictedBug / SubmissionListItem / SubmissionRenameRequest
-│   │   └── account.py          # ProfileResponse / ProfileUpdateRequest / ChangePasswordRequest / AvatarUploadResponse
+│   │   └── account.py          # ProfileResponse / ProfileUpdateRequest / ChangePasswordRequest / AvatarUploadResponse / InviteUserRequest
 │   ├── routes/
 │   │   ├── analysis.py         # POST /api/v1/analyze (with submission naming + reanalyze)
-│   │   ├── account.py          # GET/PATCH/DELETE /api/v1/account + avatar upload + password change
+│   │   ├── account.py          # GET/PATCH/DELETE /api/v1/account + avatar upload + password change + invite
 │   │   └── submissions.py      # GET/PATCH/DELETE /api/v1/submissions + pin toggle
 │   └── services/
 │       ├── analysis_engine.py  # AST-based static analyzer (24 PEP 8 checks) + score computation
@@ -45,6 +45,7 @@ backend/
 │   ├── test_gpt_predictor.py       # GPT predictor unit tests (mocked OpenAI)
 │   ├── test_account_routes.py      # Account CRUD route tests (13 tests)
 │   └── test_submission_routes.py   # Submission CRUD route tests (13 tests)
+│       test_account_routes.py      # Account CRUD route tests (16 tests — includes invite)
 ├── database/
 │   └── schema.sql              # Supabase PostgreSQL schema (source of truth)
 ├── Dockerfile
@@ -144,6 +145,7 @@ uvicorn app.main:app --reload   # Runs at http://localhost:8000
 | `SUPABASE_JWT_SECRET` | Yes | Supabase Dashboard → Settings → API → JWT Secret |
 | `OPENAI_API_KEY` | Yes | OpenAI Dashboard → API Keys — used by the GPT bug predictor |
 | `GPT_MODEL` | No | GPT model name (default: `gpt-4o-mini`) |
+| `SITE_URL` | No | Production frontend URL used as invite redirect (default: `https://code-pulse-six.vercel.app`) |
 | `ALLOWED_ORIGINS` | Yes | Comma-separated allowed CORS origins (e.g. `http://localhost:3000`) |
 | `DEBUG` | No | Set to `true` locally to enable `/docs` and `/redoc`; omit in production |
 
@@ -169,6 +171,7 @@ docker run -p 8000:8000 --env-file .env codepulse-backend
 | `PATCH` | `/api/v1/account/profile` | Bearer JWT | Update username and/or profile picture URL |
 | `POST` | `/api/v1/account/avatar` | Bearer JWT | Upload profile picture (multipart, ≤2 MB) |
 | `POST` | `/api/v1/account/change-password` | Bearer JWT | Change password (verifies current password) |
+| `POST` | `/api/v1/account/invite` | Bearer JWT | Send a Supabase invite email to a new user |
 | `DELETE` | `/api/v1/account` | Bearer JWT | Delete account (cascades all user data) |
 | `GET` | `/api/v1/submissions` | Bearer JWT | List user's submissions with scores |
 | `PATCH` | `/api/v1/submissions/{id}` | Bearer JWT | Rename a submission |
@@ -195,7 +198,7 @@ pytest tests/test_gpt_predictor.py -v    # GPT predictor tests (mocked)
 pytest tests/test_analyze_route.py -v    # Route integration tests
 ```
 
-116 tests, all passing. Add a corresponding test file in `tests/` for each new service module.
+119 tests, all passing. Add a corresponding test file in `tests/` for each new service module.
 
 ---
 
@@ -241,5 +244,6 @@ A pull request cannot be merged if any CI step fails. All new code must be Black
 | Submission persistence to Supabase (`app/services/persistence_service.py`) | Done |
 | Postman collection + Newman CI | Done |
 | Account CRUD endpoints (profile, avatar, password, delete) | Done |
+| User invite endpoint (`POST /api/v1/account/invite`) | Done |
 | Submission CRUD endpoints (list, rename, delete, pin) | Done |
 | Submission naming (user-provided or GPT-generated) | Done |

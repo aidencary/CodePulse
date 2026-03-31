@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     supabase_jwt_secret: str
     openai_api_key: str
     gpt_model: str = "gpt-4o-mini"
+    site_url: str = "http://localhost:3000"
 
     model_config = SettingsConfigDict(
         env_file=".env", env_file_encoding="utf-8", extra="ignore"

@@ -50,6 +50,22 @@ export async function changePassword(token, data) {
   return res.json()
 }
 
+export async function inviteUser(token, email) {
+  const res = await fetch(`${API_URL}/api/v1/account/invite`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ email }),
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw new Error(data.detail || `Failed to send invite (${res.status})`)
+  }
+  return res.json()
+}
+
 export async function deleteAccount(token) {
   const res = await fetch(`${API_URL}/api/v1/account`, {
     method: 'DELETE',

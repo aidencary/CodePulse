@@ -315,3 +315,63 @@ def test_delete_account_no_auth() -> None:
     """DELETE /account without Authorization header returns 422."""
     resp = client.delete("/api/v1/account")
     assert resp.status_code == 422
+
+
+# ------------------------------------------------------------------
+# POST /api/v1/account/invite
+# ------------------------------------------------------------------
+
+_INVITE_SETTINGS = MagicMock(site_url="https://code-pulse-six.vercel.app")
+
+
+def test_invite_user_success() -> None:
+    """POST /invite sends an invite and returns 200 with confirmation."""
+    sb, _ = _make_mock_supabase()
+    sb.auth.admin.invite_user_by_email.return_value = MagicMock()
+
+    with (
+        patch("app.routes.account.get_supabase_client", return_value=sb),
+        patch("app.routes.account.get_settings", return_value=_INVITE_SETTINGS),
+    ):
+        resp = client.post(
+            "/api/v1/account/invite",
+            json={"email": "newuser@example.com"},
+            headers=_make_headers(),
+        )
+
+    assert resp.status_code == 200
+    assert "newuser@example.com" in resp.json()["detail"]
+    sb.auth.admin.invite_user_by_email.assert_called_once_with(
+        "newuser@example.com",
+        options={"redirect_to": "https://code-pulse-six.vercel.app"},
+    )
+
+
+def test_invite_user_supabase_error() -> None:
+    """POST /invite returns 400 with the Supabase error message on failure."""
+    sb, _ = _make_mock_supabase()
+    sb.auth.admin.invite_user_by_email.side_effect = Exception(
+        "User already registered"
+    )
+
+    with (
+        patch("app.routes.account.get_supabase_client", return_value=sb),
+        patch("app.routes.account.get_settings", return_value=_INVITE_SETTINGS),
+    ):
+        resp = client.post(
+            "/api/v1/account/invite",
+            json={"email": "existing@example.com"},
+            headers=_make_headers(),
+        )
+
+    assert resp.status_code == 400
+    assert "User already registered" in resp.json()["detail"]
+
+
+def test_invite_user_no_auth() -> None:
+    """POST /invite without Authorization header returns 422."""
+    resp = client.post(
+        "/api/v1/account/invite",
+        json={"email": "newuser@example.com"},
+    )
+    assert resp.status_code == 422
