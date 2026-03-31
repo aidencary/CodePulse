@@ -53,3 +53,9 @@ class AvatarUploadResponse(BaseModel):
     """Response after a successful avatar upload."""
 
     profile_picture: str
+
+
+class InviteUserRequest(BaseModel):
+    """Payload for inviting a new user by email."""
+
+    email: str = Field(..., min_length=3, max_length=254)

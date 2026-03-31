@@ -6,6 +6,7 @@ import CodeEditor from '../components/CodeEditor'
 import ResultsPanel from '../components/ResultsPanel'
 import SubmissionSidebar from '../components/SubmissionSidebar'
 import ProfileDropdown from '../components/ProfileDropdown'
+import InviteModal from '../components/InviteModal'
 import '../styles/dashboard.css'
 
 function SunIcon() {
@@ -46,6 +47,7 @@ function DashboardPage() {
   const [theme, setTheme] = useState(
     () => localStorage.getItem('cp-theme') || 'dark'
   )
+  const [inviteOpen, setInviteOpen] = useState(false)
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
@@ -122,6 +124,8 @@ function DashboardPage() {
         onOpen={() => setSidebarOpen(true)}
       />
 
+      {inviteOpen && <InviteModal onClose={() => setInviteOpen(false)} />}
+
       <div className="dashboard-right">
         <nav className="dashboard-nav">
           <span
@@ -131,6 +135,13 @@ function DashboardPage() {
             tabIndex={0}
           >CodePulse</span>
           <div className="nav-user">
+            <button
+              className="nav-invite-btn"
+              onClick={() => setInviteOpen(true)}
+              type="button"
+            >
+              + Invite
+            </button>
             <span className="nav-username">{username}</span>
             <ProfileDropdown user={user} />
             <button
