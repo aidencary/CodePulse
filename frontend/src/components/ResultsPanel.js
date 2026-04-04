@@ -43,6 +43,11 @@ function SortControls({ field, direction, onFieldChange, onDirectionToggle }) {
 }
 
 
+// FR-REPORT-001
+// FR-REPORT-002
+// FR-REPORT-003
+// FR-REPORT-004
+// FR-REPORT-005
 function ResultsPanel({ results, loading, error, onHoverLine }) {
   const [findingSort, setFindingSort] = useState('desc')
   const [findingSortField, setFindingSortField] = useState('severity')
@@ -168,6 +173,7 @@ function ResultsPanel({ results, loading, error, onHoverLine }) {
           </div>
 
           {/* Static Analysis Findings */}
+          {/* FR-REPORT-001 FR-REPORT-003 FR-REPORT-004 FR-REPORT-005 */}
           <section className="results-section">
             <h3 className="section-title">
               Static Analysis{' '}
@@ -212,6 +218,7 @@ function ResultsPanel({ results, loading, error, onHoverLine }) {
           </section>
 
           {/* AI Bug Predictions */}
+          {/* FR-REPORT-002 FR-REPORT-003 FR-REPORT-004 FR-REPORT-005 */}
           <section className="results-section">
             <h3 className="section-title">
               AI Bug Predictions{' '}

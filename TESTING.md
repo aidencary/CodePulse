@@ -48,6 +48,9 @@ All test files live in `__tests__/` directories next to the code they test.
 | `src/pages/__tests__/LoginPage.test.js` | Log In / Sign Up form toggle, form submission handlers, error message display |
 | `src/pages/__tests__/AccountPage.test.js` | Profile load/display, username validation, update profile, change password validation/success, delete modal and confirmation (10 tests) |
 | `src/components/__tests__/SubmissionSidebar.test.js` | Render names, fallback to code, search filter, rename (kebab menu/Enter/Escape), delete confirmation, pin/star toggle, pinned icon display, collapsed state (11 tests) |
+| `src/components/__tests__/InviteModal.test.js` | Email invite modal — render, empty-email disable, submit handler, success toast, error display, cancel, backdrop click, loading state (9 tests) |
+| `src/components/__tests__/TwoFactorSection.test.js` | TOTP enrollment (enroll call, QR code, manual secret), verification (challengeAndVerify, error), successful enable, unenrollment, status display (11 tests) |
+| `src/pages/__tests__/ResetPasswordPage.test.js` | PASSWORD_RECOVERY wait state, form render, password mismatch / too-short validation, successful updateUser, success toast + redirect, expired-link error, button disable while submitting (8 tests) |
 
 ### Mocking Strategy
 
@@ -275,6 +278,370 @@ A PR to `main` cannot be merged if any CI step fails. Before opening a PR:
 4. Run `npm audit --audit-level=critical` in `frontend/` — fix anything reported
 5. Commit and push — GitHub Actions will run automatically
 6. Check the Actions tab on GitHub to confirm all checks are green
+
+---
+
+## Test Matrix
+
+Every automated test case is listed here with its ID and the requirement(s) it covers.
+Test IDs follow the pattern `TC-{MODULE}-{NNN}`. For full requirement descriptions see
+[REQUIREMENTS.md](REQUIREMENTS.md).
+
+---
+
+### Backend — Unit Tests
+
+#### `tests/test_analysis_engine.py`
+
+| TC-ID | Test Function | Requirements Covered |
+|-------|---------------|----------------------|
+| TC-ANALYSIS-001 | `test_long_line_detected` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-002 | `test_long_line_not_flagged_at_exactly_88` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-003 | `test_long_line_not_flagged_below_limit` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-004 | `test_missing_docstring_on_function` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-005 | `test_missing_docstring_not_flagged_when_present` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-006 | `test_dunder_method_not_flagged_for_missing_docstring` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-007 | `test_missing_docstring_on_class` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-008 | `test_bare_except_detected` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-009 | `test_bare_except_not_flagged_with_type` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-010 | `test_syntax_error_returns_high_finding` | FR-ANALYSIS-001, FR-ANALYSIS-002 |
+| TC-ANALYSIS-011 | `test_score_is_100_for_clean_code` | FR-REPORT-001 |
+| TC-ANALYSIS-012 | `test_score_decreases_with_findings` | FR-REPORT-001 |
+| TC-ANALYSIS-013 | `test_score_floor_is_zero` | FR-REPORT-001 |
+| TC-ANALYSIS-014 | `test_compute_score_includes_predicted_bugs` | FR-REPORT-001, FR-ANALYSIS-003 |
+| TC-ANALYSIS-015 | `test_camel_case_function_detected` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-016 | `test_snake_case_function_not_flagged` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-017 | `test_non_pascal_case_class_detected` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-018 | `test_pascal_case_class_not_flagged` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-019 | `test_ambiguous_name_detected` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-020 | `test_ambiguous_name_not_flagged_for_other_singles` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-021 | `test_camel_case_variable_detected` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-022 | `test_wrong_self_detected` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-023 | `test_correct_self_not_flagged` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-024 | `test_wrong_cls_detected` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-025 | `test_staticmethod_not_flagged` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-026 | `test_none_equality_detected` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-027 | `test_none_is_not_flagged` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-028 | `test_boolean_comparison_detected` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-029 | `test_boolean_comparison_not_flagged_for_direct_use` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-030 | `test_type_comparison_detected` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-031 | `test_isinstance_not_flagged` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-032 | `test_len_equals_zero_detected` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-033 | `test_truthiness_not_flagged` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-034 | `test_lambda_assignment_detected` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-035 | `test_lambda_in_call_not_flagged` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-036 | `test_multi_import_detected` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-037 | `test_separate_imports_not_flagged` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-038 | `test_from_import_multi_names_not_flagged` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-039 | `test_not_is_detected` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-040 | `test_is_not_not_flagged` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-041 | `test_inconsistent_returns_detected` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-042 | `test_consistent_returns_not_flagged` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-043 | `test_base_exception_inheritance_detected` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-044 | `test_exception_inheritance_not_flagged` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-045 | `test_string_prefix_slicing_detected` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-046 | `test_string_suffix_slicing_detected` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-047 | `test_startswith_not_flagged` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-048 | `test_trailing_whitespace_detected` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-049 | `test_no_trailing_whitespace_not_flagged` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-050 | `test_tab_indentation_detected` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-051 | `test_space_indentation_not_flagged` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-052 | `test_missing_blank_lines_before_top_level_def` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-053 | `test_correct_blank_lines_before_top_level_def` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-054 | `test_missing_blank_line_between_methods` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-055 | `test_correct_blank_line_between_methods` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-056 | `test_inline_comment_too_close_detected` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-057 | `test_inline_comment_proper_spacing_not_flagged` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-058 | `test_block_comment_not_flagged_as_inline` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-059 | `test_comment_missing_space_after_hash` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-060 | `test_comment_with_space_after_hash_not_flagged` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-061 | `test_shebang_not_flagged` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-062 | `test_triple_single_quotes_detected` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-063 | `test_triple_double_quotes_not_flagged` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-064 | `test_stdlib_after_third_party_detected` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-065 | `test_properly_grouped_imports_not_flagged` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-066 | `test_broad_try_block_detected` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-067 | `test_narrow_try_block_not_flagged` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-068 | `test_try_finally_close_detected` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-069 | `test_with_statement_not_flagged` | FR-ANALYSIS-002 |
+
+#### `tests/test_gpt_predictor.py`
+
+| TC-ID | Test Function | Requirements Covered |
+|-------|---------------|----------------------|
+| TC-ANALYSIS-070 | `test_returns_predicted_bugs_on_valid_response` | FR-ANALYSIS-003 |
+| TC-ANALYSIS-071 | `test_returns_empty_list_on_empty_predicted_bugs_array` | FR-ANALYSIS-003 |
+| TC-ANALYSIS-072 | `test_returns_empty_list_on_api_error` | FR-ANALYSIS-003, NFR-RELI-001 |
+| TC-ANALYSIS-073 | `test_returns_empty_list_on_malformed_json` | FR-ANALYSIS-003, NFR-RELI-001 |
+| TC-ANALYSIS-074 | `test_returns_empty_list_on_schema_validation_failure` | FR-ANALYSIS-003, NFR-RELI-001 |
+| TC-ANALYSIS-075 | `test_system_prompt_includes_static_findings` | FR-ANALYSIS-003 |
+| TC-ANALYSIS-076 | `test_user_message_prefixes_each_line_with_line_number` | FR-ANALYSIS-003 |
+| TC-ANALYSIS-077 | `test_user_message_preserves_blank_lines` | FR-ANALYSIS-003 |
+
+---
+
+### Backend — Integration Tests
+
+#### `tests/test_analyze_endpoint.py`
+
+| TC-ID | Test Function | Requirements Covered |
+|-------|---------------|----------------------|
+| TC-AUTH-001 | `test_health_check` | — |
+| TC-AUTH-002 | `test_analyze_missing_auth_header` | FR-AUTH-007 |
+| TC-AUTH-003 | `test_analyze_malformed_token` | FR-AUTH-007 |
+| TC-AUTH-004 | `test_analyze_wrong_prefix` | FR-AUTH-007 |
+| TC-ANALYSIS-084 | `test_analyze_valid_token_returns_analysis` | FR-ANALYSIS-001, FR-AUTH-007 |
+| TC-ANALYSIS-085 | `test_analyze_missing_code_field` | FR-ANALYSIS-001 |
+
+#### `tests/test_analyze_route.py`
+
+| TC-ID | Test Function | Requirements Covered |
+|-------|---------------|----------------------|
+| TC-ANALYSIS-078 | `test_analyze_returns_correct_shape` | FR-REPORT-001, FR-REPORT-002 |
+| TC-ANALYSIS-079 | `test_analyze_score_in_range` | FR-REPORT-001, NFR-PERF-001 |
+| TC-ANALYSIS-080 | `test_analyze_findings_have_required_fields` | FR-REPORT-001 |
+| TC-ANALYSIS-081 | `test_analyze_predicted_bugs_have_required_fields` | FR-REPORT-002 |
+| TC-ANALYSIS-082 | `test_analyze_persistence_failure_still_returns_200` | NFR-RELI-001 |
+| TC-ANALYSIS-083 | `test_analyze_code_too_long_returns_422` | NFR-RELI-001 |
+
+#### `tests/test_account_routes.py`
+
+| TC-ID | Test Function | Requirements Covered |
+|-------|---------------|----------------------|
+| TC-ACCT-001 | `test_get_profile_success` | FR-ACCT-001 |
+| TC-ACCT-002 | `test_get_profile_no_auth` | FR-AUTH-007 |
+| TC-ACCT-003 | `test_update_profile_username` | FR-ACCT-001 |
+| TC-ACCT-004 | `test_update_profile_duplicate_username` | FR-ACCT-001 |
+| TC-ACCT-005 | `test_update_profile_invalid_username_chars` | FR-ACCT-001 |
+| TC-ACCT-006 | `test_update_profile_no_fields` | FR-ACCT-001 |
+| TC-ACCT-007 | `test_change_password_success` | FR-ACCT-003 |
+| TC-ACCT-008 | `test_change_password_wrong_current` | FR-ACCT-003 |
+| TC-ACCT-009 | `test_change_password_too_short` | FR-ACCT-003 |
+| TC-ACCT-010 | `test_upload_avatar_success` | FR-ACCT-002 |
+| TC-ACCT-011 | `test_upload_avatar_invalid_type` | FR-ACCT-002 |
+| TC-ACCT-012 | `test_delete_account_success` | FR-ACCT-004 |
+| TC-ACCT-013 | `test_delete_account_no_auth` | FR-AUTH-007 |
+| TC-ACCT-014 | `test_invite_user_success` | FR-ACCT-005 |
+| TC-ACCT-015 | `test_invite_user_supabase_error` | FR-ACCT-005 |
+| TC-ACCT-016 | `test_invite_user_no_auth` | FR-AUTH-007 |
+
+#### `tests/test_submission_routes.py`
+
+| TC-ID | Test Function | Requirements Covered |
+|-------|---------------|----------------------|
+| TC-HIST-001 | `test_list_submissions_success` | FR-HIST-001 |
+| TC-HIST-002 | `test_list_submissions_no_auth` | FR-AUTH-007 |
+| TC-HIST-003 | `test_rename_submission_success` | FR-HIST-003 |
+| TC-HIST-004 | `test_rename_submission_not_found` | FR-HIST-003 |
+| TC-HIST-005 | `test_rename_submission_not_owner` | FR-HIST-003, NFR-SEC-001 |
+| TC-HIST-006 | `test_rename_submission_empty_name` | FR-HIST-003 |
+| TC-HIST-007 | `test_delete_submission_success` | FR-HIST-004 |
+| TC-HIST-008 | `test_delete_submission_not_found` | FR-HIST-004 |
+| TC-HIST-009 | `test_delete_submission_not_owner` | FR-HIST-004, NFR-SEC-001 |
+| TC-HIST-010 | `test_toggle_pin_success` | FR-HIST-005 |
+| TC-HIST-011 | `test_toggle_unpin_success` | FR-HIST-005 |
+| TC-HIST-012 | `test_toggle_pin_not_found` | FR-HIST-005 |
+| TC-HIST-013 | `test_toggle_pin_not_owner` | FR-HIST-005, NFR-SEC-001 |
+
+---
+
+### Frontend — Unit Tests
+
+#### `src/components/__tests__/ProtectedRoute.test.js`
+
+| TC-ID | Test Description | Requirements Covered |
+|-------|-----------------|----------------------|
+| TC-AUTH-005 | renders loading indicator while auth state is initializing | FR-AUTH-007, NFR-USAB-001 |
+| TC-AUTH-006 | redirects to /login when user is not authenticated | FR-AUTH-007 |
+| TC-AUTH-007 | renders children when user is authenticated | FR-AUTH-007 |
+
+#### `src/components/__tests__/CodeEditor.test.js`
+
+| TC-ID | Test Description | Requirements Covered |
+|-------|-----------------|----------------------|
+| TC-DASH-001 | renders the editor and run button | FR-DASH-001 |
+| TC-DASH-002 | calls onRun with the current editor content when button is clicked | FR-DASH-001 |
+| TC-DASH-003 | disables the run button when loading is true | FR-DASH-002, NFR-USAB-001 |
+| TC-DASH-004 | renders the copy button and it is disabled when code is empty | FR-DASH-001 |
+
+#### `src/components/__tests__/ResultsPanel.test.js`
+
+| TC-ID | Test Description | Requirements Covered |
+|-------|-----------------|----------------------|
+| TC-REPORT-001 | shows idle placeholder when there are no results | FR-REPORT-001 |
+| TC-REPORT-002 | shows the error message on failure | FR-REPORT-001, NFR-RELI-001 |
+| TC-REPORT-003 | shows the skeleton with aria-label while loading | FR-DASH-002, NFR-USAB-001 |
+| TC-REPORT-004 | does not show the skeleton when not loading | FR-DASH-002 |
+| TC-REPORT-005 | displays the overall score | FR-REPORT-001 |
+| TC-REPORT-006 | displays the summary text | FR-REPORT-001 |
+| TC-REPORT-007 | renders each finding type | FR-REPORT-001 |
+| TC-REPORT-008 | renders finding line numbers | FR-REPORT-001 |
+| TC-REPORT-009 | renders finding messages | FR-REPORT-001 |
+| TC-REPORT-010 | shows empty state when findings array is empty | FR-REPORT-001 |
+| TC-REPORT-011 | renders the bug type | FR-REPORT-002 |
+| TC-REPORT-012 | renders the bug description | FR-REPORT-002 |
+| TC-REPORT-013 | renders the bug line number | FR-REPORT-002 |
+| TC-REPORT-014 | does not render line number when bug.line_number is null | FR-REPORT-002 |
+| TC-REPORT-015 | expands suggested fix when toggle is clicked | FR-REPORT-002 |
+| TC-REPORT-016 | collapses suggested fix on second click | FR-REPORT-002 |
+| TC-REPORT-017 | shows empty state when predicted_bugs array is empty | FR-REPORT-002 |
+| TC-REPORT-018 | ignoring a finding removes it from the list | FR-REPORT-004 |
+| TC-REPORT-019 | ignoring a bug removes it from the list | FR-REPORT-004 |
+| TC-REPORT-020 | ignored items reappear when results are reset | FR-REPORT-004 |
+| TC-REPORT-021 | calls onHoverLine with line number when hovering a finding | FR-REPORT-005, FR-DASH-006 |
+| TC-REPORT-022 | calls onHoverLine with null when leaving a finding | FR-REPORT-005, FR-DASH-006 |
+| TC-REPORT-023 | calls onHoverLine with line number when hovering a bug card | FR-REPORT-005, FR-DASH-006 |
+| TC-REPORT-024 | does not call onHoverLine when bug has no line number | FR-REPORT-005 |
+| TC-REPORT-025 | clicking the Line pill re-orders findings by line number ascending | FR-REPORT-003 |
+| TC-REPORT-026 | direction toggle reverses line sort to descending | FR-REPORT-003 |
+| TC-REPORT-027 | equal-severity findings are tiebroken by line number ascending | FR-REPORT-003 |
+| TC-REPORT-028 | null line_number findings sort last when Line sort is active | FR-REPORT-003 |
+
+#### `src/components/__tests__/SubmissionSidebar.test.js`
+
+| TC-ID | Test Description | Requirements Covered |
+|-------|-----------------|----------------------|
+| TC-HIST-014 | renders submissions with names | FR-HIST-001 |
+| TC-HIST-015 | falls back to first code line when name is null | FR-HIST-001 |
+| TC-HIST-016 | filters submissions by search input | FR-HIST-006 |
+| TC-HIST-017 | shows rename input via kebab menu | FR-HIST-003 |
+| TC-HIST-018 | saves rename on Enter key | FR-HIST-003 |
+| TC-HIST-019 | does not call renameSubmission when name is unchanged | FR-HIST-003 |
+| TC-HIST-020 | cancels rename on Escape key without calling API | FR-HIST-003 |
+| TC-HIST-021 | shows centered delete modal via kebab menu | FR-HIST-004 |
+| TC-HIST-022 | calls deleteSubmission when delete is confirmed | FR-HIST-004 |
+| TC-HIST-023 | renders collapsed mini-bar when open is false | FR-DASH-004 |
+| TC-HIST-024 | calls pinSubmission via kebab Star option | FR-HIST-005 |
+| TC-HIST-025 | shows pin star icon on pinned submissions | FR-HIST-005 |
+
+#### `src/components/__tests__/InviteModal.test.js`
+
+| TC-ID | Test Description | Requirements Covered |
+|-------|-----------------|----------------------|
+| TC-ACCT-017 | renders title, hint, email input, and action buttons | FR-ACCT-005, FR-DASH-005 |
+| TC-ACCT-018 | disables Send Invite when email is empty | FR-ACCT-005 |
+| TC-ACCT-019 | enables Send Invite once an email is entered | FR-ACCT-005 |
+| TC-ACCT-020 | calls inviteUser with the token and trimmed email on submit | FR-ACCT-005 |
+| TC-ACCT-021 | shows success toast and closes modal on successful invite | FR-ACCT-005 |
+| TC-ACCT-022 | displays the error message and does not close on a failed invite | FR-ACCT-005 |
+| TC-ACCT-023 | calls onClose when Cancel is clicked | FR-ACCT-005 |
+| TC-ACCT-024 | calls onClose when the backdrop is clicked | FR-ACCT-005 |
+| TC-ACCT-025 | shows Sending and disables the button while the request is in-flight | FR-ACCT-005 |
+
+#### `src/components/__tests__/TwoFactorSection.test.js`
+
+| TC-ID | Test Description | Requirements Covered |
+|-------|-----------------|----------------------|
+| TC-AUTH-008 | shows Enable 2FA when no verified factor exists | FR-AUTH-003 |
+| TC-AUTH-009 | shows 2FA Enabled and Disable 2FA when a verified factor exists | FR-AUTH-003 |
+| TC-AUTH-010 | clicking Enable 2FA calls enroll and shows QR code | FR-AUTH-003 |
+| TC-AUTH-011 | QR code img has src matching the returned qr_code URI | FR-AUTH-003 |
+| TC-AUTH-012 | displays the manual secret after enrollment | FR-AUTH-003 |
+| TC-AUTH-013 | calls challengeAndVerify with correct factorId and trimmed code on Verify | FR-AUTH-004 |
+| TC-AUTH-014 | shows error on failed verification | FR-AUTH-004 |
+| TC-AUTH-015 | shows 2FA Enabled and removes QR code on successful verification | FR-AUTH-003, FR-AUTH-004 |
+| TC-AUTH-016 | calls unenroll with the factorId when Disable 2FA is clicked | FR-AUTH-005 |
+| TC-AUTH-017 | shows Enable 2FA again after successful unenroll | FR-AUTH-005 |
+| TC-AUTH-018 | shows error on failed unenroll | FR-AUTH-005 |
+
+#### `src/context/__tests__/AuthContext.test.js`
+
+| TC-ID | Test Description | Requirements Covered |
+|-------|-----------------|----------------------|
+| TC-AUTH-019 | subscribes to onAuthStateChange on mount and unsubscribes on unmount | FR-AUTH-002 |
+| TC-AUTH-020 | signIn calls supabase.auth.signInWithPassword with email and password | FR-AUTH-002 |
+| TC-AUTH-021 | signUp calls supabase.auth.signUp with email, password, and username metadata | FR-AUTH-001 |
+| TC-AUTH-022 | signOut calls supabase.auth.signOut | FR-AUTH-002 |
+
+#### `src/pages/__tests__/LoginPage.test.js`
+
+| TC-ID | Test Description | Requirements Covered |
+|-------|-----------------|----------------------|
+| TC-AUTH-023 | renders Log In form by default without username field | FR-AUTH-002 |
+| TC-AUTH-024 | shows username field after switching to Sign Up mode | FR-AUTH-001 |
+| TC-AUTH-025 | calls signIn with email and password on login form submit | FR-AUTH-002 |
+| TC-AUTH-026 | calls signUp with email, password, and username on signup form submit | FR-AUTH-001 |
+| TC-AUTH-027 | displays error message when signIn returns an error | FR-AUTH-002 |
+| TC-AUTH-028 | does not show Forgot password before a failed login attempt | FR-AUTH-006 |
+| TC-AUTH-029 | shows Forgot password after a failed login attempt | FR-AUTH-006 |
+| TC-AUTH-030 | shows forgot password email form when Forgot password is clicked | FR-AUTH-006 |
+| TC-AUTH-031 | calls resetPasswordForEmail with the entered email | FR-AUTH-006 |
+| TC-AUTH-032 | shows success message after reset email is sent | FR-AUTH-006 |
+| TC-AUTH-033 | shows error message when resetPasswordForEmail fails | FR-AUTH-006 |
+| TC-AUTH-034 | returns to login mode when Back to Log In is clicked | FR-AUTH-006 |
+| TC-AUTH-035 | shows MFA code input after successful login when AAL step-up is required | FR-AUTH-004 |
+| TC-AUTH-036 | does not show MFA step when nextLevel is aal1 | FR-AUTH-004 |
+| TC-AUTH-037 | calls challenge and verify with factorId and code on MFA submit | FR-AUTH-004 |
+| TC-AUTH-038 | shows Invalid code error on verify failure | FR-AUTH-004 |
+| TC-AUTH-039 | signs out and returns to credentials when Back to Log In is clicked in MFA | FR-AUTH-004 |
+
+#### `src/pages/__tests__/AccountPage.test.js`
+
+| TC-ID | Test Description | Requirements Covered |
+|-------|-----------------|----------------------|
+| TC-ACCT-026 | renders all sections after profile loads | FR-ACCT-001, FR-ACCT-002, FR-ACCT-003, FR-ACCT-004 |
+| TC-ACCT-027 | displays profile data in form fields | FR-ACCT-001 |
+| TC-ACCT-028 | shows validation error when username is too short | FR-ACCT-001 |
+| TC-ACCT-029 | shows validation error when username has invalid characters | FR-ACCT-001 |
+| TC-ACCT-030 | calls updateProfile and shows success toast on valid update | FR-ACCT-001 |
+| TC-ACCT-031 | shows error when new password and confirm password do not match | FR-ACCT-003 |
+| TC-ACCT-032 | shows error when new password is too short | FR-ACCT-003 |
+| TC-ACCT-033 | calls changePassword and shows success toast on valid password change | FR-ACCT-003 |
+| TC-ACCT-034 | shows delete confirmation modal when Delete Account is clicked | FR-ACCT-004 |
+| TC-ACCT-035 | keeps delete button disabled until username matches | FR-ACCT-004 |
+
+#### `src/pages/__tests__/ResetPasswordPage.test.js`
+
+| TC-ID | Test Description | Requirements Covered |
+|-------|-----------------|----------------------|
+| TC-AUTH-040 | shows loading state while waiting for PASSWORD_RECOVERY event | FR-AUTH-006 |
+| TC-AUTH-041 | shows password form once PASSWORD_RECOVERY fires | FR-AUTH-006 |
+| TC-AUTH-042 | shows error when passwords do not match | FR-AUTH-006 |
+| TC-AUTH-043 | shows error when password is shorter than 8 characters | FR-AUTH-006 |
+| TC-AUTH-044 | calls updateUser with the new password on valid submit | FR-AUTH-006 |
+| TC-AUTH-045 | calls toast and navigates to /login on success | FR-AUTH-006 |
+| TC-AUTH-046 | shows error message when updateUser returns an error (expired link) | FR-AUTH-006 |
+| TC-AUTH-047 | disables submit button while submitting | FR-AUTH-006 |
+
+---
+
+### API Integration Tests (Postman / Newman)
+
+| TC-ID | Postman Request Name | Folder | Requirements Covered |
+|-------|---------------------|--------|----------------------|
+| TC-API-001 | TC-API-001: GET / — 200 OK | Health Check | — |
+| TC-API-002 | TC-API-002: No Authorization header — 422 | Auth Errors | FR-AUTH-007 |
+| TC-API-003 | TC-API-003: Missing Bearer prefix — 401 | Auth Errors | FR-AUTH-007 |
+| TC-API-004 | TC-API-004: Invalid JWT — 401 | Auth Errors | FR-AUTH-007 |
+| TC-API-005 | TC-API-005: Expired JWT — 401 | Auth Errors | FR-AUTH-007 |
+| TC-API-006 | TC-API-006: Missing code field — 422 | Validation Errors | FR-ANALYSIS-001 |
+| TC-API-007 | TC-API-007: Wrong type for code (int) — 422 | Validation Errors | FR-ANALYSIS-001 |
+| TC-API-008 | TC-API-008: Code exceeds max length — 422 | Validation Errors | NFR-RELI-001 |
+| TC-API-009 | TC-API-009: Empty body — 422 | Validation Errors | FR-ANALYSIS-001 |
+| TC-API-010 | TC-API-010: Valid Python code — 200 | Happy Path | FR-ANALYSIS-001, FR-ANALYSIS-002, FR-ANALYSIS-003, FR-REPORT-001, FR-REPORT-002 |
+| TC-API-011 | TC-API-011: Empty code string — 200 | Happy Path | FR-ANALYSIS-001 |
+| TC-API-012 | TC-API-012: Code with syntax errors — 200 | Happy Path | FR-ANALYSIS-001, FR-REPORT-001 |
+| TC-API-013 | TC-API-013: Unicode and special characters — 200 | Happy Path | NFR-RELI-001 |
+| TC-API-014 | TC-API-014: Non-Python code — 200 | Happy Path | FR-ANALYSIS-001 |
+| TC-API-015 | TC-API-015: Get Profile — 200 | Account CRUD | FR-ACCT-001 |
+| TC-API-016 | TC-API-016: Update Username — 200 | Account CRUD | FR-ACCT-001 |
+| TC-API-017 | TC-API-017: Update Username — invalid chars — 422 | Account CRUD | FR-ACCT-001 |
+| TC-API-018 | TC-API-018: Change Password — wrong current — 401 | Account CRUD | FR-ACCT-003 |
+| TC-API-019 | TC-API-019: Change Password — too short — 422 | Account CRUD | FR-ACCT-003 |
+| TC-API-020 | TC-API-020: Upload Avatar — invalid type — 422 | Account CRUD | FR-ACCT-002 |
+| TC-API-021 | TC-API-021: Get Profile — no auth — 422 | Account CRUD | FR-AUTH-007 |
+| TC-API-022 | TC-API-022: Change Password — no auth — 422 | Account CRUD | FR-AUTH-007 |
+| TC-API-023 | TC-API-023: Delete Account — no auth — 422 | Account CRUD | FR-AUTH-007 |
+| TC-API-024 | TC-API-024: Analyze with custom name — 200 | Submission CRUD | FR-ANALYSIS-001, FR-HIST-001 |
+| TC-API-025 | TC-API-025: Analyze without name (GPT generates) — 200 | Submission CRUD | FR-ANALYSIS-004 |
+| TC-API-026 | TC-API-026: List submissions — 200 | Submission CRUD | FR-HIST-001 |
+| TC-API-027 | TC-API-027: Rename submission — 200 | Submission CRUD | FR-HIST-003 |
+| TC-API-028 | TC-API-028: Rename — not found — 404 | Submission CRUD | FR-HIST-003 |
+| TC-API-029 | TC-API-029: Delete submission — 200 | Submission CRUD | FR-HIST-004 |
+| TC-API-030 | TC-API-030: Delete — not found — 404 | Submission CRUD | FR-HIST-004 |
+| TC-API-031 | TC-API-031: Pin submission — 200 | Submission CRUD | FR-HIST-005 |
+| TC-API-032 | TC-API-032: Pin — not found — 404 | Submission CRUD | FR-HIST-005 |
+| TC-API-033 | TC-API-033: List submissions — no auth — 422 | Submission CRUD | FR-AUTH-007 |
 
 ---
 

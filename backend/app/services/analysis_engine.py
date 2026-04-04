@@ -200,10 +200,12 @@ def _collect_returns(node: ast.AST) -> list[ast.Return]:
 
 
 # ---------------------------------------------------------------------------
-# Private check functions
+# Private check functions — all implement FR-ANALYSIS-001 and FR-ANALYSIS-002
 # ---------------------------------------------------------------------------
 
 
+# FR-ANALYSIS-001
+# FR-ANALYSIS-002
 def _check_long_lines(code: str) -> list[Finding]:
     """Return a Finding for each line that exceeds the 88-character limit."""
     findings: list[Finding] = []
@@ -962,6 +964,7 @@ def _check_context_manager_usage(tree: ast.Module) -> list[Finding]:
 # ---------------------------------------------------------------------------
 
 
+# FR-REPORT-001
 def compute_score(
     findings: list[Finding],
     predicted_bugs: list[PredictedBug],
@@ -983,6 +986,9 @@ def compute_score(
     return max(0, 100 - penalty)
 
 
+# FR-ANALYSIS-001
+# FR-ANALYSIS-002
+# NFR-RELI-001
 def run_static_analysis(code: str) -> tuple[list[Finding], int]:
     """Run all static checks against *code* and return findings with a raw score.
 

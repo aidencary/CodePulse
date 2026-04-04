@@ -10,6 +10,7 @@ jest.mock('../../context/AuthContext', () => ({
 const renderWithRouter = (ui) => render(<MemoryRouter>{ui}</MemoryRouter>)
 
 describe('ProtectedRoute', () => {
+  // TC-AUTH-005
   it('renders loading indicator while auth state is initializing', () => {
     useAuth.mockReturnValue({ user: null, loading: true })
     renderWithRouter(<ProtectedRoute><div>Dashboard</div></ProtectedRoute>)
@@ -17,12 +18,14 @@ describe('ProtectedRoute', () => {
     expect(screen.queryByText('Dashboard')).not.toBeInTheDocument()
   })
 
+  // TC-AUTH-006
   it('redirects to /login when user is not authenticated', () => {
     useAuth.mockReturnValue({ user: null, loading: false })
     renderWithRouter(<ProtectedRoute><div>Dashboard</div></ProtectedRoute>)
     expect(screen.queryByText('Dashboard')).not.toBeInTheDocument()
   })
 
+  // TC-AUTH-007
   it('renders children when user is authenticated', () => {
     useAuth.mockReturnValue({ user: { id: 'abc', email: 'test@example.com' }, loading: false })
     renderWithRouter(<ProtectedRoute><div>Dashboard</div></ProtectedRoute>)

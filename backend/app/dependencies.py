@@ -25,6 +25,8 @@ def _fetch_jwks(supabase_url: str) -> dict:
     return response.json()
 
 
+# FR-AUTH-007
+# NFR-SEC-001
 def get_current_user(
     authorization: str = Header(..., description="Bearer <supabase_jwt>"),
     settings: Settings = Depends(get_settings),

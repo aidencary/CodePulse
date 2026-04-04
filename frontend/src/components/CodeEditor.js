@@ -5,6 +5,8 @@ const STAR_PATH = 'M 0 -10 L 2.2 -2.2 L 10 0 L 2.2 2.2 L 0 10 L -2.2 2.2 L -10 0
 const RAND = (min, max) => Math.floor(Math.random() * (max - min + 1) + min)
 const SIGN = () => (Math.random() > 0.5 ? -1 : 1)
 
+// FR-DASH-001
+// FR-DASH-002
 function CodeEditor({ code, onCodeChange, onRun, loading, isDark, highlightLine }) {
   const btnRef = useRef(null)
   const editorRef = useRef(null)

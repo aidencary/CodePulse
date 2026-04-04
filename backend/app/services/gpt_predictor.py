@@ -65,6 +65,8 @@ def _build_user_message(code: str, language: str) -> str:
 
 
 # Public API
+# FR-ANALYSIS-003
+# NFR-RELI-001
 async def predict_bugs(
     code: str,
     findings: list[Finding],
@@ -109,14 +111,17 @@ async def predict_bugs(
         return prediction.predicted_bugs
     # Catch JSON parsing errors and Pydantic validation errors to handle
     # malformed GPT responses gracefully.
+    # NFR-RELI-001
     except (json.JSONDecodeError, ValidationError) as exc:
         logger.warning("GPT response failed validation: %s", exc)
         return []
+    # NFR-RELI-001
     except Exception as exc:  # noqa: BLE001
         logger.warning("GPT prediction failed: %s", exc)
         return []
 
 
+# FR-ANALYSIS-004
 async def generate_submission_name(code: str) -> str:
     """Ask GPT to generate a short, descriptive name for a code submission.
 

@@ -28,6 +28,7 @@ const renderModal = (onClose = jest.fn()) =>
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
+// TC-ACCT-017
 it('renders title, hint, email input, and action buttons', () => {
   renderModal()
   expect(screen.getByText(/invite a user/i)).toBeInTheDocument()
@@ -36,11 +37,13 @@ it('renders title, hint, email input, and action buttons', () => {
   expect(screen.getByRole('button', { name: /cancel/i })).toBeInTheDocument()
 })
 
+// TC-ACCT-018
 it('disables Send Invite when email is empty', () => {
   renderModal()
   expect(screen.getByRole('button', { name: /send invite/i })).toBeDisabled()
 })
 
+// TC-ACCT-019
 it('enables Send Invite once an email is entered', () => {
   renderModal()
   fireEvent.change(screen.getByLabelText(/email address/i), {
@@ -49,6 +52,7 @@ it('enables Send Invite once an email is entered', () => {
   expect(screen.getByRole('button', { name: /send invite/i })).not.toBeDisabled()
 })
 
+// TC-ACCT-020
 it('calls inviteUser with the token and trimmed email on submit', async () => {
   mockInviteUser.mockResolvedValue({})
   const onClose = jest.fn()
@@ -66,6 +70,7 @@ it('calls inviteUser with the token and trimmed email on submit', async () => {
   })
 })
 
+// TC-ACCT-021
 it('shows success toast and closes modal on successful invite', async () => {
   mockInviteUser.mockResolvedValue({})
   const onClose = jest.fn()
@@ -87,6 +92,7 @@ it('shows success toast and closes modal on successful invite', async () => {
   })
 })
 
+// TC-ACCT-022
 it('displays the error message and does not close on a failed invite', async () => {
   mockInviteUser.mockRejectedValue(new Error('User already registered'))
   const onClose = jest.fn()
@@ -103,6 +109,7 @@ it('displays the error message and does not close on a failed invite', async () 
   expect(onClose).not.toHaveBeenCalled()
 })
 
+// TC-ACCT-023
 it('calls onClose when Cancel is clicked', () => {
   const onClose = jest.fn()
   renderModal(onClose)
@@ -110,6 +117,7 @@ it('calls onClose when Cancel is clicked', () => {
   expect(onClose).toHaveBeenCalled()
 })
 
+// TC-ACCT-024
 it('calls onClose when the backdrop is clicked', () => {
   const onClose = jest.fn()
   const { container } = renderModal(onClose)
@@ -117,6 +125,7 @@ it('calls onClose when the backdrop is clicked', () => {
   expect(onClose).toHaveBeenCalled()
 })
 
+// TC-ACCT-025
 it('shows "Sending…" and disables the button while the request is in-flight', async () => {
   let resolve
   mockInviteUser.mockReturnValue(new Promise((res) => { resolve = res }))

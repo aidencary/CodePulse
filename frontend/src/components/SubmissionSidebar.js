@@ -90,6 +90,12 @@ function KebabMenu({ onRename, onDelete, onTogglePin, isPinned }) {
   )
 }
 
+// FR-HIST-001
+// FR-HIST-002
+// FR-HIST-003
+// FR-HIST-004
+// FR-HIST-005
+// FR-HIST-006
 const SubmissionSidebar = forwardRef(function SubmissionSidebar(
   { onSelect, activeId, onClose, onOpen, open },
   ref
@@ -123,6 +129,7 @@ const SubmissionSidebar = forwardRef(function SubmissionSidebar(
     setEditValue(s.name || '')
   }
 
+  // FR-HIST-003
   const handleRenameSubmit = async (submissionId) => {
     if (!editValue.trim()) {
       setEditingId(null)
@@ -148,6 +155,7 @@ const SubmissionSidebar = forwardRef(function SubmissionSidebar(
     if (e.key === 'Escape') setEditingId(null)
   }
 
+  // FR-HIST-005
   const handleTogglePin = async (submissionId) => {
     try {
       await pinSubmission(submissionId, token)
@@ -157,6 +165,7 @@ const SubmissionSidebar = forwardRef(function SubmissionSidebar(
     }
   }
 
+  // FR-HIST-004
   const handleDeleteConfirm = async () => {
     try {
       await deleteSubmission(deletingId, token)
@@ -220,6 +229,7 @@ const SubmissionSidebar = forwardRef(function SubmissionSidebar(
         </button>
       </div>
 
+      {/* FR-HIST-006 */}
       <div className="sidebar-search">
         <input
           type="search"

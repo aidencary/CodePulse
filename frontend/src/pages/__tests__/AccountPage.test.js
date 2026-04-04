@@ -60,6 +60,7 @@ const renderAccountPage = () =>
   )
 
 describe('AccountPage', () => {
+  // TC-ACCT-026
   it('renders all sections after profile loads', async () => {
     renderAccountPage()
     await waitFor(() => {
@@ -73,6 +74,7 @@ describe('AccountPage', () => {
     expect(screen.getByText('Danger Zone')).toBeInTheDocument()
   })
 
+  // TC-ACCT-027
   it('displays profile data in form fields', async () => {
     renderAccountPage()
     await waitFor(() => {
@@ -82,6 +84,7 @@ describe('AccountPage', () => {
     expect(screen.getByDisplayValue('developer')).toBeInTheDocument()
   })
 
+  // TC-ACCT-028
   it('shows validation error when username is too short', async () => {
     renderAccountPage()
     await waitFor(() => {
@@ -95,6 +98,7 @@ describe('AccountPage', () => {
     })
   })
 
+  // TC-ACCT-029
   it('shows validation error when username has invalid characters', async () => {
     renderAccountPage()
     await waitFor(() => {
@@ -110,6 +114,7 @@ describe('AccountPage', () => {
     })
   })
 
+  // TC-ACCT-030
   it('calls updateProfile and shows success toast on valid update', async () => {
     const updatedProfile = { ...mockProfile, username: 'newname' }
     updateProfile.mockResolvedValue(updatedProfile)
@@ -130,6 +135,7 @@ describe('AccountPage', () => {
     })
   })
 
+  // TC-ACCT-031
   it('shows error when new password and confirm password do not match', async () => {
     renderAccountPage()
     await waitFor(() => {
@@ -150,6 +156,7 @@ describe('AccountPage', () => {
     })
   })
 
+  // TC-ACCT-032
   it('shows error when new password is too short', async () => {
     renderAccountPage()
     await waitFor(() => {
@@ -170,6 +177,7 @@ describe('AccountPage', () => {
     })
   })
 
+  // TC-ACCT-033
   it('calls changePassword and shows success toast on valid password change', async () => {
     changePassword.mockResolvedValue()
     renderAccountPage()
@@ -200,6 +208,7 @@ describe('AccountPage', () => {
     })
   })
 
+  // TC-ACCT-034
   it('shows delete confirmation modal when Delete Account is clicked', async () => {
     renderAccountPage()
     await waitFor(() => {
@@ -212,6 +221,7 @@ describe('AccountPage', () => {
     ).toBeInTheDocument()
   })
 
+  // TC-ACCT-035
   it('keeps delete button disabled until username matches', async () => {
     renderAccountPage()
     await waitFor(() => {

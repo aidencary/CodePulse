@@ -8,6 +8,8 @@ const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000'
  * @returns {Promise<Object>} Parsed JSON response from the backend.
  * @throws {Error} If the request fails or the server returns a non-2xx status.
  */
+// FR-ANALYSIS-001
+// FR-DASH-001
 export async function analyzeCode(code, token, name, submissionId) {
   const body = { code }
   if (name) body.name = name

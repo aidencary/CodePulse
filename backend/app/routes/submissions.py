@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/submissions", tags=["submissions"])
 
 
+# FR-HIST-001
 @router.get("", response_model=list[SubmissionListItem])
 async def list_submissions(user_id: str = Depends(get_current_user)):
     """Return all submissions for the authenticated user with optional score."""
@@ -60,6 +61,8 @@ async def list_submissions(user_id: str = Depends(get_current_user)):
     return items
 
 
+# FR-HIST-003
+# NFR-SEC-001
 @router.patch("/{submission_id}", response_model=SubmissionListItem)
 async def rename_submission(
     submission_id: str,
@@ -111,6 +114,8 @@ async def rename_submission(
     )
 
 
+# FR-HIST-004
+# NFR-SEC-001
 @router.delete("/{submission_id}", status_code=status.HTTP_200_OK)
 async def delete_submission(
     submission_id: str,
@@ -143,6 +148,8 @@ async def delete_submission(
     return {"detail": "Submission deleted"}
 
 
+# FR-HIST-005
+# NFR-SEC-001
 @router.patch("/{submission_id}/pin")
 async def toggle_pin(
     submission_id: str,

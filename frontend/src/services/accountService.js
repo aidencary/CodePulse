@@ -1,5 +1,6 @@
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000'
 
+// FR-ACCT-001
 export async function getProfile(token) {
   const res = await fetch(`${API_URL}/api/v1/account/profile`, {
     headers: { Authorization: `Bearer ${token}` },
@@ -8,6 +9,7 @@ export async function getProfile(token) {
   return res.json()
 }
 
+// FR-ACCT-001
 export async function updateProfile(token, data) {
   const res = await fetch(`${API_URL}/api/v1/account/profile`, {
     method: 'PATCH',
@@ -22,6 +24,7 @@ export async function updateProfile(token, data) {
   return res.json()
 }
 
+// FR-ACCT-002
 export async function uploadAvatar(token, file) {
   const form = new FormData()
   form.append('file', file)
@@ -36,6 +39,7 @@ export async function uploadAvatar(token, file) {
   return res.json()
 }
 
+// FR-ACCT-003
 export async function changePassword(token, data) {
   const res = await fetch(`${API_URL}/api/v1/account/change-password`, {
     method: 'POST',
@@ -50,6 +54,7 @@ export async function changePassword(token, data) {
   return res.json()
 }
 
+// FR-ACCT-005
 export async function inviteUser(token, email) {
   const res = await fetch(`${API_URL}/api/v1/account/invite`, {
     method: 'POST',
@@ -66,6 +71,7 @@ export async function inviteUser(token, email) {
   return res.json()
 }
 
+// FR-ACCT-004
 export async function deleteAccount(token) {
   const res = await fetch(`${API_URL}/api/v1/account`, {
     method: 'DELETE',

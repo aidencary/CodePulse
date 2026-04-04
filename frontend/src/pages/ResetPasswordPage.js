@@ -13,6 +13,7 @@ function ResetPasswordPage() {
   const navigate = useNavigate()
   const toast = useToast()
 
+  // FR-AUTH-006
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY') setReady(true)
@@ -20,6 +21,7 @@ function ResetPasswordPage() {
     return () => subscription.unsubscribe()
   }, [])
 
+  // FR-AUTH-006
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError(null)

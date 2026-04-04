@@ -55,6 +55,7 @@ const submitForm = () =>
   fireEvent.submit(screen.getByRole('form', { name: /authentication/i }))
 
 describe('LoginPage', () => {
+  // TC-AUTH-023
   it('renders Log In form by default without username field', () => {
     renderLoginPage()
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument()
@@ -62,6 +63,7 @@ describe('LoginPage', () => {
     expect(screen.queryByLabelText(/username/i)).not.toBeInTheDocument()
   })
 
+  // TC-AUTH-024
   it('shows username field after switching to Sign Up mode', () => {
     renderLoginPage()
     // Click the Sign Up toggle tab (not the submit button)
@@ -69,6 +71,7 @@ describe('LoginPage', () => {
     expect(screen.getByLabelText(/username/i)).toBeInTheDocument()
   })
 
+  // TC-AUTH-025
   it('calls signIn with email and password on login form submit', async () => {
     mockSignIn.mockResolvedValue({ error: null })
     renderLoginPage()
@@ -80,6 +83,7 @@ describe('LoginPage', () => {
     )
   })
 
+  // TC-AUTH-026
   it('calls signUp with email, password, and username on signup form submit', async () => {
     mockSignUp.mockResolvedValue({ error: null })
     renderLoginPage()
@@ -93,6 +97,7 @@ describe('LoginPage', () => {
     )
   })
 
+  // TC-AUTH-027
   it('displays error message when signIn returns an error', async () => {
     mockSignIn.mockResolvedValue({ error: { message: 'Invalid login credentials' } })
     renderLoginPage()
@@ -113,17 +118,20 @@ describe('LoginPage — forgot password', () => {
     await screen.findByText('Invalid login credentials')
   }
 
+  // TC-AUTH-028
   it('does not show "Forgot password?" before a failed login attempt', () => {
     renderLoginPage()
     expect(screen.queryByRole('button', { name: /forgot password/i })).not.toBeInTheDocument()
   })
 
+  // TC-AUTH-029
   it('shows "Forgot password?" after a failed login attempt', async () => {
     renderLoginPage()
     await triggerFailedLogin()
     expect(screen.getByRole('button', { name: /forgot password/i })).toBeInTheDocument()
   })
 
+  // TC-AUTH-030
   it('shows forgot password email form when "Forgot password?" is clicked', async () => {
     renderLoginPage()
     await triggerFailedLogin()
@@ -132,6 +140,7 @@ describe('LoginPage — forgot password', () => {
     expect(screen.queryByLabelText(/^password$/i)).not.toBeInTheDocument()
   })
 
+  // TC-AUTH-031
   it('calls resetPasswordForEmail with the entered email', async () => {
     mockResetPasswordForEmail.mockResolvedValue({ error: null })
     renderLoginPage()
@@ -147,6 +156,7 @@ describe('LoginPage — forgot password', () => {
     )
   })
 
+  // TC-AUTH-032
   it('shows success message after reset email is sent', async () => {
     mockResetPasswordForEmail.mockResolvedValue({ error: null })
     renderLoginPage()
@@ -159,6 +169,7 @@ describe('LoginPage — forgot password', () => {
     ).toBeInTheDocument()
   })
 
+  // TC-AUTH-033
   it('shows error message when resetPasswordForEmail fails', async () => {
     mockResetPasswordForEmail.mockResolvedValue({ error: { message: 'User not found' } })
     renderLoginPage()
@@ -169,6 +180,7 @@ describe('LoginPage — forgot password', () => {
     expect(await screen.findByText('User not found')).toBeInTheDocument()
   })
 
+  // TC-AUTH-034
   it('returns to login mode when "Back to Log In" is clicked', async () => {
     renderLoginPage()
     await triggerFailedLogin()
@@ -195,12 +207,14 @@ describe('LoginPage — MFA step-up', () => {
     await screen.findByRole('form', { name: /two-factor authentication/i })
   }
 
+  // TC-AUTH-035
   it('shows MFA code input after successful login when AAL step-up is required', async () => {
     await signInWithMfa()
     expect(screen.getByLabelText(/authentication code/i)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /^verify$/i })).toBeInTheDocument()
   })
 
+  // TC-AUTH-036
   it('does not show MFA step when nextLevel is aal1', async () => {
     mockSignIn.mockResolvedValue({ error: null })
     // Default mocks already set nextLevel: 'aal1' — no MFA step-up
@@ -213,6 +227,7 @@ describe('LoginPage — MFA step-up', () => {
     expect(screen.queryByRole('form', { name: /two-factor authentication/i })).not.toBeInTheDocument()
   })
 
+  // TC-AUTH-037
   it('calls challenge and verify with factorId and code on MFA submit', async () => {
     mockChallenge.mockResolvedValue({ data: { id: 'challenge-1' }, error: null })
     mockVerify.mockResolvedValue({ error: null })
@@ -229,6 +244,7 @@ describe('LoginPage — MFA step-up', () => {
     )
   })
 
+  // TC-AUTH-038
   it('shows "Invalid code" error on verify failure', async () => {
     mockChallenge.mockResolvedValue({ data: { id: 'challenge-1' }, error: null })
     mockVerify.mockResolvedValue({ error: { message: 'Invalid TOTP token' } })
@@ -238,6 +254,7 @@ describe('LoginPage — MFA step-up', () => {
     expect(await screen.findByText(/invalid code/i)).toBeInTheDocument()
   })
 
+  // TC-AUTH-039
   it('signs out and returns to credentials when "Back to Log In" is clicked', async () => {
     await signInWithMfa()
     fireEvent.click(screen.getByRole('button', { name: /back to log in/i }))

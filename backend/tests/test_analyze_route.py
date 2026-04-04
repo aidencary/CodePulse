@@ -69,6 +69,7 @@ def _make_headers() -> dict[str, str]:
 # ---------------------------------------------------------------------------
 
 
+# TC-ANALYSIS-078
 def test_analyze_returns_correct_shape() -> None:
     """Response has all required top-level keys."""
     with (
@@ -108,6 +109,7 @@ def test_analyze_returns_correct_shape() -> None:
         assert key in body, f"Missing key: {key}"
 
 
+# TC-ANALYSIS-079
 def test_analyze_score_in_range() -> None:
     """overall_score is between 0 and 100 inclusive."""
     with (
@@ -132,6 +134,7 @@ def test_analyze_score_in_range() -> None:
     assert 0 <= body["overall_score"] <= 100
 
 
+# TC-ANALYSIS-080
 def test_analyze_findings_have_required_fields() -> None:
     """Each finding contains issue_type, line_number, severity, and message."""
     with (
@@ -160,6 +163,7 @@ def test_analyze_findings_have_required_fields() -> None:
             assert field in finding
 
 
+# TC-ANALYSIS-081
 def test_analyze_predicted_bugs_have_required_fields() -> None:
     """Each predicted bug contains all required fields."""
     with (
@@ -193,6 +197,7 @@ def test_analyze_predicted_bugs_have_required_fields() -> None:
 # ---------------------------------------------------------------------------
 
 
+# TC-ANALYSIS-082
 def test_analyze_persistence_failure_still_returns_200() -> None:
     """A PersistenceError does not cause the endpoint to fail."""
     with (
@@ -220,6 +225,7 @@ def test_analyze_persistence_failure_still_returns_200() -> None:
 # ---------------------------------------------------------------------------
 
 
+# TC-ANALYSIS-083
 def test_analyze_code_too_long_returns_422() -> None:
     """Code exceeding 100 000 characters returns 422."""
     resp = client.post(

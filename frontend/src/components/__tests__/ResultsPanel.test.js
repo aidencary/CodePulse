@@ -32,11 +32,13 @@ const mockResults = {
 
 // Idle / error states
 describe('ResultsPanel — idle and error states', () => {
+  // TC-REPORT-001
   it('shows idle placeholder when there are no results', () => {
     render(<ResultsPanel results={null} loading={false} error={null} />)
     expect(screen.getByText(/run analysis to see results/i)).toBeInTheDocument()
   })
 
+  // TC-REPORT-002
   it('shows the error message on failure', () => {
     render(
       <ResultsPanel results={null} loading={false} error="Analysis failed (500)" />
@@ -47,11 +49,13 @@ describe('ResultsPanel — idle and error states', () => {
 
 // Loading skeleton
 describe('ResultsPanel — loading state', () => {
+  // TC-REPORT-003
   it('shows the skeleton with aria-label while loading', () => {
     render(<ResultsPanel results={null} loading={true} error={null} />)
     expect(screen.getByLabelText(/analyzing/i)).toBeInTheDocument()
   })
 
+  // TC-REPORT-004
   it('does not show the skeleton when not loading', () => {
     render(<ResultsPanel results={null} loading={false} error={null} />)
     expect(screen.queryByLabelText(/analyzing/i)).not.toBeInTheDocument()
@@ -60,11 +64,13 @@ describe('ResultsPanel — loading state', () => {
 
 // Score section
 describe('ResultsPanel — score section', () => {
+  // TC-REPORT-005
   it('displays the overall score', () => {
     render(<ResultsPanel results={mockResults} loading={false} error={null} />)
     expect(screen.getByText('72')).toBeInTheDocument()
   })
 
+  // TC-REPORT-006
   it('displays the summary text', () => {
     render(<ResultsPanel results={mockResults} loading={false} error={null} />)
     expect(screen.getByText(mockResults.summary)).toBeInTheDocument()
@@ -73,18 +79,21 @@ describe('ResultsPanel — score section', () => {
 
 // Static findings section
 describe('ResultsPanel — findings section', () => {
+  // TC-REPORT-007
   it('renders each finding type', () => {
     render(<ResultsPanel results={mockResults} loading={false} error={null} />)
     expect(screen.getByText('long_line')).toBeInTheDocument()
     expect(screen.getByText('bare_except')).toBeInTheDocument()
   })
 
+  // TC-REPORT-008
   it('renders finding line numbers', () => {
     render(<ResultsPanel results={mockResults} loading={false} error={null} />)
     expect(screen.getByText('L5')).toBeInTheDocument()
     expect(screen.getByText('L12')).toBeInTheDocument()
   })
 
+  // TC-REPORT-009
   it('renders finding messages', () => {
     render(<ResultsPanel results={mockResults} loading={false} error={null} />)
     expect(
@@ -92,6 +101,7 @@ describe('ResultsPanel — findings section', () => {
     ).toBeInTheDocument()
   })
 
+  // TC-REPORT-010
   it('shows empty state when findings array is empty', () => {
     const emptyResults = { ...mockResults, findings: [] }
     render(<ResultsPanel results={emptyResults} loading={false} error={null} />)
@@ -101,11 +111,13 @@ describe('ResultsPanel — findings section', () => {
 
 // AI bug predictions section
 describe('ResultsPanel — predicted bugs section', () => {
+  // TC-REPORT-011
   it('renders the bug type', () => {
     render(<ResultsPanel results={mockResults} loading={false} error={null} />)
     expect(screen.getByText('null_dereference')).toBeInTheDocument()
   })
 
+  // TC-REPORT-012
   it('renders the bug description', () => {
     render(<ResultsPanel results={mockResults} loading={false} error={null} />)
     expect(
@@ -113,11 +125,13 @@ describe('ResultsPanel — predicted bugs section', () => {
     ).toBeInTheDocument()
   })
 
+  // TC-REPORT-013
   it('renders the bug line number', () => {
     render(<ResultsPanel results={mockResults} loading={false} error={null} />)
     expect(screen.getByText('L8')).toBeInTheDocument()
   })
 
+  // TC-REPORT-014
   it('does not render line number when bug.line_number is null', () => {
     const noLineResults = {
       ...mockResults,
@@ -128,6 +142,7 @@ describe('ResultsPanel — predicted bugs section', () => {
     expect(screen.queryByText('L8')).not.toBeInTheDocument()
   })
 
+  // TC-REPORT-015
   it('expands suggested fix when toggle is clicked', () => {
     render(<ResultsPanel results={mockResults} loading={false} error={null} />)
     const toggle = screen.getByRole('button', { name: /show suggested fix/i })
@@ -137,6 +152,7 @@ describe('ResultsPanel — predicted bugs section', () => {
     ).toBeInTheDocument()
   })
 
+  // TC-REPORT-016
   it('collapses suggested fix on second click', () => {
     render(<ResultsPanel results={mockResults} loading={false} error={null} />)
     const toggle = screen.getByRole('button', { name: /show suggested fix/i })
@@ -145,6 +161,7 @@ describe('ResultsPanel — predicted bugs section', () => {
     expect(screen.queryByText(/add a none check/i)).not.toBeInTheDocument()
   })
 
+  // TC-REPORT-017
   it('shows empty state when predicted_bugs array is empty', () => {
     const emptyResults = { ...mockResults, predicted_bugs: [] }
     render(<ResultsPanel results={emptyResults} loading={false} error={null} />)
@@ -154,6 +171,7 @@ describe('ResultsPanel — predicted bugs section', () => {
 
 // Ignore / dismiss
 describe('ResultsPanel — ignore buttons', () => {
+  // TC-REPORT-018
   it('ignoring a finding removes it from the list', () => {
     render(<ResultsPanel results={mockResults} loading={false} error={null} />)
     // Default sort is severity desc: bare_except (Med) renders first, long_line (Low) second.
@@ -165,6 +183,7 @@ describe('ResultsPanel — ignore buttons', () => {
     expect(screen.getByText('long_line')).toBeInTheDocument()
   })
 
+  // TC-REPORT-019
   it('ignoring a bug removes it from the list', () => {
     render(<ResultsPanel results={mockResults} loading={false} error={null} />)
     fireEvent.click(screen.getByTitle('Ignore this bug'))
@@ -172,6 +191,7 @@ describe('ResultsPanel — ignore buttons', () => {
     expect(screen.getByText(/no predicted bugs found/i)).toBeInTheDocument()
   })
 
+  // TC-REPORT-020
   it('ignored items reappear when results are reset', () => {
     const { rerender } = render(
       <ResultsPanel results={mockResults} loading={false} error={null} />
@@ -190,6 +210,7 @@ describe('ResultsPanel — ignore buttons', () => {
 
 // Hover line highlight
 describe('ResultsPanel — hover line highlight', () => {
+  // TC-REPORT-021
   it('calls onHoverLine with line number when hovering a finding', () => {
     const onHoverLine = jest.fn()
     render(
@@ -200,6 +221,7 @@ describe('ResultsPanel — hover line highlight', () => {
     expect(onHoverLine).toHaveBeenCalledWith(5)
   })
 
+  // TC-REPORT-022
   it('calls onHoverLine with null when leaving a finding', () => {
     const onHoverLine = jest.fn()
     render(
@@ -210,6 +232,7 @@ describe('ResultsPanel — hover line highlight', () => {
     expect(onHoverLine).toHaveBeenCalledWith(null)
   })
 
+  // TC-REPORT-023
   it('calls onHoverLine with line number when hovering a bug card', () => {
     const onHoverLine = jest.fn()
     render(
@@ -220,6 +243,7 @@ describe('ResultsPanel — hover line highlight', () => {
     expect(onHoverLine).toHaveBeenCalledWith(8)
   })
 
+  // TC-REPORT-024
   it('does not call onHoverLine when bug has no line number', () => {
     const onHoverLine = jest.fn()
     const noLineResults = {
@@ -251,6 +275,7 @@ describe('ResultsPanel — sort controls', () => {
     ],
   }
 
+  // TC-REPORT-025
   it('clicking the "Line" pill re-orders findings by line number ascending', () => {
     render(<ResultsPanel results={sortResults} loading={false} error={null} />)
     fireEvent.click(screen.getAllByRole('button', { name: /^Line$/i })[0])
@@ -260,6 +285,7 @@ describe('ResultsPanel — sort controls', () => {
     expect(findingLines).toEqual(['L2', 'L7', 'L10'])
   })
 
+  // TC-REPORT-026
   it('direction toggle reverses line sort to descending', () => {
     render(<ResultsPanel results={sortResults} loading={false} error={null} />)
     // Switch to Line sort
@@ -271,6 +297,7 @@ describe('ResultsPanel — sort controls', () => {
     expect(findingLines).toEqual(['L10', 'L7', 'L2'])
   })
 
+  // TC-REPORT-027
   it('equal-severity findings are tiebroken by line number ascending', () => {
     render(<ResultsPanel results={sortResults} loading={false} error={null} />)
     // Default is Severity desc: Med first, then the two Low findings ordered by line
@@ -280,6 +307,7 @@ describe('ResultsPanel — sort controls', () => {
     expect(findingLines).toEqual(['L2', 'L7', 'L10'])
   })
 
+  // TC-REPORT-028
   it('null line_number findings sort last when Line sort is active', () => {
     const nullLineResults = {
       ...sortResults,

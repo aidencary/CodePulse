@@ -48,12 +48,14 @@ function fireRecovery() {
 }
 
 describe('ResetPasswordPage', () => {
+  // TC-AUTH-040
   it('shows loading state while waiting for PASSWORD_RECOVERY event', () => {
     renderPage()
     expect(screen.getByText(/processing reset link/i)).toBeInTheDocument()
     expect(screen.queryByRole('form')).not.toBeInTheDocument()
   })
 
+  // TC-AUTH-041
   it('shows password form once PASSWORD_RECOVERY fires', () => {
     renderPage()
     fireRecovery()
@@ -62,6 +64,7 @@ describe('ResetPasswordPage', () => {
     expect(screen.getByLabelText(/confirm password/i)).toBeInTheDocument()
   })
 
+  // TC-AUTH-042
   it('shows error when passwords do not match', () => {
     renderPage()
     fireRecovery()
@@ -72,6 +75,7 @@ describe('ResetPasswordPage', () => {
     expect(mockUpdateUser).not.toHaveBeenCalled()
   })
 
+  // TC-AUTH-043
   it('shows error when password is shorter than 8 characters', () => {
     renderPage()
     fireRecovery()
@@ -82,6 +86,7 @@ describe('ResetPasswordPage', () => {
     expect(mockUpdateUser).not.toHaveBeenCalled()
   })
 
+  // TC-AUTH-044
   it('calls updateUser with the new password on valid submit', async () => {
     mockUpdateUser.mockResolvedValue({ error: null })
     renderPage()
@@ -94,6 +99,7 @@ describe('ResetPasswordPage', () => {
     )
   })
 
+  // TC-AUTH-045
   it('calls toast and navigates to /login on success', async () => {
     mockUpdateUser.mockResolvedValue({ error: null })
     renderPage()
@@ -107,6 +113,7 @@ describe('ResetPasswordPage', () => {
     expect(mockNavigate).toHaveBeenCalledWith('/login')
   })
 
+  // TC-AUTH-046
   it('shows error message when updateUser returns an error (expired link)', async () => {
     mockUpdateUser.mockResolvedValue({ error: { message: 'Token has expired or is invalid' } })
     renderPage()
@@ -118,6 +125,7 @@ describe('ResetPasswordPage', () => {
     expect(mockNavigate).not.toHaveBeenCalled()
   })
 
+  // TC-AUTH-047
   it('disables submit button while submitting', async () => {
     mockUpdateUser.mockReturnValue(new Promise(() => {})) // never resolves
     renderPage()

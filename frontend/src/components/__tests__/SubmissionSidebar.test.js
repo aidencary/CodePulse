@@ -71,16 +71,19 @@ async function openKebab(index = 0) {
 }
 
 describe('SubmissionSidebar', () => {
+  // TC-HIST-014
   it('renders submissions with names', async () => {
     renderSidebar()
     expect(await screen.findByText('Calculator')).toBeInTheDocument()
   })
 
+  // TC-HIST-015
   it('falls back to first code line when name is null', async () => {
     renderSidebar()
     expect(await screen.findByText('def foo(): pass')).toBeInTheDocument()
   })
 
+  // TC-HIST-016
   it('filters submissions by search input', async () => {
     renderSidebar()
     await screen.findByText('Calculator')
@@ -90,6 +93,7 @@ describe('SubmissionSidebar', () => {
     expect(screen.queryByText('def foo(): pass')).not.toBeInTheDocument()
   })
 
+  // TC-HIST-017
   it('shows rename input via kebab menu', async () => {
     renderSidebar()
     await screen.findByText('Calculator')
@@ -98,6 +102,7 @@ describe('SubmissionSidebar', () => {
     expect(screen.getByDisplayValue('Calculator')).toBeInTheDocument()
   })
 
+  // TC-HIST-018
   it('saves rename on Enter key', async () => {
     renameSubmission.mockResolvedValue()
     renderSidebar()
@@ -116,6 +121,7 @@ describe('SubmissionSidebar', () => {
     })
   })
 
+  // TC-HIST-019
   it('does not call renameSubmission when name is unchanged', async () => {
     renderSidebar()
     await screen.findByText('Calculator')
@@ -130,6 +136,7 @@ describe('SubmissionSidebar', () => {
     expect(renameSubmission).not.toHaveBeenCalled()
   })
 
+  // TC-HIST-020
   it('cancels rename on Escape key without calling API', async () => {
     renderSidebar()
     await screen.findByText('Calculator')
@@ -143,6 +150,7 @@ describe('SubmissionSidebar', () => {
     expect(renameSubmission).not.toHaveBeenCalled()
   })
 
+  // TC-HIST-021
   it('shows centered delete modal via kebab menu', async () => {
     renderSidebar()
     await screen.findByText('Calculator')
@@ -152,6 +160,7 @@ describe('SubmissionSidebar', () => {
     expect(screen.getByText(/This will delete/)).toBeInTheDocument()
   })
 
+  // TC-HIST-022
   it('calls deleteSubmission when delete is confirmed', async () => {
     deleteSubmission.mockResolvedValue()
     renderSidebar()
@@ -166,12 +175,14 @@ describe('SubmissionSidebar', () => {
     })
   })
 
+  // TC-HIST-023
   it('renders collapsed mini-bar when open is false', async () => {
     renderSidebar({ open: false })
     const sidebar = screen.getByRole('complementary')
     expect(sidebar).toHaveClass('sidebar-collapsed')
   })
 
+  // TC-HIST-024
   it('calls pinSubmission via kebab Star option', async () => {
     pinSubmission.mockResolvedValue({ pinned: true })
     renderSidebar()
@@ -183,6 +194,7 @@ describe('SubmissionSidebar', () => {
     })
   })
 
+  // TC-HIST-025
   it('shows pin star icon on pinned submissions', async () => {
     const pinnedSubmissions = [
       { ...mockSubmissions[0], pinned_at: '2025-06-01T00:00:00Z' },

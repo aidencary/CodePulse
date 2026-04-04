@@ -74,7 +74,7 @@
       "name": "Health Check",
       "item": [
         {
-          "name": "GET / — 200 OK",
+          "name": "TC-API-001: GET / — 200 OK",
           "request": {
             "method": "GET",
             "header": [],
@@ -118,7 +118,7 @@
       "name": "Auth Errors",
       "item": [
         {
-          "name": "No Authorization header — 422",
+          "name": "TC-API-002: No Authorization header — 422",
           "request": {
             "method": "POST",
             "header": [
@@ -158,7 +158,7 @@
           ]
         },
         {
-          "name": "Missing Bearer prefix — 401",
+          "name": "TC-API-003: Missing Bearer prefix — 401",
           "request": {
             "method": "POST",
             "header": [
@@ -205,7 +205,7 @@
           ]
         },
         {
-          "name": "Invalid JWT — 401",
+          "name": "TC-API-004: Invalid JWT — 401",
           "request": {
             "method": "POST",
             "header": [
@@ -252,7 +252,7 @@
           ]
         },
         {
-          "name": "Expired JWT — 401",
+          "name": "TC-API-005: Expired JWT — 401",
           "request": {
             "method": "POST",
             "header": [
@@ -304,7 +304,7 @@
       "name": "Validation Errors",
       "item": [
         {
-          "name": "Missing code field — 422",
+          "name": "TC-API-006: Missing code field — 422",
           "request": {
             "method": "POST",
             "header": [
@@ -348,7 +348,7 @@
           ]
         },
         {
-          "name": "Wrong type for code (int) — 422",
+          "name": "TC-API-007: Wrong type for code (int) — 422",
           "request": {
             "method": "POST",
             "header": [
@@ -391,7 +391,7 @@
           ]
         },
         {
-          "name": "Code exceeds max length — 422",
+          "name": "TC-API-008: Code exceeds max length — 422",
           "request": {
             "method": "POST",
             "header": [
@@ -448,7 +448,7 @@
           ]
         },
         {
-          "name": "Empty body — 422",
+          "name": "TC-API-009: Empty body — 422",
           "request": {
             "method": "POST",
             "header": [
@@ -496,7 +496,7 @@
       "name": "Happy Path",
       "item": [
         {
-          "name": "Valid Python code — 200",
+          "name": "TC-API-010: Valid Python code — 200",
           "request": {
             "method": "POST",
             "header": [
@@ -586,7 +586,7 @@
           ]
         },
         {
-          "name": "Empty code string — 200",
+          "name": "TC-API-011: Empty code string — 200",
           "request": {
             "method": "POST",
             "header": [
@@ -634,7 +634,7 @@
           ]
         },
         {
-          "name": "Code with syntax errors — 200",
+          "name": "TC-API-012: Code with syntax errors — 200",
           "request": {
             "method": "POST",
             "header": [
@@ -686,7 +686,7 @@
           ]
         },
         {
-          "name": "Unicode and special characters — 200",
+          "name": "TC-API-013: Unicode and special characters — 200",
           "request": {
             "method": "POST",
             "header": [
@@ -731,7 +731,7 @@
           ]
         },
         {
-          "name": "Non-Python code — 200",
+          "name": "TC-API-014: Non-Python code — 200",
           "request": {
             "method": "POST",
             "header": [
@@ -782,7 +782,7 @@
       "name": "Account CRUD",
       "item": [
         {
-          "name": "Get Profile — 200",
+          "name": "TC-API-015: Get Profile — 200",
           "request": {
             "method": "GET",
             "header": [
@@ -818,7 +818,7 @@
           ]
         },
         {
-          "name": "Update Username — 200",
+          "name": "TC-API-016: Update Username — 200",
           "request": {
             "method": "PATCH",
             "header": [
@@ -855,7 +855,7 @@
           ]
         },
         {
-          "name": "Update Username — invalid chars — 422",
+          "name": "TC-API-017: Update Username — invalid chars — 422",
           "request": {
             "method": "PATCH",
             "header": [
@@ -887,7 +887,7 @@
           ]
         },
         {
-          "name": "Change Password — wrong current — 401",
+          "name": "TC-API-018: Change Password — wrong current — 401",
           "request": {
             "method": "POST",
             "header": [
@@ -924,7 +924,7 @@
           ]
         },
         {
-          "name": "Change Password — too short — 422",
+          "name": "TC-API-019: Change Password — too short — 422",
           "request": {
             "method": "POST",
             "header": [
@@ -956,7 +956,7 @@
           ]
         },
         {
-          "name": "Upload Avatar — invalid type — 422",
+          "name": "TC-API-020: Upload Avatar — invalid type — 422",
           "request": {
             "method": "POST",
             "header": [
@@ -1006,7 +1006,7 @@
           ]
         },
         {
-          "name": "Get Profile — no auth — 422",
+          "name": "TC-API-021: Get Profile — no auth — 422",
           "request": {
             "method": "GET",
             "header": [],
@@ -1031,7 +1031,7 @@
           ]
         },
         {
-          "name": "Change Password — no auth — 422",
+          "name": "TC-API-022: Change Password — no auth — 422",
           "request": {
             "method": "POST",
             "header": [
@@ -1062,7 +1062,7 @@
           ]
         },
         {
-          "name": "Delete Account — no auth — 422",
+          "name": "TC-API-023: Delete Account — no auth — 422",
           "request": {
             "method": "DELETE",
             "header": [],
@@ -1092,7 +1092,7 @@
       "name": "Submission CRUD",
       "item": [
         {
-          "name": "Analyze with custom name — 200",
+          "name": "TC-API-024: Analyze with custom name — 200",
           "request": {
             "method": "POST",
             "header": [
@@ -1137,7 +1137,7 @@
           ]
         },
         {
-          "name": "Analyze without name (GPT generates) — 200",
+          "name": "TC-API-025: Analyze without name (GPT generates) — 200",
           "request": {
             "method": "POST",
             "header": [
@@ -1176,7 +1176,7 @@
           ]
         },
         {
-          "name": "List submissions — 200",
+          "name": "TC-API-026: List submissions — 200",
           "request": {
             "method": "GET",
             "header": [
@@ -1216,7 +1216,7 @@
           ]
         },
         {
-          "name": "Rename submission — 200",
+          "name": "TC-API-027: Rename submission — 200",
           "request": {
             "method": "PATCH",
             "header": [
@@ -1253,7 +1253,7 @@
           ]
         },
         {
-          "name": "Rename — not found — 404",
+          "name": "TC-API-028: Rename — not found — 404",
           "request": {
             "method": "PATCH",
             "header": [
@@ -1285,7 +1285,7 @@
           ]
         },
         {
-          "name": "Delete submission — 200",
+          "name": "TC-API-029: Delete submission — 200",
           "request": {
             "method": "DELETE",
             "header": [
@@ -1317,7 +1317,7 @@
           ]
         },
         {
-          "name": "Delete — not found — 404",
+          "name": "TC-API-030: Delete — not found — 404",
           "request": {
             "method": "DELETE",
             "header": [
@@ -1344,7 +1344,7 @@
           ]
         },
         {
-          "name": "Pin submission — 200",
+          "name": "TC-API-031: Pin submission — 200",
           "request": {
             "method": "PATCH",
             "header": [
@@ -1376,7 +1376,7 @@
           ]
         },
         {
-          "name": "Pin — not found — 404",
+          "name": "TC-API-032: Pin — not found — 404",
           "request": {
             "method": "PATCH",
             "header": [
@@ -1403,7 +1403,7 @@
           ]
         },
         {
-          "name": "List submissions — no auth — 422",
+          "name": "TC-API-033: List submissions — no auth — 422",
           "request": {
             "method": "GET",
             "header": [],

@@ -12,6 +12,8 @@ class PersistenceError(Exception):
     """Raised when a Supabase write fails during analysis persistence."""
 
 
+# FR-HIST-001
+# NFR-SEC-001
 async def persist_analysis(
     user_id: str,
     code: str,
@@ -116,6 +118,8 @@ async def persist_analysis(
         raise PersistenceError(str(exc)) from exc
 
 
+# FR-ANALYSIS-005
+# NFR-SEC-001
 async def reanalyze_submission(
     submission_id: str,
     user_id: str,
