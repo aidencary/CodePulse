@@ -1288,34 +1288,28 @@ def _run_text_checks(
                             )
                         )
 
-        ''' Buggy, may fix later if time allows.
         # binary_operator_line_break (W504)
         if stripped and not stripped.startswith("#"):
             rstripped = code_portion.rstrip()
             if rstripped:
-                # Check if line ends with a binary operator
-                for bop in sorted(_BINARY_OPS, key=len, reverse=True):
-                    if rstripped.endswith(bop):
-                        # Avoid false positive for single-char ops that
-                        # might be unary (e.g., trailing -)
-                        if len(bop) > 1 or (
-                            len(rstripped) > len(bop)
-                            and rstripped[-(len(bop) + 1)] == " "
-                        ):
-                            findings.append(
-                                Finding(
-                                    issue_type="binary_operator_line_break",
-                                    line_number=line_number,
-                                    severity="Low",
-                                    message=(
-                                        f"Line break after binary "
-                                        f"operator '{bop}'. Break "
-                                        f"before the operator instead."
-                                    ),
-                                )
-                            )
-                        break
-                        '''
+                m = re.search(
+                    r"\s(and|or|\+|-|\*\*|//|\*|/|%|\||\^|&)\s*$",
+                    rstripped,
+                )
+                if m:
+                    bop = m.group(1)
+                    findings.append(
+                        Finding(
+                            issue_type="binary_operator_line_break",
+                            line_number=line_number,
+                            severity="Low",
+                            message=(
+                                f"Line break after binary "
+                                f"operator '{bop}'. Break "
+                                f"before the operator instead."
+                            ),
+                        )
+                    )
 
         # arrow_spacing — missing spaces around -> in function signatures
         if stripped and not stripped.startswith("#"):
