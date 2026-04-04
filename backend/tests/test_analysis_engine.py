@@ -1,7 +1,10 @@
 """Unit tests for the static analysis engine."""
 
 from app.models.analysis import Finding, PredictedBug
-from app.services.analysis_engine import compute_score, run_static_analysis
+from app.services.engines.python_engine import PythonEngine
+
+compute_score = PythonEngine.compute_score
+run_static_analysis = PythonEngine.run_static_analysis
 
 
 # Long-line detection
@@ -867,3 +870,531 @@ def test_with_statement_not_flagged() -> None:
     )
     findings, _ = run_static_analysis(code)
     assert not any(f.issue_type == "context_manager_usage" for f in findings)
+
+
+# ===========================================================================
+# New PEP 8 checks (22 checks, 44 tests)
+# ===========================================================================
+
+
+# ---------------------------------------------------------------------------
+# is_true_false
+# ---------------------------------------------------------------------------
+
+
+# TC-ANALYSIS-084
+def test_is_true_detected() -> None:
+    """``is True`` produces an is_true_false finding."""
+    code = 'def foo():\n    """Doc."""\n    if x is True:\n        pass\n'
+    findings, _ = run_static_analysis(code)
+    itf = [f for f in findings if f.issue_type == "is_true_false"]
+    assert len(itf) == 1
+    assert "truthiness" in itf[0].message.lower()
+
+
+# TC-ANALYSIS-085
+def test_is_true_false_not_flagged_for_direct_use() -> None:
+    """Using a boolean value directly does not produce is_true_false."""
+    code = 'def foo():\n    """Doc."""\n    if x:\n        pass\n'
+    findings, _ = run_static_analysis(code)
+    assert not any(f.issue_type == "is_true_false" for f in findings)
+
+
+# ---------------------------------------------------------------------------
+# exception_naming
+# ---------------------------------------------------------------------------
+
+
+# TC-ANALYSIS-086
+def test_exception_naming_missing_error_suffix() -> None:
+    """An exception class not ending with 'Error' is flagged."""
+    code = 'class MyException(Exception):\n    """Doc."""\n    pass\n'
+    findings, _ = run_static_analysis(code)
+    en = [f for f in findings if f.issue_type == "exception_naming"]
+    assert len(en) == 1
+    assert "Error" in en[0].message
+
+
+# TC-ANALYSIS-087
+def test_exception_naming_with_error_suffix_not_flagged() -> None:
+    """An exception class ending with 'Error' is not flagged."""
+    code = 'class MyError(Exception):\n    """Doc."""\n    pass\n'
+    findings, _ = run_static_analysis(code)
+    assert not any(f.issue_type == "exception_naming" for f in findings)
+
+
+# ---------------------------------------------------------------------------
+# invalid_dunder
+# ---------------------------------------------------------------------------
+
+
+# TC-ANALYSIS-088
+def test_invalid_dunder_detected() -> None:
+    """A non-standard dunder method is flagged."""
+    code = (
+        "class Foo:\n"
+        '    """Doc."""\n'
+        "    def __custom__(self):\n"
+        '        """Doc."""\n'
+        "        pass\n"
+    )
+    findings, _ = run_static_analysis(code)
+    idd = [f for f in findings if f.issue_type == "invalid_dunder"]
+    assert len(idd) == 1
+    assert "__custom__" in idd[0].message
+
+
+# TC-ANALYSIS-089
+def test_valid_dunder_not_flagged() -> None:
+    """A standard dunder method is not flagged."""
+    code = (
+        "class Foo:\n" '    """Doc."""\n' "    def __init__(self):\n" "        pass\n"
+    )
+    findings, _ = run_static_analysis(code)
+    assert not any(f.issue_type == "invalid_dunder" for f in findings)
+
+
+# ---------------------------------------------------------------------------
+# return_in_finally
+# ---------------------------------------------------------------------------
+
+
+# TC-ANALYSIS-090
+def test_return_in_finally_detected() -> None:
+    """A return inside a finally block is flagged as High severity."""
+    code = (
+        "def foo():\n"
+        '    """Doc."""\n'
+        "    try:\n"
+        "        pass\n"
+        "    finally:\n"
+        "        return 1\n"
+    )
+    findings, _ = run_static_analysis(code)
+    rif = [f for f in findings if f.issue_type == "return_in_finally"]
+    assert len(rif) == 1
+    assert rif[0].severity == "High"
+
+
+# TC-ANALYSIS-091
+def test_no_return_in_finally_not_flagged() -> None:
+    """A try/finally without return in finally is not flagged."""
+    code = (
+        "def foo():\n"
+        '    """Doc."""\n'
+        "    try:\n"
+        "        pass\n"
+        "    finally:\n"
+        "        x = 1\n"
+    )
+    findings, _ = run_static_analysis(code)
+    assert not any(f.issue_type == "return_in_finally" for f in findings)
+
+
+# ---------------------------------------------------------------------------
+# implicit_return_none
+# ---------------------------------------------------------------------------
+
+
+# TC-ANALYSIS-092
+def test_implicit_return_none_detected() -> None:
+    """A bare return in a function with return values is flagged."""
+    code = (
+        "def foo(x):\n"
+        '    """Doc."""\n'
+        "    if x:\n"
+        "        return 1\n"
+        "    return\n"
+    )
+    findings, _ = run_static_analysis(code)
+    irn = [f for f in findings if f.issue_type == "implicit_return_none"]
+    assert len(irn) == 1
+    assert "return None" in irn[0].message
+
+
+# TC-ANALYSIS-093
+def test_implicit_return_none_not_flagged_for_consistent() -> None:
+    """A function with only bare returns is not flagged."""
+    code = (
+        "def foo(x):\n"
+        '    """Doc."""\n'
+        "    if x:\n"
+        "        return\n"
+        "    return\n"
+    )
+    findings, _ = run_static_analysis(code)
+    assert not any(f.issue_type == "implicit_return_none" for f in findings)
+
+
+# ---------------------------------------------------------------------------
+# module_dunder_placement
+# ---------------------------------------------------------------------------
+
+
+# TC-ANALYSIS-094
+def test_module_dunder_after_import_detected() -> None:
+    """__all__ after an import is flagged."""
+    code = 'import os\n__all__ = ["foo"]\n'
+    findings, _ = run_static_analysis(code)
+    mdp = [f for f in findings if f.issue_type == "module_dunder_placement"]
+    assert len(mdp) == 1
+
+
+# TC-ANALYSIS-095
+def test_module_dunder_before_import_not_flagged() -> None:
+    """__all__ before imports is not flagged."""
+    code = '__all__ = ["foo"]\nimport os\n'
+    findings, _ = run_static_analysis(code)
+    assert not any(f.issue_type == "module_dunder_placement" for f in findings)
+
+
+# ---------------------------------------------------------------------------
+# relative_import
+# ---------------------------------------------------------------------------
+
+
+# TC-ANALYSIS-096
+def test_relative_import_detected() -> None:
+    """A relative import is flagged."""
+    code = "from . import foo\n"
+    findings, _ = run_static_analysis(code)
+    ri = [f for f in findings if f.issue_type == "relative_import"]
+    assert len(ri) == 1
+
+
+# TC-ANALYSIS-097
+def test_absolute_import_not_flagged() -> None:
+    """An absolute import is not flagged."""
+    code = "import os\n"
+    findings, _ = run_static_analysis(code)
+    assert not any(f.issue_type == "relative_import" for f in findings)
+
+
+# ---------------------------------------------------------------------------
+# semicolon_statement (E702)
+# ---------------------------------------------------------------------------
+
+
+# TC-ANALYSIS-098
+def test_semicolon_statement_detected() -> None:
+    """Two statements joined by semicolon are flagged."""
+    code = "x = 1; y = 2\n"
+    findings, _ = run_static_analysis(code)
+    ss = [f for f in findings if f.issue_type == "semicolon_statement"]
+    assert len(ss) == 1
+
+
+# TC-ANALYSIS-099
+def test_no_semicolon_not_flagged() -> None:
+    """Separate statements on their own lines are not flagged."""
+    code = "x = 1\ny = 2\n"
+    findings, _ = run_static_analysis(code)
+    assert not any(f.issue_type == "semicolon_statement" for f in findings)
+
+
+# ---------------------------------------------------------------------------
+# compound_statement (E701)
+# ---------------------------------------------------------------------------
+
+
+# TC-ANALYSIS-100
+def test_compound_statement_detected() -> None:
+    """An if/body on a single line is flagged."""
+    code = "def foo():\n" '    """Doc."""\n' "    if True: pass\n"
+    findings, _ = run_static_analysis(code)
+    cs = [f for f in findings if f.issue_type == "compound_statement"]
+    assert len(cs) == 1
+
+
+# TC-ANALYSIS-101
+def test_compound_statement_not_flagged_for_multiline() -> None:
+    """An if with body on the next line is not flagged."""
+    code = "def foo():\n" '    """Doc."""\n' "    if True:\n" "        pass\n"
+    findings, _ = run_static_analysis(code)
+    assert not any(f.issue_type == "compound_statement" for f in findings)
+
+
+# ---------------------------------------------------------------------------
+# bracket_whitespace (E201/E202)
+# ---------------------------------------------------------------------------
+
+
+# TC-ANALYSIS-102
+def test_bracket_whitespace_detected() -> None:
+    """Space after opening bracket is flagged."""
+    code = "x = foo( 1, 2)\n"
+    findings, _ = run_static_analysis(code)
+    bw = [f for f in findings if f.issue_type == "bracket_whitespace"]
+    assert len(bw) >= 1
+
+
+# TC-ANALYSIS-103
+def test_bracket_whitespace_not_flagged_for_clean() -> None:
+    """No space inside brackets is not flagged."""
+    code = "x = foo(1, 2)\n"
+    findings, _ = run_static_analysis(code)
+    assert not any(f.issue_type == "bracket_whitespace" for f in findings)
+
+
+# ---------------------------------------------------------------------------
+# whitespace_before_punctuation (E203)
+# ---------------------------------------------------------------------------
+
+
+# TC-ANALYSIS-104
+def test_whitespace_before_punctuation_detected() -> None:
+    """Space before comma is flagged."""
+    code = "x = [1 , 2]\n"
+    findings, _ = run_static_analysis(code)
+    wp = [f for f in findings if f.issue_type == "whitespace_before_punctuation"]
+    assert len(wp) >= 1
+
+
+# TC-ANALYSIS-105
+def test_whitespace_before_punctuation_not_flagged() -> None:
+    """No space before comma is not flagged."""
+    code = "x = [1, 2]\n"
+    findings, _ = run_static_analysis(code)
+    assert not any(f.issue_type == "whitespace_before_punctuation" for f in findings)
+
+
+# ---------------------------------------------------------------------------
+# whitespace_before_call (E211)
+# ---------------------------------------------------------------------------
+
+
+# TC-ANALYSIS-106
+def test_whitespace_before_call_detected() -> None:
+    """Space before opening paren in call is flagged."""
+    code = "def foo():\n" '    """Doc."""\n' "    bar (1)\n"
+    findings, _ = run_static_analysis(code)
+    wbc = [f for f in findings if f.issue_type == "whitespace_before_call"]
+    assert len(wbc) >= 1
+
+
+# TC-ANALYSIS-107
+def test_whitespace_before_call_not_flagged() -> None:
+    """No space before paren in call is not flagged."""
+    code = "def foo():\n" '    """Doc."""\n' "    bar(1)\n"
+    findings, _ = run_static_analysis(code)
+    assert not any(f.issue_type == "whitespace_before_call" for f in findings)
+
+
+# ---------------------------------------------------------------------------
+# whitespace_after_separator (E231)
+# ---------------------------------------------------------------------------
+
+
+# TC-ANALYSIS-108
+def test_whitespace_after_separator_detected() -> None:
+    """Missing space after comma is flagged."""
+    code = "x = [1,2,3]\n"
+    findings, _ = run_static_analysis(code)
+    was = [f for f in findings if f.issue_type == "whitespace_after_separator"]
+    assert len(was) >= 1
+
+
+# TC-ANALYSIS-109
+def test_whitespace_after_separator_not_flagged() -> None:
+    """Space after comma is not flagged."""
+    code = "x = [1, 2, 3]\n"
+    findings, _ = run_static_analysis(code)
+    assert not any(f.issue_type == "whitespace_after_separator" for f in findings)
+
+
+# ---------------------------------------------------------------------------
+# operator_spacing (E225)
+# ---------------------------------------------------------------------------
+
+
+# TC-ANALYSIS-110
+def test_operator_spacing_detected() -> None:
+    """Missing space around = is flagged (not in def/lambda)."""
+    code = "x=1\n"
+    findings, _ = run_static_analysis(code)
+    ops = [f for f in findings if f.issue_type == "operator_spacing"]
+    assert len(ops) >= 1
+
+
+# TC-ANALYSIS-111
+def test_operator_spacing_not_flagged_for_spaced() -> None:
+    """Properly spaced = is not flagged."""
+    code = "x = 1\n"
+    findings, _ = run_static_analysis(code)
+    assert not any(f.issue_type == "operator_spacing" for f in findings)
+
+
+# ---------------------------------------------------------------------------
+# keyword_arg_spacing (E251)
+# ---------------------------------------------------------------------------
+
+
+# TC-ANALYSIS-112
+def test_keyword_arg_spacing_detected() -> None:
+    """Space around = in default param is flagged."""
+    code = 'def foo(x = 1):\n    """Doc."""\n    pass\n'
+    findings, _ = run_static_analysis(code)
+    kas = [f for f in findings if f.issue_type == "keyword_arg_spacing"]
+    assert len(kas) == 1
+
+
+# TC-ANALYSIS-113
+def test_keyword_arg_spacing_not_flagged() -> None:
+    """No space around = in default param is not flagged."""
+    code = 'def foo(x=1):\n    """Doc."""\n    pass\n'
+    findings, _ = run_static_analysis(code)
+    assert not any(f.issue_type == "keyword_arg_spacing" for f in findings)
+
+
+# ---------------------------------------------------------------------------
+# binary_operator_line_break (W504)
+# ---------------------------------------------------------------------------
+
+
+# TC-ANALYSIS-114
+def test_binary_operator_line_break_detected() -> None:
+    """Line ending with 'and' operator is flagged."""
+    code = "def foo():\n" '    """Doc."""\n' "    x = (a and\n" "         b)\n"
+    findings, _ = run_static_analysis(code)
+    bolb = [f for f in findings if f.issue_type == "binary_operator_line_break"]
+    assert len(bolb) >= 1
+
+
+# TC-ANALYSIS-115
+def test_binary_operator_line_break_not_flagged() -> None:
+    """Line breaking before 'and' is not flagged."""
+    code = "def foo():\n" '    """Doc."""\n' "    x = (a\n" "         and b)\n"
+    findings, _ = run_static_analysis(code)
+    assert not any(f.issue_type == "binary_operator_line_break" for f in findings)
+
+
+# ---------------------------------------------------------------------------
+# arrow_spacing
+# ---------------------------------------------------------------------------
+
+
+# TC-ANALYSIS-116
+def test_arrow_spacing_detected() -> None:
+    """Missing space around -> is flagged."""
+    code = 'def foo()->int:\n    """Doc."""\n    return 1\n'
+    findings, _ = run_static_analysis(code)
+    ar = [f for f in findings if f.issue_type == "arrow_spacing"]
+    assert len(ar) == 1
+
+
+# TC-ANALYSIS-117
+def test_arrow_spacing_not_flagged() -> None:
+    """Properly spaced -> is not flagged."""
+    code = 'def foo() -> int:\n    """Doc."""\n    return 1\n'
+    findings, _ = run_static_analysis(code)
+    assert not any(f.issue_type == "arrow_spacing" for f in findings)
+
+
+# ---------------------------------------------------------------------------
+# annotation_spacing
+# ---------------------------------------------------------------------------
+
+
+# TC-ANALYSIS-118
+def test_annotation_spacing_detected() -> None:
+    """Missing space after : in annotation is flagged."""
+    code = "x:int = 1\n"
+    findings, _ = run_static_analysis(code)
+    ans = [f for f in findings if f.issue_type == "annotation_spacing"]
+    assert len(ans) == 1
+
+
+# TC-ANALYSIS-119
+def test_annotation_spacing_not_flagged() -> None:
+    """Properly spaced annotation is not flagged."""
+    code = "x: int = 1\n"
+    findings, _ = run_static_analysis(code)
+    assert not any(f.issue_type == "annotation_spacing" for f in findings)
+
+
+# ---------------------------------------------------------------------------
+# block_comment_capitalization
+# ---------------------------------------------------------------------------
+
+
+# TC-ANALYSIS-120
+def test_block_comment_capitalization_detected() -> None:
+    """A block comment starting with a lowercase word is flagged."""
+    code = "# this is a comment\nx = 1\n"
+    findings, _ = run_static_analysis(code)
+    bcc = [f for f in findings if f.issue_type == "block_comment_capitalization"]
+    assert len(bcc) == 1
+
+
+# TC-ANALYSIS-121
+def test_block_comment_capitalization_not_flagged() -> None:
+    """A block comment starting with an uppercase word is not flagged."""
+    code = "# This is a comment\nx = 1\n"
+    findings, _ = run_static_analysis(code)
+    assert not any(f.issue_type == "block_comment_capitalization" for f in findings)
+
+
+# ---------------------------------------------------------------------------
+# block_comment_indentation
+# ---------------------------------------------------------------------------
+
+
+# TC-ANALYSIS-122
+def test_block_comment_indentation_detected() -> None:
+    """A block comment misaligned with the following code is flagged."""
+    code = "def foo():\n" '    """Doc."""\n' "# Misaligned comment\n" "    x = 1\n"
+    findings, _ = run_static_analysis(code)
+    bci = [f for f in findings if f.issue_type == "block_comment_indentation"]
+    assert len(bci) >= 1
+
+
+# TC-ANALYSIS-123
+def test_block_comment_indentation_not_flagged() -> None:
+    """A block comment aligned with the following code is not flagged."""
+    code = "def foo():\n" '    """Doc."""\n' "    # Aligned comment\n" "    x = 1\n"
+    findings, _ = run_static_analysis(code)
+    assert not any(f.issue_type == "block_comment_indentation" for f in findings)
+
+
+# ---------------------------------------------------------------------------
+# quote_consistency
+# ---------------------------------------------------------------------------
+
+
+# TC-ANALYSIS-124
+def test_quote_consistency_detected() -> None:
+    """Minority quote style in a predominantly double-quoted file is flagged."""
+    code = 'x = "hello"\n' 'y = "world"\n' 'z = "foo"\n' 'a = "bar"\n' "w = 'odd'\n"
+    findings, _ = run_static_analysis(code)
+    qc = [f for f in findings if f.issue_type == "quote_consistency"]
+    assert len(qc) >= 1
+
+
+# TC-ANALYSIS-125
+def test_quote_consistency_not_flagged() -> None:
+    """A file with consistent quote style is not flagged."""
+    code = 'x = "hello"\ny = "world"\n'
+    findings, _ = run_static_analysis(code)
+    assert not any(f.issue_type == "quote_consistency" for f in findings)
+
+
+# ---------------------------------------------------------------------------
+# module_naming
+# ---------------------------------------------------------------------------
+
+
+# TC-ANALYSIS-126
+def test_module_naming_detected() -> None:
+    """A non-lowercase module filename is flagged."""
+    code = "x = 1\n"
+    findings, _ = run_static_analysis(code, filename="MyModule.py")
+    mn = [f for f in findings if f.issue_type == "module_naming"]
+    assert len(mn) == 1
+
+
+# TC-ANALYSIS-127
+def test_module_naming_not_flagged() -> None:
+    """A lowercase module filename is not flagged."""
+    code = "x = 1\n"
+    findings, _ = run_static_analysis(code, filename="my_module.py")
+    assert not any(f.issue_type == "module_naming" for f in findings)

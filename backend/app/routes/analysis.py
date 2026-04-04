@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends
 
 from app.dependencies import get_current_user
 from app.models.analysis import AnalyzeRequest, AnalyzeResponse
-from app.services.analysis_engine import compute_score, run_static_analysis
+from app.services.engines.python_engine import PythonEngine
 from app.services.gpt_predictor import generate_submission_name, predict_bugs
 from app.services.persistence_service import (
     PersistenceError,
@@ -15,6 +15,9 @@ from app.services.persistence_service import (
 )
 
 logger = logging.getLogger(__name__)
+
+run_static_analysis = PythonEngine.run_static_analysis
+compute_score = PythonEngine.compute_score
 
 router = APIRouter(tags=["analysis"])
 

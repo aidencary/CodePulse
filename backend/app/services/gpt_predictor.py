@@ -1,4 +1,4 @@
-"""GPT-based bug prediction service — calls OpenAI to find latent bugs in code."""
+"""GPT-based bug prediction service - calls OpenAI to find latent bugs in code."""
 
 import json
 import logging
@@ -7,11 +7,9 @@ from pydantic import BaseModel, ValidationError
 
 from app.config import get_settings
 from app.models.analysis import Finding, PredictedBug
+from app.services.prompts.python_prompt import build_system_prompt, build_user_message
 
 logger = logging.getLogger(__name__)
-
-# Global constants for prompt construction and scoring can be defined here if needed.
-MAX_BUGS_RETURNED = 10
 
 
 # Internal validation model
@@ -19,49 +17,6 @@ class GptPrediction(BaseModel):
     """Validated wrapper around the JSON object returned by GPT."""
 
     predicted_bugs: list[PredictedBug]
-
-
-# Prompt helper for GPT
-def _build_system_prompt(findings: list[Finding], language: str) -> str:
-    """Build the system prompt, summarising any static findings to avoid duplication."""
-    findings_summary = (
-        "\n".join(
-            f"  - Line {f.line_number}: [{f.severity}] {f.issue_type} — {f.message}"
-            for f in findings
-        )
-        if findings
-        else "  (none)"
-    )
-
-    return f"""You are an expert code quality analyst specialising in bug detection.
-Analyse the provided {language} code for bugs, logic errors, security vulnerabilities,
-and potential runtime failures that are NOT already listed below.
-
-Static analysis has already flagged:
-{findings_summary}
-
-Do NOT repeat issues from the list above.
-
-Respond ONLY with valid JSON matching this exact schema — no markdown, no prose:
-{{
-  "predicted_bugs": [
-    {{
-      "line_number": <integer or null>,
-      "bug_type": <string — e.g. "null_dereference", "sql_injection", "off_by_one">,
-      "severity": <"low" | "medium" | "high" | "critical">,
-      "description": <string — one sentence explaining the bug>,
-      "suggested_fix": <string — concrete code change or approach to fix it>
-    }}
-  ]
-}}
-
-Return at most {MAX_BUGS_RETURNED} bugs. Return an empty array if no bugs are found."""
-
-
-def _build_user_message(code: str, language: str) -> str:
-    """Wrap code in a prompt with explicit line numbers for accurate GPT references."""
-    numbered = "\n".join(f"{i + 1}: {line}" for i, line in enumerate(code.splitlines()))
-    return f"Analyse the following {language} code:\n\n```\n{numbered}\n```"
 
 
 # Public API
@@ -96,8 +51,8 @@ async def predict_bugs(
             model=settings.gpt_model,
             response_format={"type": "json_object"},
             messages=[
-                {"role": "system", "content": _build_system_prompt(findings, language)},
-                {"role": "user", "content": _build_user_message(code, language)},
+                {"role": "system", "content": build_system_prompt(findings, language)},
+                {"role": "user", "content": build_user_message(code, language)},
             ],
             temperature=0.2,
             max_tokens=2048,

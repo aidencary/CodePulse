@@ -1016,6 +1016,13 @@ body {
 .severity-medium   { background: rgba(250, 204, 21, 0.15);  color: #facc15; }
 .severity-critical { background: rgba(248, 113, 113, 0.25); color: #ff4444; }
 
+/* Light mode: darker saturated tones for readability on light surfaces */
+:root[data-theme="light"] .severity-low      { background: rgba(22, 163, 74, 0.12);  color: #15803d; }
+:root[data-theme="light"] .severity-med      { background: rgba(202, 138, 4, 0.12);  color: #a16207; }
+:root[data-theme="light"] .severity-high     { background: rgba(220, 38, 38, 0.12);  color: #b91c1c; }
+:root[data-theme="light"] .severity-medium   { background: rgba(202, 138, 4, 0.12);  color: #a16207; }
+:root[data-theme="light"] .severity-critical { background: rgba(220, 38, 38, 0.18);  color: #b91c1c; }
+
 /* ─── Ignore button ─────────────────────────────────────────────── */
 .ignore-btn {
   margin-left: auto;

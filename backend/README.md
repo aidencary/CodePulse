@@ -34,14 +34,19 @@ backend/
 │   │   ├── account.py          # GET/PATCH/DELETE /api/v1/account + avatar upload + password change + invite
 │   │   └── submissions.py      # GET/PATCH/DELETE /api/v1/submissions + pin toggle
 │   └── services/
-│       ├── analysis_engine.py  # AST-based static analyzer (24 PEP 8 checks) + score computation
-│       ├── gpt_predictor.py    # OpenAI GPT bug prediction with graceful fallback
+│       ├── engines/
+│       │   ├── __init__.py
+│       │   └── python_engine.py    # AST-based static analyzer (46 PEP 8 checks) + score computation
+│       ├── prompts/
+│       │   ├── __init__.py
+│       │   └── python_prompt.py    # GPT prompt templates for Python code analysis
+│       ├── gpt_predictor.py        # OpenAI GPT bug prediction with graceful fallback
 │       └── persistence_service.py  # Supabase write sequence (submissions → reports → findings → bugs)
 ├── tests/
 │   ├── test_placeholder.py
 │   ├── test_analyze_endpoint.py
 │   ├── test_analyze_route.py       # Route integration tests (mocked services)
-│   ├── test_analysis_engine.py     # Static analyzer unit tests (69 tests — 24 PEP 8 checks)
+│   ├── test_analysis_engine.py     # Static analyzer unit tests (113 tests — 46 PEP 8 checks)
 │   ├── test_gpt_predictor.py       # GPT predictor unit tests (mocked OpenAI)
 │   ├── test_account_routes.py      # Account CRUD route tests (13 tests)
 │   └── test_submission_routes.py   # Submission CRUD route tests (13 tests)
@@ -198,7 +203,7 @@ pytest tests/test_gpt_predictor.py -v    # GPT predictor tests (mocked)
 pytest tests/test_analyze_route.py -v    # Route integration tests
 ```
 
-119 tests, all passing. Add a corresponding test file in `tests/` for each new service module.
+163 tests, all passing. Add a corresponding test file in `tests/` for each new service module.
 
 ---
 
@@ -239,8 +244,8 @@ A pull request cannot be merged if any CI step fails. All new code must be Black
 | Supabase client module (`app/database.py`) | Done |
 | `POST /api/v1/analyze` — real analysis pipeline | Done |
 | Dockerfile | Done |
-| Static analysis engine (`app/services/analysis_engine.py`) | Done |
-| GPT bug prediction (`app/services/gpt_predictor.py`) | Done |
+| Static analysis engine (`app/services/engines/python_engine.py`, 46 PEP 8 checks) | Done |
+| GPT bug prediction (`app/services/gpt_predictor.py`, prompts in `prompts/python_prompt.py`) | Done |
 | Submission persistence to Supabase (`app/services/persistence_service.py`) | Done |
 | Postman collection + Newman CI | Done |
 | Account CRUD endpoints (profile, avatar, password, delete) | Done |

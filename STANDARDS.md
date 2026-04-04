@@ -20,7 +20,12 @@ CodePulse/
 │   │   │   ├── account.py    # Account CRUD (profile, avatar, password, delete)
 │   │   │   └── submissions.py # Submission CRUD (list, rename, delete)
 │   │   └── services/         # Business logic layer
-│   │       ├── analysis_engine.py    # AST-based static analyzer (24 PEP 8 checks)
+│   │       ├── engines/
+│   │       │   ├── __init__.py
+│   │       │   └── python_engine.py  # AST-based static analyzer (46 PEP 8 checks)
+│   │       ├── prompts/
+│   │       │   ├── __init__.py
+│   │       │   └── python_prompt.py  # GPT prompt templates for Python analysis
 │   │       ├── gpt_predictor.py      # OpenAI GPT bug prediction + submission name generation
 │   │       └── persistence_service.py # Supabase write sequence
 │   ├── database/

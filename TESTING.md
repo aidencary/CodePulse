@@ -108,8 +108,8 @@ All test files live in `backend/tests/` and follow the `test_<module>.py` naming
 |------|--------------|
 | `tests/test_analyze_endpoint.py` | Health check, auth guard (missing header, malformed token, wrong Bearer prefix), valid JWT happy path, request body validation (6 tests) |
 | `tests/test_analyze_route.py` | Route integration tests — full response shape, score range, finding/bug schema, persistence failure resilience, max-length validation (6 tests) |
-| `tests/test_analysis_engine.py` | Static analyzer — 24 PEP 8 checks (naming conventions, self/cls, None/boolean/type comparisons, empty sequences, lambda assignment, import formatting, is-not preference, return consistency, exception inheritance, string slicing, trailing whitespace, tab indentation, blank line spacing, comment spacing, triple quote style, import ordering, try block scope, context manager usage), syntax errors, score computation (69 tests) |
-| `tests/test_gpt_predictor.py` | GPT predictor — valid responses, empty arrays, API errors, malformed JSON, schema validation, prompt construction (6 tests) |
+| `tests/test_analysis_engine.py` | Static analyzer — 46 PEP 8 checks (naming conventions, self/cls, None/boolean/type comparisons, empty sequences, lambda assignment, import formatting, is-not preference, return consistency, exception inheritance, string slicing, trailing whitespace, tab indentation, blank line spacing, comment spacing, triple quote style, import ordering, try block scope, context manager usage, is true/false, exception naming, invalid dunders, return in finally, implicit return none, module dunder placement, relative imports, semicolons, compound statements, bracket whitespace, whitespace before punctuation, whitespace before call, whitespace after separator, operator spacing, keyword arg spacing, binary operator line break, arrow spacing, annotation spacing, block comment capitalization/indentation, quote consistency, module naming), syntax errors, score computation (113 tests) |
+| `tests/test_gpt_predictor.py` | GPT predictor — valid responses, empty arrays, API errors, malformed JSON, schema validation, prompt construction, user message formatting (8 tests) |
 | `tests/test_account_routes.py` | Account CRUD — get profile, update username, duplicate username 409, invalid chars 422, change password (success/wrong/short), avatar upload (success/invalid type), delete account (13 tests) |
 | `tests/test_submission_routes.py` | Submission CRUD — list submissions, rename (success/not-found/not-owner/empty-name), delete (success/not-found/not-owner), pin toggle (pin/unpin/not-found/not-owner) (13 tests) |
 | `tests/test_placeholder.py` | Confirms the test runner is configured correctly |
@@ -364,6 +364,50 @@ Test IDs follow the pattern `TC-{MODULE}-{NNN}`. For full requirement descriptio
 | TC-ANALYSIS-067 | `test_narrow_try_block_not_flagged` | FR-ANALYSIS-002 |
 | TC-ANALYSIS-068 | `test_try_finally_close_detected` | FR-ANALYSIS-002 |
 | TC-ANALYSIS-069 | `test_with_statement_not_flagged` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-084 | `test_is_true_detected` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-085 | `test_is_true_false_not_flagged_for_direct_use` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-086 | `test_exception_naming_missing_error_suffix` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-087 | `test_exception_naming_with_error_suffix_not_flagged` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-088 | `test_invalid_dunder_detected` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-089 | `test_valid_dunder_not_flagged` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-090 | `test_return_in_finally_detected` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-091 | `test_no_return_in_finally_not_flagged` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-092 | `test_implicit_return_none_detected` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-093 | `test_implicit_return_none_not_flagged_for_consistent` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-094 | `test_module_dunder_after_import_detected` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-095 | `test_module_dunder_before_import_not_flagged` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-096 | `test_relative_import_detected` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-097 | `test_absolute_import_not_flagged` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-098 | `test_semicolon_statement_detected` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-099 | `test_no_semicolon_not_flagged` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-100 | `test_compound_statement_detected` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-101 | `test_compound_statement_not_flagged_for_multiline` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-102 | `test_bracket_whitespace_detected` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-103 | `test_bracket_whitespace_not_flagged_for_clean` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-104 | `test_whitespace_before_punctuation_detected` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-105 | `test_whitespace_before_punctuation_not_flagged` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-106 | `test_whitespace_before_call_detected` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-107 | `test_whitespace_before_call_not_flagged` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-108 | `test_whitespace_after_separator_detected` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-109 | `test_whitespace_after_separator_not_flagged` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-110 | `test_operator_spacing_detected` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-111 | `test_operator_spacing_not_flagged_for_spaced` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-112 | `test_keyword_arg_spacing_detected` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-113 | `test_keyword_arg_spacing_not_flagged` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-114 | `test_binary_operator_line_break_detected` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-115 | `test_binary_operator_line_break_not_flagged` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-116 | `test_arrow_spacing_detected` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-117 | `test_arrow_spacing_not_flagged` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-118 | `test_annotation_spacing_detected` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-119 | `test_annotation_spacing_not_flagged` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-120 | `test_block_comment_capitalization_detected` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-121 | `test_block_comment_capitalization_not_flagged` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-122 | `test_block_comment_indentation_detected` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-123 | `test_block_comment_indentation_not_flagged` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-124 | `test_quote_consistency_detected` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-125 | `test_quote_consistency_not_flagged` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-126 | `test_module_naming_detected` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-127 | `test_module_naming_not_flagged` | FR-ANALYSIS-002 |
 
 #### `tests/test_gpt_predictor.py`
 
