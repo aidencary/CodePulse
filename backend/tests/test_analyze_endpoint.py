@@ -42,6 +42,7 @@ def _make_token(user_id: str = "00000000-0000-0000-0000-000000000001") -> str:
 # ---------------------------------------------------------------------------
 
 
+# TC-AUTH-001
 def test_health_check() -> None:
     """GET / returns 200 and ok status."""
     response = client.get("/")
@@ -54,12 +55,14 @@ def test_health_check() -> None:
 # ---------------------------------------------------------------------------
 
 
+# TC-AUTH-002
 def test_analyze_missing_auth_header() -> None:
     """Missing Authorization header returns 422 (required field absent)."""
     response = client.post("/api/v1/analyze", json={"code": "print('hello')"})
     assert response.status_code == 422
 
 
+# TC-AUTH-003
 def test_analyze_malformed_token() -> None:
     """Garbage token string returns 401."""
     response = client.post(
@@ -70,6 +73,7 @@ def test_analyze_malformed_token() -> None:
     assert response.status_code == 401
 
 
+# TC-AUTH-004
 def test_analyze_wrong_prefix() -> None:
     """Token without 'Bearer ' prefix returns 401."""
     token = _make_token()
@@ -86,6 +90,7 @@ def test_analyze_wrong_prefix() -> None:
 # ---------------------------------------------------------------------------
 
 
+# TC-ANALYSIS-084
 def test_analyze_valid_token_returns_analysis() -> None:
     """Valid JWT returns a real AnalyzeResponse with an overall_score."""
     from unittest.mock import AsyncMock, patch
@@ -119,6 +124,7 @@ def test_analyze_valid_token_returns_analysis() -> None:
 # ---------------------------------------------------------------------------
 
 
+# TC-ANALYSIS-085
 def test_analyze_missing_code_field() -> None:
     """Body missing the 'code' field returns 422."""
     token = _make_token()

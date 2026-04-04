@@ -81,6 +81,7 @@ def _make_mock_supabase():
 # ------------------------------------------------------------------
 
 
+# TC-HIST-001
 def test_list_submissions_success() -> None:
     """GET /submissions returns 200 with an array of submissions."""
     sb, builder = _make_mock_supabase()
@@ -99,6 +100,7 @@ def test_list_submissions_success() -> None:
     assert item["overall_score"] == 85
 
 
+# TC-HIST-002
 def test_list_submissions_no_auth() -> None:
     """GET /submissions without Authorization header returns 422."""
     resp = client.get("/api/v1/submissions")
@@ -110,6 +112,7 @@ def test_list_submissions_no_auth() -> None:
 # ------------------------------------------------------------------
 
 
+# TC-HIST-003
 def test_rename_submission_success() -> None:
     """PATCH /submissions/{id} renames and returns 200."""
     sb, builder = _make_mock_supabase()
@@ -143,6 +146,7 @@ def test_rename_submission_success() -> None:
     assert resp.json()["name"] == "Renamed"
 
 
+# TC-HIST-004
 def test_rename_submission_not_found() -> None:
     """PATCH /submissions/{id} for a missing submission returns 404."""
     sb, builder = _make_mock_supabase()
@@ -158,6 +162,7 @@ def test_rename_submission_not_found() -> None:
     assert resp.status_code == 404
 
 
+# TC-HIST-005
 def test_rename_submission_not_owner() -> None:
     """PATCH /submissions/{id} by a non-owner returns 403."""
     sb, builder = _make_mock_supabase()
@@ -174,6 +179,7 @@ def test_rename_submission_not_owner() -> None:
     assert resp.status_code == 403
 
 
+# TC-HIST-006
 def test_rename_submission_empty_name() -> None:
     """PATCH /submissions/{id} with an empty name returns 422."""
     resp = client.patch(
@@ -189,6 +195,7 @@ def test_rename_submission_empty_name() -> None:
 # ------------------------------------------------------------------
 
 
+# TC-HIST-007
 def test_delete_submission_success() -> None:
     """DELETE /submissions/{id} returns 200 on success."""
     sb, builder = _make_mock_supabase()
@@ -205,6 +212,7 @@ def test_delete_submission_success() -> None:
     assert "deleted" in resp.json()["detail"].lower()
 
 
+# TC-HIST-008
 def test_delete_submission_not_found() -> None:
     """DELETE /submissions/{id} for a missing submission returns 404."""
     sb, builder = _make_mock_supabase()
@@ -219,6 +227,7 @@ def test_delete_submission_not_found() -> None:
     assert resp.status_code == 404
 
 
+# TC-HIST-009
 def test_delete_submission_not_owner() -> None:
     """DELETE /submissions/{id} by a non-owner returns 403."""
     sb, builder = _make_mock_supabase()
@@ -238,6 +247,7 @@ def test_delete_submission_not_owner() -> None:
 # ------------------------------------------------------------------
 
 
+# TC-HIST-010
 def test_toggle_pin_success() -> None:
     """PATCH /submissions/{id}/pin toggles pin and returns 200."""
     sb, builder = _make_mock_supabase()
@@ -266,6 +276,7 @@ def test_toggle_pin_success() -> None:
     assert body["pinned_at"] is not None
 
 
+# TC-HIST-011
 def test_toggle_unpin_success() -> None:
     """PATCH /submissions/{id}/pin unpins a pinned submission."""
     sb, builder = _make_mock_supabase()
@@ -297,6 +308,7 @@ def test_toggle_unpin_success() -> None:
     assert resp.json()["pinned"] is False
 
 
+# TC-HIST-012
 def test_toggle_pin_not_found() -> None:
     """PATCH /submissions/{id}/pin for a missing submission returns 404."""
     sb, builder = _make_mock_supabase()
@@ -311,6 +323,7 @@ def test_toggle_pin_not_found() -> None:
     assert resp.status_code == 404
 
 
+# TC-HIST-013
 def test_toggle_pin_not_owner() -> None:
     """PATCH /submissions/{id}/pin by a non-owner returns 403."""
     sb, builder = _make_mock_supabase()

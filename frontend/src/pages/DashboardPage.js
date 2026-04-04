@@ -33,6 +33,8 @@ function MoonIcon() {
   )
 }
 
+// FR-DASH-001
+// FR-DASH-004
 function DashboardPage() {
   const { user, session } = useAuth()
   const sidebarRef = useRef(null)
@@ -54,11 +56,14 @@ function DashboardPage() {
     localStorage.setItem('cp-theme', theme)
   }, [theme])
 
+  // FR-DASH-003
   const toggleTheme = () => setTheme(t => (t === 'dark' ? 'light' : 'dark'))
 
   const username =
     user?.user_metadata?.username || user?.email?.split('@')[0] || 'user'
 
+  // FR-DASH-001
+  // FR-DASH-002
   const handleRun = async (currentCode) => {
     setLoading(true)
     setError(null)
@@ -124,6 +129,7 @@ function DashboardPage() {
         onOpen={() => setSidebarOpen(true)}
       />
 
+      {/* FR-DASH-005 */}
       {inviteOpen && <InviteModal onClose={() => setInviteOpen(false)} />}
 
       <div className="dashboard-right">
@@ -163,6 +169,7 @@ function DashboardPage() {
             isDark={theme === 'dark'}
             highlightLine={hoveredLine}
           />
+          {/* FR-DASH-006 FR-REPORT-005 */}
           <ResultsPanel results={results} loading={loading} error={error} onHoverLine={setHoveredLine} />
         </main>
       </div>

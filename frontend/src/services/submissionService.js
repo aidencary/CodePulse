@@ -2,6 +2,7 @@ import supabase from './supabaseClient'
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000'
 
+// FR-HIST-001
 export async function getSubmissions(userId) {
   const { data, error } = await supabase
     .from('submissions')
@@ -51,6 +52,7 @@ export async function saveSubmission(userId, code) {
   return data
 }
 
+// FR-HIST-003
 export async function renameSubmission(submissionId, name, token) {
   const res = await fetch(`${API_URL}/api/v1/submissions/${submissionId}`, {
     method: 'PATCH',
@@ -64,6 +66,7 @@ export async function renameSubmission(submissionId, name, token) {
   return res.json()
 }
 
+// FR-HIST-004
 export async function deleteSubmission(submissionId, token) {
   const res = await fetch(`${API_URL}/api/v1/submissions/${submissionId}`, {
     method: 'DELETE',
@@ -73,6 +76,7 @@ export async function deleteSubmission(submissionId, token) {
   return res.json()
 }
 
+// FR-HIST-005
 export async function pinSubmission(submissionId, token) {
   const res = await fetch(`${API_URL}/api/v1/submissions/${submissionId}/pin`, {
     method: 'PATCH',

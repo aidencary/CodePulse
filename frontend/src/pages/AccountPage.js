@@ -83,6 +83,7 @@ function AccountPage() {
   }, [token])
 
   // ── Profile handlers ──
+  // FR-ACCT-001
   const handleProfileSave = async (e) => {
     e.preventDefault()
     setProfileMsg(null)
@@ -113,6 +114,7 @@ function AccountPage() {
   }
 
   // ── Avatar handlers ──
+  // FR-ACCT-002
   const handleFileSelect = (e) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -147,6 +149,7 @@ function AccountPage() {
   }
 
   // ── Password handlers ──
+  // FR-ACCT-003
   const handlePasswordChange = async (e) => {
     e.preventDefault()
     setPwMsg(null)
@@ -181,6 +184,7 @@ function AccountPage() {
   }
 
   // ── Delete handlers ──
+  // FR-ACCT-004
   const handleDelete = async () => {
     setDeleteErr(null)
     setDeleting(true)
@@ -360,6 +364,7 @@ function AccountPage() {
         </section>
 
         {/* ── Security Section ── */}
+        {/* FR-AUTH-003 FR-AUTH-004 FR-AUTH-005 */}
         <TwoFactorSection />
 
         {/* ── Danger Zone ── */}

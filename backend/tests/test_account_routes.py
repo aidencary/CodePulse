@@ -101,6 +101,7 @@ def _make_mock_supabase(
 # ------------------------------------------------------------------
 
 
+# TC-ACCT-001
 def test_get_profile_success() -> None:
     """GET /profile returns 200 with correct response shape."""
     sb, _ = _make_mock_supabase()
@@ -116,6 +117,7 @@ def test_get_profile_success() -> None:
     assert body["username"] == "testuser"
 
 
+# TC-ACCT-002
 def test_get_profile_no_auth() -> None:
     """GET /profile without Authorization header returns 422."""
     resp = client.get("/api/v1/account/profile")
@@ -127,6 +129,7 @@ def test_get_profile_no_auth() -> None:
 # ------------------------------------------------------------------
 
 
+# TC-ACCT-003
 def test_update_profile_username() -> None:
     """PATCH /profile updates the username and returns 200."""
     sb, builder = _make_mock_supabase()
@@ -155,6 +158,7 @@ def test_update_profile_username() -> None:
     assert resp.json()["username"] == "newname"
 
 
+# TC-ACCT-004
 def test_update_profile_duplicate_username() -> None:
     """PATCH /profile with a taken username returns 409."""
     sb, builder = _make_mock_supabase()
@@ -185,6 +189,7 @@ def test_update_profile_duplicate_username() -> None:
     assert "already taken" in resp.json()["detail"].lower()
 
 
+# TC-ACCT-005
 def test_update_profile_invalid_username_chars() -> None:
     """PATCH /profile with invalid characters returns 422."""
     sb, _ = _make_mock_supabase()
@@ -198,6 +203,7 @@ def test_update_profile_invalid_username_chars() -> None:
     assert resp.status_code == 422
 
 
+# TC-ACCT-006
 def test_update_profile_no_fields() -> None:
     """PATCH /profile with empty body returns 422."""
     sb, _ = _make_mock_supabase()
@@ -216,6 +222,7 @@ def test_update_profile_no_fields() -> None:
 # ------------------------------------------------------------------
 
 
+# TC-ACCT-007
 def test_change_password_success() -> None:
     """POST /change-password returns 200 on valid credentials."""
     sb, _ = _make_mock_supabase()
@@ -232,6 +239,7 @@ def test_change_password_success() -> None:
     assert "successfully" in resp.json()["detail"].lower()
 
 
+# TC-ACCT-008
 def test_change_password_wrong_current() -> None:
     """POST /change-password with wrong current password returns 401."""
     sb, _ = _make_mock_supabase()
@@ -248,6 +256,7 @@ def test_change_password_wrong_current() -> None:
     assert "incorrect" in resp.json()["detail"].lower()
 
 
+# TC-ACCT-009
 def test_change_password_too_short() -> None:
     """POST /change-password with new password < 8 chars returns 422."""
     resp = client.post(
@@ -263,6 +272,7 @@ def test_change_password_too_short() -> None:
 # ------------------------------------------------------------------
 
 
+# TC-ACCT-010
 def test_upload_avatar_success() -> None:
     """POST /avatar with a valid image returns 200 with profile_picture URL."""
     sb, _ = _make_mock_supabase()
@@ -280,6 +290,7 @@ def test_upload_avatar_success() -> None:
     assert body["profile_picture"].startswith("https://")
 
 
+# TC-ACCT-011
 def test_upload_avatar_invalid_type() -> None:
     """POST /avatar with a non-image file returns 422."""
     sb, _ = _make_mock_supabase()
@@ -300,6 +311,7 @@ def test_upload_avatar_invalid_type() -> None:
 # ------------------------------------------------------------------
 
 
+# TC-ACCT-012
 def test_delete_account_success() -> None:
     """DELETE /account returns 200 on success."""
     sb, _ = _make_mock_supabase()
@@ -311,6 +323,7 @@ def test_delete_account_success() -> None:
     assert "deleted" in resp.json()["detail"].lower()
 
 
+# TC-ACCT-013
 def test_delete_account_no_auth() -> None:
     """DELETE /account without Authorization header returns 422."""
     resp = client.delete("/api/v1/account")
@@ -324,6 +337,7 @@ def test_delete_account_no_auth() -> None:
 _INVITE_SETTINGS = MagicMock(site_url="https://code-pulse-six.vercel.app")
 
 
+# TC-ACCT-014
 def test_invite_user_success() -> None:
     """POST /invite sends an invite and returns 200 with confirmation."""
     sb, _ = _make_mock_supabase()
@@ -347,6 +361,7 @@ def test_invite_user_success() -> None:
     )
 
 
+# TC-ACCT-015
 def test_invite_user_supabase_error() -> None:
     """POST /invite returns 400 with the Supabase error message on failure."""
     sb, _ = _make_mock_supabase()
@@ -368,6 +383,7 @@ def test_invite_user_supabase_error() -> None:
     assert "User already registered" in resp.json()["detail"]
 
 
+# TC-ACCT-016
 def test_invite_user_no_auth() -> None:
     """POST /invite without Authorization header returns 422."""
     resp = client.post(

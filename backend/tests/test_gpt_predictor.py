@@ -44,6 +44,7 @@ def _make_openai_response(content: str) -> MagicMock:
 
 # Happy path
 @pytest.mark.asyncio
+# TC-ANALYSIS-070
 async def test_returns_predicted_bugs_on_valid_response() -> None:
     """A valid GPT JSON response is parsed into PredictedBug objects."""
     mock_response = _make_openai_response(_VALID_RESPONSE_JSON)
@@ -65,6 +66,7 @@ async def test_returns_predicted_bugs_on_valid_response() -> None:
 
 
 @pytest.mark.asyncio
+# TC-ANALYSIS-071
 async def test_returns_empty_list_on_empty_predicted_bugs_array() -> None:
     """GPT response with an empty predicted_bugs array returns []."""
     mock_response = _make_openai_response(_EMPTY_RESPONSE_JSON)
@@ -82,6 +84,7 @@ async def test_returns_empty_list_on_empty_predicted_bugs_array() -> None:
 
 # Failure / fallback paths
 @pytest.mark.asyncio
+# TC-ANALYSIS-072
 async def test_returns_empty_list_on_api_error() -> None:
     """An OpenAI API error results in an empty list (no crash)."""
     import openai
@@ -99,6 +102,7 @@ async def test_returns_empty_list_on_api_error() -> None:
 
 
 @pytest.mark.asyncio
+# TC-ANALYSIS-073
 async def test_returns_empty_list_on_malformed_json() -> None:
     """A response that is not valid JSON results in an empty list."""
     mock_response = _make_openai_response("not json at all")
@@ -115,6 +119,7 @@ async def test_returns_empty_list_on_malformed_json() -> None:
 
 
 @pytest.mark.asyncio
+# TC-ANALYSIS-074
 async def test_returns_empty_list_on_schema_validation_failure() -> None:
     """Valid JSON with the wrong schema results in an empty list."""
     bad_json = json.dumps({"bugs": [{"wrong_field": "value"}]})
@@ -133,6 +138,7 @@ async def test_returns_empty_list_on_schema_validation_failure() -> None:
 
 # Prompt construction
 @pytest.mark.asyncio
+# TC-ANALYSIS-075
 async def test_system_prompt_includes_static_findings() -> None:
     """Static findings are summarised in the system prompt sent to GPT."""
     findings = [
@@ -161,6 +167,7 @@ async def test_system_prompt_includes_static_findings() -> None:
 
 
 # User message format
+# TC-ANALYSIS-076
 def test_user_message_prefixes_each_line_with_line_number() -> None:
     """Each line of the code is prefixed with its 1-based line number."""
     code = "x = 1\ny = 2\nz = 3"
@@ -170,6 +177,7 @@ def test_user_message_prefixes_each_line_with_line_number() -> None:
     assert "3: z = 3" in message
 
 
+# TC-ANALYSIS-077
 def test_user_message_preserves_blank_lines() -> None:
     """Blank lines are numbered so GPT line numbers match the editor."""
     code = "x = 1\n\nz = 3"

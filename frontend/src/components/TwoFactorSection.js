@@ -22,6 +22,7 @@ function TwoFactorSection() {
     })
   }, [])
 
+  // FR-AUTH-003
   const handleEnroll = async () => {
     setEnrolling(true)
     setEnrollErr(null)
@@ -46,6 +47,7 @@ function TwoFactorSection() {
     })
   }
 
+  // FR-AUTH-004
   const handleVerify = async (e) => {
     e.preventDefault()
     setVerifying(true)
@@ -65,6 +67,7 @@ function TwoFactorSection() {
     toast('Two-factor authentication enabled', 'success')
   }
 
+  // FR-AUTH-005
   const handleDisable = async () => {
     setDisabling(true)
     setMfaErr(null)

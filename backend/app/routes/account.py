@@ -26,6 +26,7 @@ MAX_AVATAR_SIZE = 2 * 1024 * 1024  # 2 MB
 # ------------------------------------------------------------------
 # GET /account/profile
 # ------------------------------------------------------------------
+# FR-ACCT-001
 @router.get("/profile", response_model=ProfileResponse)
 async def get_profile(user_id: str = Depends(get_current_user)):
     """Return the authenticated user's profile."""
@@ -57,6 +58,7 @@ async def get_profile(user_id: str = Depends(get_current_user)):
 # ------------------------------------------------------------------
 # PATCH /account/profile
 # ------------------------------------------------------------------
+# FR-ACCT-001
 @router.patch("/profile", response_model=ProfileResponse)
 async def update_profile(
     body: ProfileUpdateRequest,
@@ -109,6 +111,7 @@ async def update_profile(
 # ------------------------------------------------------------------
 # POST /account/avatar
 # ------------------------------------------------------------------
+# FR-ACCT-002
 @router.post("/avatar", response_model=AvatarUploadResponse)
 async def upload_avatar(
     file: UploadFile = File(...),
@@ -162,6 +165,7 @@ async def upload_avatar(
 # ------------------------------------------------------------------
 # POST /account/change-password
 # ------------------------------------------------------------------
+# FR-ACCT-003
 @router.post("/change-password", status_code=status.HTTP_200_OK)
 async def change_password(
     body: ChangePasswordRequest,
@@ -198,6 +202,8 @@ async def change_password(
 # ------------------------------------------------------------------
 # POST /account/invite
 # ------------------------------------------------------------------
+# FR-ACCT-005
+# FR-DASH-005
 @router.post("/invite", status_code=status.HTTP_200_OK)
 async def invite_user(
     body: InviteUserRequest,
@@ -225,6 +231,7 @@ async def invite_user(
 # ------------------------------------------------------------------
 # DELETE /account
 # ------------------------------------------------------------------
+# FR-ACCT-004
 @router.delete("", status_code=status.HTTP_200_OK)
 async def delete_account(user_id: str = Depends(get_current_user)):
     """Delete the authenticated user's account. DB cascades handle related data."""

@@ -1,0 +1,168 @@
+# CodePulse — Requirements
+
+This document defines the machine-readable requirement IDs for CodePulse, derived from the
+original Requirements Analysis document (March 3, 2026). Each source-code file and test
+that implements a requirement carries a matching inline comment (e.g., `// FR-AUTH-001` or
+`# FR-AUTH-001`) so requirements can be located by searching the codebase.
+
+---
+
+## ID Scheme
+
+| Prefix | Module |
+|--------|--------|
+| `FR-DASH-NNN` | Dashboard / UI shell |
+| `FR-AUTH-NNN` | Authentication & security |
+| `FR-ANALYSIS-NNN` | Code analysis (static + AI) |
+| `FR-REPORT-NNN` | Results reporting & display |
+| `FR-ACCT-NNN` | Account management |
+| `FR-HIST-NNN` | Submission history |
+| `NFR-PERF-NNN` | Performance |
+| `NFR-USAB-NNN` | Usability |
+| `NFR-SEC-NNN` | Security / confidentiality |
+| `NFR-RELI-NNN` | Reliability |
+
+Test-case IDs follow the same module structure: `TC-{MODULE}-{NNN}` (see `TESTING.md`).
+
+---
+
+## Implementation Status Key
+
+| Status | Meaning |
+|--------|---------|
+| **Implemented** | Feature delivered as specified in the original requirements |
+| **Changed** | Requirement delivered but implementation differs from the original specification; deviation documented in the [Requirement Deviations](#requirement-deviations) section |
+| **Not Implemented** | Requirement was descoped or deferred |
+
+---
+
+## Functional Requirements
+
+### FR-DASH — Dashboard / UI Shell
+
+| ID | Original REQ-N | Description | Status |
+|----|---------------|-------------|--------|
+| FR-DASH-001 | REQ-1 | Web dashboard for pasting and submitting source code | Implemented |
+| FR-DASH-002 | REQ-14 | Dashboard remains interactive and displays loading state while analysis is in progress | Implemented |
+| FR-DASH-003 | — | Dark / light theme toggle with `localStorage` persistence | Implemented |
+| FR-DASH-004 | — | Three-column layout: collapsible sidebar / Monaco editor / results panel | Implemented |
+| FR-DASH-005 | — | Invite new users by email via in-dashboard modal | Implemented |
+| FR-DASH-006 | — | Line-highlight orchestration between results panel and editor on hover | Implemented |
+
+### FR-AUTH — Authentication & Security
+
+| ID | Original REQ-N | Description | Status |
+|----|---------------|-------------|--------|
+| FR-AUTH-001 | REQ-2 | User registration with email and username | Implemented |
+| FR-AUTH-002 | REQ-2 | User login with email and password | Implemented |
+| FR-AUTH-003 | — | TOTP two-factor authentication enrollment (QR code + manual secret) | Implemented |
+| FR-AUTH-004 | — | TOTP two-factor authentication step-up verification at login | Implemented |
+| FR-AUTH-005 | — | TOTP two-factor authentication unenrollment | Implemented |
+| FR-AUTH-006 | — | Forgot-password / reset via email link (`PASSWORD_RECOVERY` flow) | Implemented |
+| FR-AUTH-007 | — | JWT authentication guard on every protected API route and frontend route | Implemented |
+| FR-AUTH-008 | REQ-3 | Encrypt user-submitted code before storage in the database | Not Implemented |
+
+> **FR-AUTH-008 note:** Code is stored as plaintext; confidentiality is enforced instead by
+> Row Level Security (NFR-SEC-001) and JWT authentication (FR-AUTH-007). See
+> [Requirement Deviations](#requirement-deviations).
+
+### FR-ANALYSIS — Code Analysis
+
+| ID | Original REQ-N | Description | Status |
+|----|---------------|-------------|--------|
+| FR-ANALYSIS-001 | REQ-4, REQ-5 | Python AST parsing using the built-in `ast` module | Changed |
+| FR-ANALYSIS-002 | REQ-5, REQ-6 | 24 PEP 8 / AST-based static checks (naming, style, imports, best practices, docs) | Changed |
+| FR-ANALYSIS-003 | REQ-7 | AI-assisted bug prediction using OpenAI GPT-4o-mini | Changed |
+| FR-ANALYSIS-004 | — | GPT-generated descriptive submission names for new submissions | Implemented |
+| FR-ANALYSIS-005 | — | Reanalysis of an existing submission (updates code and results in place) | Implemented |
+
+### FR-REPORT — Results Reporting & Display
+
+| ID | Original REQ-N | Description | Status |
+|----|---------------|-------------|--------|
+| FR-REPORT-001 | REQ-8 | Quality score (0–100) plus static findings with line number, severity, message, and suggested fix | Implemented |
+| FR-REPORT-002 | REQ-8 | GPT-predicted bugs with description, severity, line number, and suggested fix | Implemented |
+| FR-REPORT-003 | — | Sort findings and bugs by severity or line number, with ascending / descending direction toggle | Implemented |
+| FR-REPORT-004 | — | Ignore / dismiss individual findings and predicted bugs | Implemented |
+| FR-REPORT-005 | — | Hover a finding or bug to highlight the corresponding line in the editor | Implemented |
+
+### FR-ACCT — Account Management
+
+| ID | Original REQ-N | Description | Status |
+|----|---------------|-------------|--------|
+| FR-ACCT-001 | REQ-2 | View and update profile (username, avatar URL) | Implemented |
+| FR-ACCT-002 | — | Upload profile avatar image to Supabase Storage (PNG / JPEG / WebP, ≤ 2 MB) | Implemented |
+| FR-ACCT-003 | — | Change password (requires current password verification) | Implemented |
+| FR-ACCT-004 | — | Delete account with full cascade cleanup of all submissions and reports | Implemented |
+| FR-ACCT-005 | — | Invite a new user by email (sends Supabase invite email) | Implemented |
+
+### FR-HIST — Submission History
+
+| ID | Original REQ-N | Description | Status |
+|----|---------------|-------------|--------|
+| FR-HIST-001 | REQ-9 | Retrieve and display the authenticated user's past submissions with scores | Implemented |
+| FR-HIST-002 | REQ-9 | Load a past submission's code and results into the editor and results panel | Implemented |
+| FR-HIST-003 | — | Rename a submission | Implemented |
+| FR-HIST-004 | — | Delete a submission | Implemented |
+| FR-HIST-005 | — | Pin / star a submission so it sorts to the top of the sidebar | Implemented |
+| FR-HIST-006 | — | Search and filter submissions by name in the sidebar | Implemented |
+
+---
+
+## Non-Functional Requirements
+
+| ID | Original REQ-N | Category | Description | Status |
+|----|---------------|----------|-------------|--------|
+| NFR-PERF-001 | REQ-10 | Efficiency | Analysis results must be delivered within 5 seconds of submission | Implemented |
+| NFR-USAB-001 | REQ-11 | Learnability | A new user must be able to complete their first full code analysis within 2 minutes of login | Implemented |
+| NFR-USAB-002 | REQ-14 | Usability | Dashboard must display a visible loading state while backend analysis is in progress | Implemented |
+| NFR-SEC-001 | REQ-12 | Confidentiality | Supabase Row Level Security ensures users can only access their own data | Implemented |
+| NFR-SEC-002 | REQ-2 | Confidentiality | Passwords are stored as bcrypt hashes managed by Supabase Auth | Implemented |
+| NFR-RELI-001 | REQ-13 | Reliability | System handles submissions up to 5,000 lines (100,000 characters) without degradation; GPT failures return static results rather than an error | Implemented |
+
+---
+
+## Requirement Deviations
+
+The following requirements were delivered with implementations that differ from the original
+specification.
+
+### FR-AUTH-008 — Code Encryption (Not Implemented)
+
+**Original (REQ-3):** The system shall encrypt all user-submitted source code before storage
+in the PostgreSQL database.
+
+**Actual:** Code is stored as plaintext. Data confidentiality is enforced through:
+- Supabase Row Level Security (`NFR-SEC-001`) — database policies prevent cross-user access
+- JWT authentication on every endpoint (`FR-AUTH-007`) — unauthenticated requests are rejected at the API layer
+
+**Reason:** At-rest encryption was descoped in favour of Supabase's built-in RLS, which
+satisfies the confidentiality requirement (REQ-12) without the performance and key-management
+overhead of application-layer encryption.
+
+### FR-ANALYSIS-001 — AST Parsing (Changed)
+
+**Original (REQ-4):** The system shall use a `CodeParser` class to generate an `ASTObject`
+representing the code's hierarchy and symbol table.
+
+**Actual:** Python's built-in `ast` module is used directly inside `analysis_engine.py`.
+There is no separate `CodeParser` class or `ASTObject` wrapper; the AST is an intermediate
+artefact consumed immediately by the 24 static-check functions.
+
+### FR-ANALYSIS-002 — Static Analysis Checks (Changed)
+
+**Original (REQ-5):** The `StaticEngine` shall calculate cyclomatic complexity and identify
+dead code or bloated classes.
+
+**Actual:** The analysis engine (`analysis_engine.py`) implements 24 PEP 8 / AST-based
+checks covering naming conventions, code style, import organisation, documentation, and
+best practices. Cyclomatic complexity and dead-code detection are not included.
+
+### FR-ANALYSIS-003 — AI Bug Prediction (Changed)
+
+**Original (REQ-7):** The system shall utilise an AI model (e.g., CodeBERT) to identify
+risky patterns and predict potential bugs based on historical data.
+
+**Actual:** Bug prediction is performed by OpenAI GPT-4o-mini via the Chat Completions API
+(`gpt_predictor.py`). The model is not fine-tuned on historical data; it uses a structured
+prompt that includes the static-analysis findings as context to avoid duplication.

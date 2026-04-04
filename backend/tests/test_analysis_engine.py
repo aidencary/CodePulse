@@ -5,6 +5,7 @@ from app.services.analysis_engine import compute_score, run_static_analysis
 
 
 # Long-line detection
+# TC-ANALYSIS-001
 def test_long_line_detected() -> None:
     """A line with 89 characters produces one Low finding."""
     code = "x = " + "a" * 85  # 4 + 85 = 89 chars
@@ -15,6 +16,7 @@ def test_long_line_detected() -> None:
     assert long_line_findings[0].line_number == 1
 
 
+# TC-ANALYSIS-002
 def test_long_line_not_flagged_at_exactly_88() -> None:
     """A line of exactly 88 characters produces no long_line finding."""
     code = "x = " + "a" * 84  # 4 + 84 = 88 chars
@@ -23,6 +25,7 @@ def test_long_line_not_flagged_at_exactly_88() -> None:
     assert len(long_line_findings) == 0
 
 
+# TC-ANALYSIS-003
 def test_long_line_not_flagged_below_limit() -> None:
     """A short one-liner produces no long_line finding."""
     findings, _ = run_static_analysis("x = 1\n")
@@ -30,6 +33,7 @@ def test_long_line_not_flagged_below_limit() -> None:
 
 
 # Missing-docstring detection
+# TC-ANALYSIS-004
 def test_missing_docstring_on_function() -> None:
     """A function without a docstring produces one Low finding."""
     code = "def foo():\n    pass\n"
@@ -40,6 +44,7 @@ def test_missing_docstring_on_function() -> None:
     assert ds_findings[0].line_number == 1
 
 
+# TC-ANALYSIS-005
 def test_missing_docstring_not_flagged_when_present() -> None:
     """A function with a docstring produces no missing_docstring finding."""
     code = 'def foo():\n    """Does something."""\n    pass\n'
@@ -47,6 +52,7 @@ def test_missing_docstring_not_flagged_when_present() -> None:
     assert not any(f.issue_type == "missing_docstring" for f in findings)
 
 
+# TC-ANALYSIS-006
 def test_dunder_method_not_flagged_for_missing_docstring() -> None:
     """Dunder methods are exempt from the docstring requirement."""
     code = "class Foo:\n    def __init__(self):\n        pass\n"
@@ -56,6 +62,7 @@ def test_dunder_method_not_flagged_for_missing_docstring() -> None:
     assert not any("__init__" in m for m in flagged_names)
 
 
+# TC-ANALYSIS-007
 def test_missing_docstring_on_class() -> None:
     """A class without a docstring produces a missing_docstring finding."""
     code = "class Bar:\n    pass\n"
@@ -66,6 +73,7 @@ def test_missing_docstring_on_class() -> None:
 
 
 # Bare-except detection
+# TC-ANALYSIS-008
 def test_bare_except_detected() -> None:
     """A bare ``except:`` clause produces one Med finding."""
     code = "try:\n    pass\nexcept:\n    pass\n"
@@ -76,6 +84,7 @@ def test_bare_except_detected() -> None:
     assert bare_findings[0].line_number == 3
 
 
+# TC-ANALYSIS-009
 def test_bare_except_not_flagged_with_type() -> None:
     """``except Exception:`` is not a bare except."""
     code = "try:\n    pass\nexcept Exception:\n    pass\n"
@@ -84,6 +93,7 @@ def test_bare_except_not_flagged_with_type() -> None:
 
 
 # Syntax-error handling
+# TC-ANALYSIS-010
 def test_syntax_error_returns_high_finding() -> None:
     """Invalid syntax produces exactly one High finding and no other checks run."""
     code = "def foo(:\n    pass\n"
@@ -94,6 +104,7 @@ def test_syntax_error_returns_high_finding() -> None:
 
 
 # Score computation
+# TC-ANALYSIS-011
 def test_score_is_100_for_clean_code() -> None:
     """Clean code with no findings returns a score of 100."""
     code = 'def foo():\n    """Return 1."""\n    return 1\n'
@@ -102,6 +113,7 @@ def test_score_is_100_for_clean_code() -> None:
     assert raw_score == 100
 
 
+# TC-ANALYSIS-012
 def test_score_decreases_with_findings() -> None:
     """Multiple findings reduce the score below 100."""
     code = "def foo():\n    pass\n"  # missing docstring (Low = -2)
@@ -110,6 +122,7 @@ def test_score_decreases_with_findings() -> None:
     assert raw_score == 98  # 100 - 2 (Low)
 
 
+# TC-ANALYSIS-013
 def test_score_floor_is_zero() -> None:
     """Many severe findings do not produce a negative score."""
     high_findings = [
@@ -120,6 +133,7 @@ def test_score_floor_is_zero() -> None:
     assert score == 0
 
 
+# TC-ANALYSIS-014
 def test_compute_score_includes_predicted_bugs() -> None:
     """Predicted bugs reduce the score beyond the static-findings baseline."""
     findings = [
@@ -144,6 +158,7 @@ def test_compute_score_includes_predicted_bugs() -> None:
 # ---------------------------------------------------------------------------
 
 
+# TC-ANALYSIS-015
 def test_camel_case_function_detected() -> None:
     """A camelCase function name produces a naming_convention finding."""
     code = 'def myFunction():\n    """Doc."""\n    pass\n'
@@ -152,6 +167,7 @@ def test_camel_case_function_detected() -> None:
     assert any("myFunction" in f.message for f in naming)
 
 
+# TC-ANALYSIS-016
 def test_snake_case_function_not_flagged() -> None:
     """A snake_case function name produces no naming_convention finding."""
     code = 'def my_function():\n    """Doc."""\n    pass\n'
@@ -160,6 +176,7 @@ def test_snake_case_function_not_flagged() -> None:
     assert not any("my_function" in f.message for f in naming)
 
 
+# TC-ANALYSIS-017
 def test_non_pascal_case_class_detected() -> None:
     """A non-PascalCase class name produces a naming_convention finding."""
     code = 'class my_class:\n    """Doc."""\n    pass\n'
@@ -168,6 +185,7 @@ def test_non_pascal_case_class_detected() -> None:
     assert any("my_class" in f.message for f in naming)
 
 
+# TC-ANALYSIS-018
 def test_pascal_case_class_not_flagged() -> None:
     """A PascalCase class name produces no naming_convention finding."""
     code = 'class MyClass:\n    """Doc."""\n    pass\n'
@@ -176,6 +194,7 @@ def test_pascal_case_class_not_flagged() -> None:
     assert not any("MyClass" in f.message for f in naming)
 
 
+# TC-ANALYSIS-019
 def test_ambiguous_name_detected() -> None:
     """Single-char names l, O, I produce ambiguous_name findings."""
     code = 'def foo():\n    """Doc."""\n    l = 1\n    O = 2\n    I = 3\n'
@@ -184,6 +203,7 @@ def test_ambiguous_name_detected() -> None:
     assert len(ambig) == 3
 
 
+# TC-ANALYSIS-020
 def test_ambiguous_name_not_flagged_for_other_singles() -> None:
     """Single-char names like x, y, i are not ambiguous."""
     code = 'def foo():\n    """Doc."""\n    x = 1\n    i = 2\n'
@@ -191,6 +211,7 @@ def test_ambiguous_name_not_flagged_for_other_singles() -> None:
     assert not any(f.issue_type == "ambiguous_name" for f in findings)
 
 
+# TC-ANALYSIS-021
 def test_camel_case_variable_detected() -> None:
     """A camelCase variable assignment produces a naming_convention finding."""
     code = 'def foo():\n    """Doc."""\n    myVar = 1\n'
@@ -204,6 +225,7 @@ def test_camel_case_variable_detected() -> None:
 # ---------------------------------------------------------------------------
 
 
+# TC-ANALYSIS-022
 def test_wrong_self_detected() -> None:
     """Instance method not using 'self' is flagged."""
     code = (
@@ -219,6 +241,7 @@ def test_wrong_self_detected() -> None:
     assert "self" in sc[0].message
 
 
+# TC-ANALYSIS-023
 def test_correct_self_not_flagged() -> None:
     """Instance method using 'self' is not flagged."""
     code = (
@@ -232,6 +255,7 @@ def test_correct_self_not_flagged() -> None:
     assert not any(f.issue_type == "self_cls_naming" for f in findings)
 
 
+# TC-ANALYSIS-024
 def test_wrong_cls_detected() -> None:
     """Classmethod not using 'cls' is flagged."""
     code = (
@@ -248,6 +272,7 @@ def test_wrong_cls_detected() -> None:
     assert "cls" in sc[0].message
 
 
+# TC-ANALYSIS-025
 def test_staticmethod_not_flagged() -> None:
     """Static methods are exempt from self/cls checks."""
     code = (
@@ -267,6 +292,7 @@ def test_staticmethod_not_flagged() -> None:
 # ---------------------------------------------------------------------------
 
 
+# TC-ANALYSIS-026
 def test_none_equality_detected() -> None:
     """``== None`` produces a none_comparison finding."""
     code = 'def foo():\n    """Doc."""\n    if x == None:\n        pass\n'
@@ -276,6 +302,7 @@ def test_none_equality_detected() -> None:
     assert nc[0].severity == "Med"
 
 
+# TC-ANALYSIS-027
 def test_none_is_not_flagged() -> None:
     """``is None`` does not produce a none_comparison finding."""
     code = 'def foo():\n    """Doc."""\n    if x is None:\n        pass\n'
@@ -288,6 +315,7 @@ def test_none_is_not_flagged() -> None:
 # ---------------------------------------------------------------------------
 
 
+# TC-ANALYSIS-028
 def test_boolean_comparison_detected() -> None:
     """``== True`` produces a boolean_comparison finding."""
     code = 'def foo():\n    """Doc."""\n    if x == True:\n        pass\n'
@@ -296,6 +324,7 @@ def test_boolean_comparison_detected() -> None:
     assert len(bc) == 1
 
 
+# TC-ANALYSIS-029
 def test_boolean_comparison_not_flagged_for_direct_use() -> None:
     """Using a boolean directly does not produce a boolean_comparison."""
     code = 'def foo():\n    """Doc."""\n    if x:\n        pass\n'
@@ -308,6 +337,7 @@ def test_boolean_comparison_not_flagged_for_direct_use() -> None:
 # ---------------------------------------------------------------------------
 
 
+# TC-ANALYSIS-030
 def test_type_comparison_detected() -> None:
     """``type(x) is type(y)`` produces a type_comparison finding."""
     code = (
@@ -322,6 +352,7 @@ def test_type_comparison_detected() -> None:
     assert tc[0].severity == "Med"
 
 
+# TC-ANALYSIS-031
 def test_isinstance_not_flagged() -> None:
     """``isinstance()`` does not produce a type_comparison finding."""
     code = (
@@ -339,6 +370,7 @@ def test_isinstance_not_flagged() -> None:
 # ---------------------------------------------------------------------------
 
 
+# TC-ANALYSIS-032
 def test_len_equals_zero_detected() -> None:
     """``len(x) == 0`` produces an empty_sequence_check finding."""
     code = (
@@ -349,6 +381,7 @@ def test_len_equals_zero_detected() -> None:
     assert len(es) == 1
 
 
+# TC-ANALYSIS-033
 def test_truthiness_not_flagged() -> None:
     """``if not items:`` does not produce an empty_sequence_check."""
     code = "def foo():\n" '    """Doc."""\n' "    if not items:\n" "        pass\n"
@@ -361,6 +394,7 @@ def test_truthiness_not_flagged() -> None:
 # ---------------------------------------------------------------------------
 
 
+# TC-ANALYSIS-034
 def test_lambda_assignment_detected() -> None:
     """``f = lambda x: x`` produces a lambda_assignment finding."""
     code = "f = lambda x: x\n"
@@ -369,6 +403,7 @@ def test_lambda_assignment_detected() -> None:
     assert len(la) == 1
 
 
+# TC-ANALYSIS-035
 def test_lambda_in_call_not_flagged() -> None:
     """A lambda passed as an argument is not flagged."""
     code = 'def foo():\n    """Doc."""\n    sorted(items, key=lambda x: x)\n'
@@ -381,6 +416,7 @@ def test_lambda_in_call_not_flagged() -> None:
 # ---------------------------------------------------------------------------
 
 
+# TC-ANALYSIS-036
 def test_multi_import_detected() -> None:
     """``import os, sys`` produces an import_formatting finding."""
     code = 'import os, sys\ndef foo():\n    """Doc."""\n    pass\n'
@@ -389,6 +425,7 @@ def test_multi_import_detected() -> None:
     assert len(imp) == 1
 
 
+# TC-ANALYSIS-037
 def test_separate_imports_not_flagged() -> None:
     """Separate import statements are not flagged."""
     code = "import os\nimport sys\n" 'def foo():\n    """Doc."""\n    pass\n'
@@ -396,6 +433,7 @@ def test_separate_imports_not_flagged() -> None:
     assert not any(f.issue_type == "import_formatting" for f in findings)
 
 
+# TC-ANALYSIS-038
 def test_from_import_multi_names_not_flagged() -> None:
     """``from os.path import join, exists`` is acceptable."""
     code = "from os.path import join, exists\n" 'def foo():\n    """Doc."""\n    pass\n'
@@ -408,6 +446,7 @@ def test_from_import_multi_names_not_flagged() -> None:
 # ---------------------------------------------------------------------------
 
 
+# TC-ANALYSIS-039
 def test_not_is_detected() -> None:
     """``not x is y`` produces an is_not_preference finding."""
     code = "def foo():\n" '    """Doc."""\n' "    if not x is None:\n" "        pass\n"
@@ -416,6 +455,7 @@ def test_not_is_detected() -> None:
     assert len(inp) == 1
 
 
+# TC-ANALYSIS-040
 def test_is_not_not_flagged() -> None:
     """``x is not None`` does not produce an is_not_preference finding."""
     code = "def foo():\n" '    """Doc."""\n' "    if x is not None:\n" "        pass\n"
@@ -428,6 +468,7 @@ def test_is_not_not_flagged() -> None:
 # ---------------------------------------------------------------------------
 
 
+# TC-ANALYSIS-041
 def test_inconsistent_returns_detected() -> None:
     """Mixed return-with-value and bare return produces a finding."""
     code = (
@@ -443,6 +484,7 @@ def test_inconsistent_returns_detected() -> None:
     assert rc[0].severity == "Med"
 
 
+# TC-ANALYSIS-042
 def test_consistent_returns_not_flagged() -> None:
     """All returns with values does not produce a finding."""
     code = (
@@ -461,6 +503,7 @@ def test_consistent_returns_not_flagged() -> None:
 # ---------------------------------------------------------------------------
 
 
+# TC-ANALYSIS-043
 def test_base_exception_inheritance_detected() -> None:
     """Inheriting from BaseException is flagged."""
     code = "class MyError(BaseException):\n" '    """Doc."""\n' "    pass\n"
@@ -470,6 +513,7 @@ def test_base_exception_inheritance_detected() -> None:
     assert "MyError" in ei[0].message
 
 
+# TC-ANALYSIS-044
 def test_exception_inheritance_not_flagged() -> None:
     """Inheriting from Exception is not flagged."""
     code = "class MyError(Exception):\n" '    """Doc."""\n' "    pass\n"
@@ -482,6 +526,7 @@ def test_exception_inheritance_not_flagged() -> None:
 # ---------------------------------------------------------------------------
 
 
+# TC-ANALYSIS-045
 def test_string_prefix_slicing_detected() -> None:
     """``s[:3] == 'foo'`` produces a string_slicing finding."""
     code = (
@@ -493,6 +538,7 @@ def test_string_prefix_slicing_detected() -> None:
     assert "startswith" in ss[0].message
 
 
+# TC-ANALYSIS-046
 def test_string_suffix_slicing_detected() -> None:
     """``s[-3:] == 'bar'`` produces a string_slicing finding."""
     code = (
@@ -507,6 +553,7 @@ def test_string_suffix_slicing_detected() -> None:
     assert "endswith" in ss[0].message
 
 
+# TC-ANALYSIS-047
 def test_startswith_not_flagged() -> None:
     """Using ``.startswith()`` does not produce a string_slicing finding."""
     code = (
@@ -524,6 +571,7 @@ def test_startswith_not_flagged() -> None:
 # ---------------------------------------------------------------------------
 
 
+# TC-ANALYSIS-048
 def test_trailing_whitespace_detected() -> None:
     """A line with trailing spaces produces a trailing_whitespace finding."""
     code = "x = 1   \ny = 2\n"
@@ -533,6 +581,7 @@ def test_trailing_whitespace_detected() -> None:
     assert tw[0].line_number == 1
 
 
+# TC-ANALYSIS-049
 def test_no_trailing_whitespace_not_flagged() -> None:
     """Clean lines produce no trailing_whitespace findings."""
     code = 'def foo():\n    """Doc."""\n    return 1\n'
@@ -545,6 +594,7 @@ def test_no_trailing_whitespace_not_flagged() -> None:
 # ---------------------------------------------------------------------------
 
 
+# TC-ANALYSIS-050
 def test_tab_indentation_detected() -> None:
     """A line indented with a tab produces a tab_indentation finding."""
     code = 'def foo():\n\t"""Doc."""\n\tpass\n'
@@ -554,6 +604,7 @@ def test_tab_indentation_detected() -> None:
     assert ti[0].severity == "Med"
 
 
+# TC-ANALYSIS-051
 def test_space_indentation_not_flagged() -> None:
     """Lines indented with spaces produce no tab_indentation findings."""
     code = 'def foo():\n    """Doc."""\n    pass\n'
@@ -566,6 +617,7 @@ def test_space_indentation_not_flagged() -> None:
 # ---------------------------------------------------------------------------
 
 
+# TC-ANALYSIS-052
 def test_missing_blank_lines_before_top_level_def() -> None:
     """A top-level def with < 2 blank lines before it is flagged."""
     code = 'import os\n\ndef foo():\n    """Doc."""\n    pass\n'
@@ -575,6 +627,7 @@ def test_missing_blank_lines_before_top_level_def() -> None:
     assert "2 blank lines" in bl[0].message
 
 
+# TC-ANALYSIS-053
 def test_correct_blank_lines_before_top_level_def() -> None:
     """A top-level def with 2 blank lines before it is not flagged."""
     code = "import os\n\n\n" 'def foo():\n    """Doc."""\n    pass\n'
@@ -582,6 +635,7 @@ def test_correct_blank_lines_before_top_level_def() -> None:
     assert not any(f.issue_type == "blank_line_spacing" for f in findings)
 
 
+# TC-ANALYSIS-054
 def test_missing_blank_line_between_methods() -> None:
     """Methods without a blank line between them are flagged."""
     code = (
@@ -600,6 +654,7 @@ def test_missing_blank_line_between_methods() -> None:
     assert "1 blank line" in bl[0].message
 
 
+# TC-ANALYSIS-055
 def test_correct_blank_line_between_methods() -> None:
     """Methods with 1 blank line between them are not flagged."""
     code = (
@@ -622,6 +677,7 @@ def test_correct_blank_line_between_methods() -> None:
 # ---------------------------------------------------------------------------
 
 
+# TC-ANALYSIS-056
 def test_inline_comment_too_close_detected() -> None:
     """An inline comment with < 2 spaces before it is flagged."""
     code = 'def foo():\n    """Doc."""\n    x = 1 # bad\n'
@@ -630,6 +686,7 @@ def test_inline_comment_too_close_detected() -> None:
     assert len(ic) == 1
 
 
+# TC-ANALYSIS-057
 def test_inline_comment_proper_spacing_not_flagged() -> None:
     """An inline comment with 2+ spaces before it is not flagged."""
     code = 'def foo():\n    """Doc."""\n    x = 1  # good\n'
@@ -637,6 +694,7 @@ def test_inline_comment_proper_spacing_not_flagged() -> None:
     assert not any(f.issue_type == "inline_comment_spacing" for f in findings)
 
 
+# TC-ANALYSIS-058
 def test_block_comment_not_flagged_as_inline() -> None:
     """A block comment is not flagged by the inline comment check."""
     code = '# this is a block comment\ndef foo():\n    """Doc."""\n    pass\n'
@@ -649,6 +707,7 @@ def test_block_comment_not_flagged_as_inline() -> None:
 # ---------------------------------------------------------------------------
 
 
+# TC-ANALYSIS-059
 def test_comment_missing_space_after_hash() -> None:
     """A comment without a space after # is flagged."""
     code = "#bad comment\n"
@@ -657,6 +716,7 @@ def test_comment_missing_space_after_hash() -> None:
     assert len(cs) == 1
 
 
+# TC-ANALYSIS-060
 def test_comment_with_space_after_hash_not_flagged() -> None:
     """A comment with a space after # is not flagged."""
     code = '# good comment\ndef foo():\n    """Doc."""\n    pass\n'
@@ -664,6 +724,7 @@ def test_comment_with_space_after_hash_not_flagged() -> None:
     assert not any(f.issue_type == "comment_spacing" for f in findings)
 
 
+# TC-ANALYSIS-061
 def test_shebang_not_flagged() -> None:
     """A shebang line is not flagged for missing space after #."""
     code = '#!/usr/bin/env python\ndef foo():\n    """Doc."""\n    pass\n'
@@ -676,6 +737,7 @@ def test_shebang_not_flagged() -> None:
 # ---------------------------------------------------------------------------
 
 
+# TC-ANALYSIS-062
 def test_triple_single_quotes_detected() -> None:
     """Triple single quotes produce a triple_quote_style finding."""
     code = "def foo():\n    '''Bad docstring.'''\n    pass\n"
@@ -684,6 +746,7 @@ def test_triple_single_quotes_detected() -> None:
     assert len(tq) >= 1
 
 
+# TC-ANALYSIS-063
 def test_triple_double_quotes_not_flagged() -> None:
     """Triple double quotes do not produce a triple_quote_style finding."""
     code = 'def foo():\n    """Good docstring."""\n    pass\n'
@@ -696,6 +759,7 @@ def test_triple_double_quotes_not_flagged() -> None:
 # ---------------------------------------------------------------------------
 
 
+# TC-ANALYSIS-064
 def test_stdlib_after_third_party_detected() -> None:
     """A stdlib import after a third-party import is flagged."""
     code = (
@@ -711,6 +775,7 @@ def test_stdlib_after_third_party_detected() -> None:
     assert "stdlib" in io[0].message
 
 
+# TC-ANALYSIS-065
 def test_properly_grouped_imports_not_flagged() -> None:
     """Imports in correct order (stdlib then third-party) are not flagged."""
     code = (
@@ -730,6 +795,7 @@ def test_properly_grouped_imports_not_flagged() -> None:
 # ---------------------------------------------------------------------------
 
 
+# TC-ANALYSIS-066
 def test_broad_try_block_detected() -> None:
     """A try block with >5 statements is flagged."""
     code = (
@@ -751,6 +817,7 @@ def test_broad_try_block_detected() -> None:
     assert "6 statements" in ts[0].message
 
 
+# TC-ANALYSIS-067
 def test_narrow_try_block_not_flagged() -> None:
     """A try block with <=5 statements is not flagged."""
     code = (
@@ -771,6 +838,7 @@ def test_narrow_try_block_not_flagged() -> None:
 # ---------------------------------------------------------------------------
 
 
+# TC-ANALYSIS-068
 def test_try_finally_close_detected() -> None:
     """A try/finally with .close() is flagged."""
     code = (
@@ -788,6 +856,7 @@ def test_try_finally_close_detected() -> None:
     assert "with" in cm[0].message
 
 
+# TC-ANALYSIS-069
 def test_with_statement_not_flagged() -> None:
     """Using a with statement does not produce a context_manager_usage finding."""
     code = (

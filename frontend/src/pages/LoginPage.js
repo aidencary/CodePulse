@@ -20,12 +20,17 @@ function LoginPage() {
   const { signIn, signUp } = useAuth()
   const navigate = useNavigate()
 
+  // FR-AUTH-001
+  // FR-AUTH-002
+  // FR-AUTH-004
+  // FR-AUTH-006
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError(null)
     setSuccess(null)
     setSubmitting(true)
 
+    // FR-AUTH-004
     if (step === 'mfa') {
       const { data: challenge, error: cErr } = await supabase.auth.mfa.challenge({
         factorId: mfaFactorId,
@@ -49,6 +54,7 @@ function LoginPage() {
       return
     }
 
+    // FR-AUTH-006
     if (mode === 'forgot') {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/reset-password`,
@@ -63,6 +69,7 @@ function LoginPage() {
       return
     }
 
+    // FR-AUTH-002 (login) / FR-AUTH-001 (signup)
     const { error } = mode === 'login'
       ? await signIn(email, password)
       : await signUp(email, password, username)
@@ -74,6 +81,7 @@ function LoginPage() {
       return
     }
 
+    // FR-AUTH-004
     if (mode === 'login') {
       // Check if MFA step-up is required
       const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()

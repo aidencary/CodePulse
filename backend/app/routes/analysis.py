@@ -19,6 +19,13 @@ logger = logging.getLogger(__name__)
 router = APIRouter(tags=["analysis"])
 
 
+# FR-ANALYSIS-001
+# FR-ANALYSIS-002
+# FR-ANALYSIS-003
+# FR-REPORT-001
+# FR-REPORT-002
+# NFR-PERF-001
+# NFR-RELI-001
 @router.post("/analyze", response_model=AnalyzeResponse)
 async def analyze(
     payload: AnalyzeRequest,
@@ -37,12 +44,15 @@ async def analyze(
         and GPT-predicted bugs.
     """
     # 1. Static analysis (sync, CPU-bound but fast enough for request cycle).
+    # FR-ANALYSIS-002
     findings, _ = run_static_analysis(payload.code)
 
     # 2. GPT bug prediction (async I/O).
+    # FR-ANALYSIS-003
     predicted_bugs = await predict_bugs(payload.code, findings)
 
     # 3. Final score incorporates both finding sets.
+    # FR-REPORT-001
     overall_score = compute_score(findings, predicted_bugs)
     summary = (
         f"Score {overall_score}/100 — "
@@ -51,6 +61,7 @@ async def analyze(
     )
 
     # 4. Branch: reanalyze existing or create new submission.
+    # FR-ANALYSIS-005 (reanalyze path) / FR-HIST-001 (new submission path)
     submission_id: str | None = payload.submission_id
     submission_name: str | None = payload.name
 
@@ -68,6 +79,7 @@ async def analyze(
             )
         else:
             # New submission — generate name if not provided.
+            # FR-ANALYSIS-004
             if not submission_name:
                 submission_name = await generate_submission_name(payload.code)
             submission_id, submission_name = await persist_analysis(
@@ -79,6 +91,7 @@ async def analyze(
                 predicted_bugs=predicted_bugs,
                 name=submission_name,
             )
+    # NFR-RELI-001
     except PersistenceError as exc:
         logger.warning("Persistence failed for user %s: %s", user_id, exc)
 

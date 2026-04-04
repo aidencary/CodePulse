@@ -36,6 +36,7 @@ function renderWithAuth(onValue) {
 }
 
 describe('AuthContext', () => {
+  // TC-AUTH-019
   it('subscribes to onAuthStateChange on mount and unsubscribes on unmount', () => {
     const { unmount } = renderWithAuth(() => {})
     expect(supabase.auth.onAuthStateChange).toHaveBeenCalledTimes(1)
@@ -43,6 +44,7 @@ describe('AuthContext', () => {
     expect(mockUnsubscribe).toHaveBeenCalledTimes(1)
   })
 
+  // TC-AUTH-020
   it('signIn calls supabase.auth.signInWithPassword with email and password', async () => {
     supabase.auth.signInWithPassword.mockResolvedValue({ error: null })
     let authValue
@@ -56,6 +58,7 @@ describe('AuthContext', () => {
     })
   })
 
+  // TC-AUTH-021
   it('signUp calls supabase.auth.signUp with email, password, and username metadata', async () => {
     supabase.auth.signUp.mockResolvedValue({ error: null })
     let authValue
@@ -70,6 +73,7 @@ describe('AuthContext', () => {
     })
   })
 
+  // TC-AUTH-022
   it('signOut calls supabase.auth.signOut', async () => {
     supabase.auth.signOut.mockResolvedValue({ error: null })
     let authValue
