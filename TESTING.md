@@ -42,7 +42,7 @@ All test files live in `__tests__/` directories next to the code they test.
 | File | What It Tests |
 |------|--------------|
 | `src/components/__tests__/ProtectedRoute.test.js` | Loading state, unauthenticated redirect to `/login`, authenticated render of children |
-| `src/components/__tests__/CodeEditor.test.js` | Renders editor, button click fires onRun, disabled during loading |
+| `src/components/__tests__/CodeEditor.test.js` | Renders editor, button click fires onRun, disabled during loading, copy button; settings gear ARIA, panel open/close, outside-click dismiss, setting change, toggle, localStorage persist/init (11 tests) |
 | `src/components/__tests__/ResultsPanel.test.js` | Idle, loading, error, score, findings, predicted bugs (expand/collapse), empty states |
 | `src/context/__tests__/AuthContext.test.js` | `onAuthStateChange` lifecycle and cleanup, `signIn` / `signUp` / `signOut` call correct Supabase methods with correct arguments |
 | `src/pages/__tests__/LoginPage.test.js` | Log In / Sign Up form toggle, form submission handlers, error message display |
@@ -507,6 +507,13 @@ Test IDs follow the pattern `TC-{MODULE}-{NNN}`. For full requirement descriptio
 | TC-DASH-002 | calls onRun with the current editor content when button is clicked | FR-DASH-001 |
 | TC-DASH-003 | disables the run button when loading is true | FR-DASH-002, NFR-USAB-001 |
 | TC-DASH-004 | renders the copy button and it is disabled when code is empty | FR-DASH-001 |
+| TC-DASH-005 | renders the settings gear button with correct ARIA attributes | FR-DASH-001 |
+| TC-DASH-006 | opens the settings panel when the gear button is clicked | FR-DASH-001 |
+| TC-DASH-007 | closes the settings panel when clicking outside | FR-DASH-001 |
+| TC-DASH-008 | updates fontSize setting when the number input changes | FR-DASH-001 |
+| TC-DASH-009 | toggles fontLigatures when its switch is clicked | FR-DASH-001 |
+| TC-DASH-010 | persists settings to localStorage when a setting changes | FR-DASH-001 |
+| TC-DASH-011 | initialises settings from localStorage on mount | FR-DASH-001 |
 
 #### `src/components/__tests__/ResultsPanel.test.js`
 
