@@ -13,12 +13,12 @@ CodePulse/
 │   │   ├── dependencies.py   # get_current_user — Supabase JWT auth
 │   │   ├── database.py       # Supabase service-role client (cached singleton)
 │   │   ├── models/           # Pydantic models
-│   │   │   ├── analysis.py   # AnalyzeRequest / AnalyzeResponse / Finding / PredictedBug / SubmissionListItem
-│   │   │   └── account.py    # ProfileResponse / ProfileUpdateRequest / ChangePasswordRequest / AvatarUploadResponse
+│   │   │   ├── analysis.py   # AnalyzeRequest / AnalyzeResponse / Finding / PredictedBug / SubmissionListItem / SubmissionRenameRequest
+│   │   │   └── account.py    # ProfileResponse / ProfileUpdateRequest / ChangePasswordRequest / AvatarUploadResponse / InviteUserRequest
 │   │   ├── routes/           # API route handlers (thin layer)
-│   │   │   ├── analysis.py   # POST /api/v1/analyze (with submission naming)
-│   │   │   ├── account.py    # Account CRUD (profile, avatar, password, delete)
-│   │   │   └── submissions.py # Submission CRUD (list, rename, delete)
+│   │   │   ├── analysis.py   # POST /api/v1/analyze (with submission naming + reanalyze)
+│   │   │   ├── account.py    # Account CRUD (profile, avatar, password, delete, invite)
+│   │   │   └── submissions.py # Submission CRUD (list, rename, delete, pin toggle)
 │   │   └── services/         # Business logic layer
 │   │       ├── engines/
 │   │       │   ├── __init__.py
@@ -37,7 +37,7 @@ CodePulse/
 ├── frontend/                # JavaScript/React frontend
 │   ├── public/              # Static files
 │   └── src/                 # Source code
-│       ├── components/      # React components (CodeEditor, ResultsPanel, ProtectedRoute, ProfileDropdown, SubmissionSidebar, Toast)
+│       ├── components/      # React components (BugCard, CodeEditor, InviteModal, ProfileDropdown, ProtectedRoute, ResultsPanel, SubmissionSidebar, Toast, TwoFactorSection)
 │       ├── context/         # React context (AuthContext with refreshSession)
 │       ├── pages/           # Page components (LoginPage, DashboardPage, AccountPage)
 │       ├── services/        # API service calls (supabaseClient, analysisService, submissionService, accountService)
@@ -80,7 +80,7 @@ The `docs/` folder contains project documentation and diagrams:
 - **CodePulse Class Diagram.drawio.png** - UML class diagram showing system architecture and relationships
 - **CodePulse Deployment Diagram.drawio.png** - Deployment diagram showing infrastructure layout
 - **CodePulse Engine Pipeline Flowchart.png** - Analysis engine pipeline flowchart
-- **CodePulse Sequence Diagram.png** - Sequence diagram showing request/response flow # Remove this later
+- **CodePulse Sequence Diagram.png** - Sequence diagram showing request/response flow
 - **CodePulse_Design_&_Architecture.pdf** - Detailed design and architecture specifications
 - **CodePulse_ER_Diagram.png** - Entity-Relationship diagram for database schema
 - **CodePulse_Requirements_Analysis.pdf** - Project requirements and analysis documentation

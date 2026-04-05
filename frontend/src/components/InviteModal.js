@@ -33,13 +33,13 @@ function InviteModal({ onClose }) {
   }
 
   return (
-    <div className="invite-backdrop" onClick={handleBackdrop}>
+    <div className="invite-backdrop" data-testid="invite-backdrop" onClick={handleBackdrop}>
       <div className="invite-modal" role="dialog" aria-modal="true" aria-labelledby="invite-title">
         <h2 className="invite-title" id="invite-title">Invite a User</h2>
         <p className="invite-hint">
           They'll receive an email with a link to set up their CodePulse account.
         </p>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} aria-labelledby="invite-title">
           <label className="invite-label" htmlFor="invite-email">Email address</label>
           <input
             ref={inputRef}

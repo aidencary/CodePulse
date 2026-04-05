@@ -48,9 +48,8 @@ backend/
 │   ├── test_analyze_route.py       # Route integration tests (mocked services)
 │   ├── test_analysis_engine.py     # Static analyzer unit tests (113 tests — 46 PEP 8 checks)
 │   ├── test_gpt_predictor.py       # GPT predictor unit tests (mocked OpenAI)
-│   ├── test_account_routes.py      # Account CRUD route tests (13 tests)
+│   ├── test_account_routes.py      # Account CRUD route tests (16 tests — includes invite)
 │   └── test_submission_routes.py   # Submission CRUD route tests (13 tests)
-│       test_account_routes.py      # Account CRUD route tests (16 tests — includes invite)
 ├── database/
 │   └── schema.sql              # Supabase PostgreSQL schema (source of truth)
 ├── Dockerfile

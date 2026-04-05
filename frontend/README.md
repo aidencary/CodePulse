@@ -90,7 +90,7 @@ const token = session.access_token
 
 ### Prerequisites
 
-- Node.js 20+
+- Node.js 24+
 - A configured Supabase project (see `backend/database/schema.sql`)
 
 ### Installation
@@ -127,7 +127,7 @@ npm test -- --watchAll=false   # Run once and exit (used in CI)
 |-----------|----------|
 | `components/__tests__/ProtectedRoute.test.js` | Loading state, unauthenticated redirect, authenticated render |
 | `context/__tests__/AuthContext.test.js` | Auth lifecycle, signIn / signUp / signOut calls |
-| `pages/__tests__/LoginPage.test.js` | Form toggle, submission handlers, error display, sign-up success banner, forgot password flow, MFA step-up (5 tests each) |
+| `pages/__tests__/LoginPage.test.js` | Form toggle, submission handlers, error display (5 tests); forgot password flow (7 tests); MFA step-up (5 tests) — 17 total |
 | `components/__tests__/TwoFactorSection.test.js` | No-factor state, enrolled state, enroll + QR display, secret display, verify, verify error, success state, disable, re-enable, disable error (11 tests) |
 | `pages/__tests__/ResetPasswordPage.test.js` | Loading state, PASSWORD_RECOVERY trigger, validation, updateUser call, toast + navigation, error on expired link, submit disabled while pending (8 tests) |
 | `components/__tests__/CodeEditor.test.js` | Renders editor, button click fires onRun, disabled during loading, copy button disabled when empty (4 tests) |
@@ -135,7 +135,7 @@ npm test -- --watchAll=false   # Run once and exit (used in CI)
 | `components/__tests__/SubmissionSidebar.test.js` | Render names, fallback, search, rename no-op, rename, delete, pin/star, collapse (12 tests) |
 | `pages/__tests__/AccountPage.test.js` | Profile load/display, username validation, password change, delete modal (10 tests) |
 
-66 tests, all passing.
+106 tests, all passing.
 
 ---
 
