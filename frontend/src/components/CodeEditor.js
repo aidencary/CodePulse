@@ -10,11 +10,13 @@ const DEFAULT_SETTINGS = {
   tabSize: 4,
   wordWrap: 'on',
   fontLigatures: true,
-  renderWhitespace: 'boundary',
+  renderWhitespace: 'trailing',
   bracketPairColorization: true,
   smoothScrolling: true,
   folding: true,
   renderLineHighlight: 'gutter',
+  mouseWheelZoom: true,
+  theme: 'auto',
 }
 
 // ── Settings toggle helper ────────────────────────────────────────────────────
@@ -146,6 +148,33 @@ function EditorSettingsPanel({ settings, onChangeSetting, onReset }) {
         </select>
       </div>
 
+      <div className="settings-row">
+        <label className="settings-label" htmlFor="setting-mouseWheelZoom">Ctrl+Scroll Zoom</label>
+        <SettingsToggle
+          id="setting-mouseWheelZoom"
+          checked={settings.mouseWheelZoom}
+          onChange={(v) => onChangeSetting('mouseWheelZoom', v)}
+        />
+      </div>
+
+      <div className="settings-row">
+        <label className="settings-label" htmlFor="setting-theme">Theme</label>
+        <select
+          id="setting-theme"
+          className="settings-select"
+          value={settings.theme}
+          onChange={(e) => onChangeSetting('theme', e.target.value)}
+        >
+          <option value="auto">Auto</option>
+          <option value="vs-dark">Dark</option>
+          <option value="vs">Light</option>
+          <option value="auto-hc">Auto (High Contrast)</option>
+          <option value="hc-black">High Contrast Dark</option>
+          <option value="hc-light">High Contrast Light</option>
+        </select>
+      </div>
+      <div className="settings-row-hint">Auto follows the app theme toggle</div>
+
       {/* ── Fixed (locked) settings ── */}
       <div className="settings-divider" />
       <div className="settings-section-title">Fixed Settings</div>
@@ -167,12 +196,6 @@ function EditorSettingsPanel({ settings, onChangeSetting, onReset }) {
         <span className="settings-locked-value">Python</span>
       </div>
       <div className="settings-row-hint">Only Python analysis is supported</div>
-
-      <div className="settings-row settings-row--locked">
-        <span className="settings-label">Theme</span>
-        <span className="settings-locked-value">Dark / Light</span>
-      </div>
-      <div className="settings-row-hint">Follows the app theme toggle</div>
 
       <button className="settings-reset-btn" onClick={onReset}>
         Reset to Defaults
@@ -315,7 +338,11 @@ function CodeEditor({ code, onCodeChange, onRun, loading, isDark, highlightLine 
         <Editor
           height="100%"
           defaultLanguage="python"
-          theme={isDark ? 'vs-dark' : 'vs'}
+          theme={
+            settings.theme === 'auto' ? (isDark ? 'vs-dark' : 'vs') :
+            settings.theme === 'auto-hc' ? (isDark ? 'hc-black' : 'hc-light') :
+            settings.theme
+          }
           value={code}
           onMount={(editor) => { editorRef.current = editor }}
           onChange={(value) => onCodeChange(value ?? '')}
@@ -333,6 +360,7 @@ function CodeEditor({ code, onCodeChange, onRun, loading, isDark, highlightLine 
             smoothScrolling: settings.smoothScrolling,
             folding: settings.folding,
             renderLineHighlight: settings.renderLineHighlight,
+            mouseWheelZoom: settings.mouseWheelZoom,
           }}
         />
       </div>

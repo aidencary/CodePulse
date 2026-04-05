@@ -36,7 +36,7 @@ frontend/
     │   └── AuthContext.js      # Auth state, useAuth hook, signIn/signUp/signOut, refreshSession
     ├── components/
     │   ├── ProtectedRoute.js   # Redirects unauthenticated users to /login
-    │   ├── CodeEditor.js       # Monaco editor + Copy button + Run Analysis button; highlights hovered finding line
+    │   ├── CodeEditor.js       # Monaco editor + Copy button + Run Analysis button; highlights hovered finding line; gear icon settings panel (font size, tab size, word wrap, ligatures, whitespace, bracket colors, smooth scroll, folding, line highlight, Ctrl+scroll zoom) persisted to localStorage
     │   ├── ResultsPanel.js     # Score circle, static findings and AI bug cards; SortControls with Severity|Line pills + ↑/↓ direction toggle; combined two-key sort; per-item ignore/dismiss
     │   ├── BugCard.js          # Collapsible AI bug prediction card with ignore and hover-highlight support
     │   ├── ProfileDropdown.js  # User avatar and dropdown menu (links to /account)
@@ -130,12 +130,12 @@ npm test -- --watchAll=false   # Run once and exit (used in CI)
 | `pages/__tests__/LoginPage.test.js` | Form toggle, submission handlers, error display (5 tests); forgot password flow (7 tests); MFA step-up (5 tests) — 17 total |
 | `components/__tests__/TwoFactorSection.test.js` | No-factor state, enrolled state, enroll + QR display, secret display, verify, verify error, success state, disable, re-enable, disable error (11 tests) |
 | `pages/__tests__/ResetPasswordPage.test.js` | Loading state, PASSWORD_RECOVERY trigger, validation, updateUser call, toast + navigation, error on expired link, submit disabled while pending (8 tests) |
-| `components/__tests__/CodeEditor.test.js` | Renders editor, button click fires onRun, disabled during loading, copy button disabled when empty (4 tests) |
+| `components/__tests__/CodeEditor.test.js` | Renders editor, button click fires onRun, disabled during loading, copy button disabled when empty; gear button ARIA, panel open/close, outside-click dismiss, setting change, toggle flip, localStorage persist, localStorage init (11 tests) |
 | `components/__tests__/ResultsPanel.test.js` | Idle, loading, error, score, findings, bugs (expand/collapse), empty states, ignore/dismiss, hover line, severity sort, line sort, tiebreaker, null-line sort (29 tests) |
 | `components/__tests__/SubmissionSidebar.test.js` | Render names, fallback, search, rename no-op, rename, delete, pin/star, collapse (12 tests) |
 | `pages/__tests__/AccountPage.test.js` | Profile load/display, username validation, password change, delete modal (10 tests) |
 
-106 tests, all passing.
+113 tests, all passing.
 
 ---
 
