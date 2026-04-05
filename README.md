@@ -111,7 +111,7 @@ See [TESTING.md](TESTING.md) for instructions on starting the backend with match
 
 ### Prerequisites
 
-- Node.js 20+
+- Node.js 24+
 - Python 3.11+
 - A configured [Supabase](https://supabase.com) project (see `backend/database/schema.sql`)
 
@@ -176,7 +176,7 @@ See the [docs](docs/) folder for:
 - Class diagram
 - Deployment diagram
 - Engine pipeline flowchart
-- Sequence diagram # Remove this later
+- Sequence diagram
 - ER diagram
 - Design and architecture documentation
 - Requirements analysis

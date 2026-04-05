@@ -216,8 +216,7 @@ describe('ResultsPanel — hover line highlight', () => {
     render(
       <ResultsPanel results={mockResults} loading={false} error={null} onHoverLine={onHoverLine} />
     )
-    const findingItem = screen.getByText('long_line').closest('.finding-item')
-    fireEvent.mouseEnter(findingItem)
+    fireEvent.mouseEnter(screen.getByTestId('finding-long_line'))
     expect(onHoverLine).toHaveBeenCalledWith(5)
   })
 
@@ -227,8 +226,7 @@ describe('ResultsPanel — hover line highlight', () => {
     render(
       <ResultsPanel results={mockResults} loading={false} error={null} onHoverLine={onHoverLine} />
     )
-    const findingItem = screen.getByText('long_line').closest('.finding-item')
-    fireEvent.mouseLeave(findingItem)
+    fireEvent.mouseLeave(screen.getByTestId('finding-long_line'))
     expect(onHoverLine).toHaveBeenCalledWith(null)
   })
 
@@ -238,8 +236,7 @@ describe('ResultsPanel — hover line highlight', () => {
     render(
       <ResultsPanel results={mockResults} loading={false} error={null} onHoverLine={onHoverLine} />
     )
-    const bugCard = screen.getByText('null_dereference').closest('.bug-card')
-    fireEvent.mouseEnter(bugCard)
+    fireEvent.mouseEnter(screen.getByTestId('bug-null_dereference'))
     expect(onHoverLine).toHaveBeenCalledWith(8)
   })
 
@@ -253,8 +250,7 @@ describe('ResultsPanel — hover line highlight', () => {
     render(
       <ResultsPanel results={noLineResults} loading={false} error={null} onHoverLine={onHoverLine} />
     )
-    const bugCard = screen.getByText('null_dereference').closest('.bug-card')
-    fireEvent.mouseEnter(bugCard)
+    fireEvent.mouseEnter(screen.getByTestId('bug-null_dereference'))
     expect(onHoverLine).not.toHaveBeenCalledWith(expect.any(Number))
   })
 })

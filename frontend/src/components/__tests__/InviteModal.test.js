@@ -61,9 +61,7 @@ it('calls inviteUser with the token and trimmed email on submit', async () => {
   fireEvent.change(screen.getByLabelText(/email address/i), {
     target: { value: '  user@example.com  ' },
   })
-  fireEvent.submit(
-    screen.getByRole('button', { name: /send invite/i }).closest('form')
-  )
+  fireEvent.submit(screen.getByRole('form', { name: /invite a user/i }))
 
   await waitFor(() => {
     expect(mockInviteUser).toHaveBeenCalledWith('test-token', 'user@example.com')
@@ -79,15 +77,15 @@ it('shows success toast and closes modal on successful invite', async () => {
   fireEvent.change(screen.getByLabelText(/email address/i), {
     target: { value: 'user@example.com' },
   })
-  fireEvent.submit(
-    screen.getByRole('button', { name: /send invite/i }).closest('form')
-  )
+  fireEvent.submit(screen.getByRole('form', { name: /invite a user/i }))
 
   await waitFor(() => {
     expect(mockToast).toHaveBeenCalledWith(
       'Invite sent to user@example.com',
       'success'
     )
+  })
+  await waitFor(() => {
     expect(onClose).toHaveBeenCalled()
   })
 })
@@ -101,9 +99,7 @@ it('displays the error message and does not close on a failed invite', async () 
   fireEvent.change(screen.getByLabelText(/email address/i), {
     target: { value: 'existing@example.com' },
   })
-  fireEvent.submit(
-    screen.getByRole('button', { name: /send invite/i }).closest('form')
-  )
+  fireEvent.submit(screen.getByRole('form', { name: /invite a user/i }))
 
   expect(await screen.findByText('User already registered')).toBeInTheDocument()
   expect(onClose).not.toHaveBeenCalled()
@@ -120,8 +116,8 @@ it('calls onClose when Cancel is clicked', () => {
 // TC-ACCT-024
 it('calls onClose when the backdrop is clicked', () => {
   const onClose = jest.fn()
-  const { container } = renderModal(onClose)
-  fireEvent.click(container.firstChild) // backdrop div
+  renderModal(onClose)
+  fireEvent.click(screen.getByTestId('invite-backdrop'))
   expect(onClose).toHaveBeenCalled()
 })
 
@@ -134,9 +130,7 @@ it('shows "Sending…" and disables the button while the request is in-flight', 
   fireEvent.change(screen.getByLabelText(/email address/i), {
     target: { value: 'user@example.com' },
   })
-  fireEvent.submit(
-    screen.getByRole('button', { name: /send invite/i }).closest('form')
-  )
+  fireEvent.submit(screen.getByRole('form', { name: /invite a user/i }))
 
   const btn = await screen.findByRole('button', { name: /sending/i })
   expect(btn).toBeDisabled()

@@ -14,6 +14,7 @@ function BugCard({ bug, onIgnore, onHoverLine }) {
   return (
     <div
       className={`bug-card bug-sev-${bug.severity}`}
+      data-testid={`bug-${bug.bug_type}`}
       onMouseEnter={() => bug.line_number != null && onHoverLine?.(bug.line_number)}
       onMouseLeave={() => onHoverLine?.(null)}
     >

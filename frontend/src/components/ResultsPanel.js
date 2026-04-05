@@ -194,6 +194,7 @@ function ResultsPanel({ results, loading, error, onHoverLine }) {
                 <div
                   key={findingKey(f)}
                   className="finding-item"
+                  data-testid={`finding-${f.issue_type}`}
                   onMouseEnter={() => f.line_number != null && onHoverLine?.(f.line_number)}
                   onMouseLeave={() => onHoverLine?.(null)}
                 >
