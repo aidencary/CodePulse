@@ -5,6 +5,182 @@ const STAR_PATH = 'M 0 -10 L 2.2 -2.2 L 10 0 L 2.2 2.2 L 0 10 L -2.2 2.2 L -10 0
 const RAND = (min, max) => Math.floor(Math.random() * (max - min + 1) + min)
 const SIGN = () => (Math.random() > 0.5 ? -1 : 1)
 
+const DEFAULT_SETTINGS = {
+  fontSize: 13,
+  tabSize: 4,
+  wordWrap: 'on',
+  fontLigatures: true,
+  renderWhitespace: 'boundary',
+  bracketPairColorization: true,
+  smoothScrolling: true,
+  folding: true,
+  renderLineHighlight: 'gutter',
+}
+
+// ── Settings toggle helper ────────────────────────────────────────────────────
+function SettingsToggle({ id, checked, onChange }) {
+  return (
+    <button
+      id={id}
+      role="switch"
+      aria-checked={checked}
+      className={`settings-toggle${checked ? ' settings-toggle--on' : ''}`}
+      onClick={() => onChange(!checked)}
+    >
+      <span className="settings-toggle-thumb" />
+    </button>
+  )
+}
+
+// ── Settings panel sub-component ─────────────────────────────────────────────
+function EditorSettingsPanel({ settings, onChangeSetting, onReset }) {
+  return (
+    <div className="editor-settings-panel" role="dialog" aria-label="Editor settings">
+
+      {/* ── Editable settings ── */}
+      <div className="settings-section-title">Editor Settings</div>
+
+      <div className="settings-row">
+        <label className="settings-label" htmlFor="setting-fontSize">Font Size</label>
+        <input
+          id="setting-fontSize"
+          className="settings-input-number"
+          type="number"
+          min={10}
+          max={24}
+          value={settings.fontSize}
+          onChange={(e) => onChangeSetting('fontSize', Number(e.target.value))}
+        />
+      </div>
+
+      <div className="settings-row">
+        <label className="settings-label" htmlFor="setting-tabSize">Tab Size</label>
+        <select
+          id="setting-tabSize"
+          className="settings-select"
+          value={settings.tabSize}
+          onChange={(e) => onChangeSetting('tabSize', Number(e.target.value))}
+        >
+          <option value={2}>2</option>
+          <option value={4}>4</option>
+          <option value={8}>8</option>
+        </select>
+      </div>
+
+      <div className="settings-row">
+        <label className="settings-label" htmlFor="setting-wordWrap">Word Wrap</label>
+        <select
+          id="setting-wordWrap"
+          className="settings-select"
+          value={settings.wordWrap}
+          onChange={(e) => onChangeSetting('wordWrap', e.target.value)}
+        >
+          <option value="on">On</option>
+          <option value="off">Off</option>
+        </select>
+      </div>
+
+      <div className="settings-row">
+        <label className="settings-label" htmlFor="setting-fontLigatures">Font Ligatures</label>
+        <SettingsToggle
+          id="setting-fontLigatures"
+          checked={settings.fontLigatures}
+          onChange={(v) => onChangeSetting('fontLigatures', v)}
+        />
+      </div>
+
+      <div className="settings-row">
+        <label className="settings-label" htmlFor="setting-renderWhitespace">Whitespace</label>
+        <select
+          id="setting-renderWhitespace"
+          className="settings-select"
+          value={settings.renderWhitespace}
+          onChange={(e) => onChangeSetting('renderWhitespace', e.target.value)}
+        >
+          <option value="none">None</option>
+          <option value="boundary">Boundary</option>
+          <option value="trailing">Trailing</option>
+          <option value="all">All</option>
+        </select>
+      </div>
+
+      <div className="settings-row">
+        <label className="settings-label" htmlFor="setting-bracketPairColorization">Bracket Colors</label>
+        <SettingsToggle
+          id="setting-bracketPairColorization"
+          checked={settings.bracketPairColorization}
+          onChange={(v) => onChangeSetting('bracketPairColorization', v)}
+        />
+      </div>
+
+      <div className="settings-row">
+        <label className="settings-label" htmlFor="setting-smoothScrolling">Smooth Scroll</label>
+        <SettingsToggle
+          id="setting-smoothScrolling"
+          checked={settings.smoothScrolling}
+          onChange={(v) => onChangeSetting('smoothScrolling', v)}
+        />
+      </div>
+
+      <div className="settings-row">
+        <label className="settings-label" htmlFor="setting-folding">Code Folding</label>
+        <SettingsToggle
+          id="setting-folding"
+          checked={settings.folding}
+          onChange={(v) => onChangeSetting('folding', v)}
+        />
+      </div>
+
+      <div className="settings-row">
+        <label className="settings-label" htmlFor="setting-renderLineHighlight">Line Highlight</label>
+        <select
+          id="setting-renderLineHighlight"
+          className="settings-select"
+          value={settings.renderLineHighlight}
+          onChange={(e) => onChangeSetting('renderLineHighlight', e.target.value)}
+        >
+          <option value="none">None</option>
+          <option value="gutter">Gutter</option>
+          <option value="line">Line</option>
+          <option value="all">All</option>
+        </select>
+      </div>
+
+      {/* ── Fixed (locked) settings ── */}
+      <div className="settings-divider" />
+      <div className="settings-section-title">Fixed Settings</div>
+
+      <div className="settings-row settings-row--locked">
+        <span className="settings-label">Minimap</span>
+        <span className="settings-locked-value">Off</span>
+      </div>
+      <div className="settings-row-hint">Disabled to maximize editor space</div>
+
+      <div className="settings-row settings-row--locked">
+        <span className="settings-label">Scroll Beyond Last Line</span>
+        <span className="settings-locked-value">Off</span>
+      </div>
+      <div className="settings-row-hint">Controlled by app layout</div>
+
+      <div className="settings-row settings-row--locked">
+        <span className="settings-label">Language</span>
+        <span className="settings-locked-value">Python</span>
+      </div>
+      <div className="settings-row-hint">Only Python analysis is supported</div>
+
+      <div className="settings-row settings-row--locked">
+        <span className="settings-label">Theme</span>
+        <span className="settings-locked-value">Dark / Light</span>
+      </div>
+      <div className="settings-row-hint">Follows the app theme toggle</div>
+
+      <button className="settings-reset-btn" onClick={onReset}>
+        Reset to Defaults
+      </button>
+    </div>
+  )
+}
+
 // FR-DASH-001
 // FR-DASH-002
 function CodeEditor({ code, onCodeChange, onRun, loading, isDark, highlightLine }) {
@@ -13,12 +189,31 @@ function CodeEditor({ code, onCodeChange, onRun, loading, isDark, highlightLine 
   const decorationsRef = useRef([])
   const [copied, setCopied] = useState(false)
 
+  const [settings, setSettings] = useState(() => {
+    try {
+      const raw = localStorage.getItem('codepulse_editor_settings')
+      return raw ? { ...DEFAULT_SETTINGS, ...JSON.parse(raw) } : DEFAULT_SETTINGS
+    } catch {
+      return DEFAULT_SETTINGS
+    }
+  })
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const settingsPanelRef = useRef(null)
+
   const handleCopy = () => {
     if (!code?.trim()) return
     navigator.clipboard.writeText(code).then(() => {
       setCopied(true)
       setTimeout(() => setCopied(false), 1500)
     })
+  }
+
+  const handleChangeSetting = (key, value) =>
+    setSettings((prev) => ({ ...prev, [key]: value }))
+
+  const handleResetSettings = () => {
+    setSettings(DEFAULT_SETTINGS)
+    localStorage.removeItem('codepulse_editor_settings')
   }
 
   useEffect(() => {
@@ -46,11 +241,49 @@ function CodeEditor({ code, onCodeChange, onRun, loading, isDark, highlightLine 
     })
   }, [])
 
+  useEffect(() => {
+    localStorage.setItem('codepulse_editor_settings', JSON.stringify(settings))
+  }, [settings])
+
+  useEffect(() => {
+    if (!settingsOpen) return
+    const handler = (e) => {
+      if (settingsPanelRef.current && !settingsPanelRef.current.contains(e.target)) {
+        setSettingsOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [settingsOpen])
+
   return (
     <div className="editor-panel">
       <div className="editor-toolbar">
         <div className="editor-toolbar-left">
           <span className="editor-label">Editor</span>
+
+          <div className="editor-settings-wrapper" ref={settingsPanelRef}>
+            <button
+              className="settings-gear-btn"
+              onClick={() => setSettingsOpen((v) => !v)}
+              aria-haspopup="dialog"
+              aria-expanded={settingsOpen}
+              aria-label="Editor settings"
+              title="Editor settings"
+            >
+              <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" width="14" height="14">
+                <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
+              </svg>
+            </button>
+
+            {settingsOpen && (
+              <EditorSettingsPanel
+                settings={settings}
+                onChangeSetting={handleChangeSetting}
+                onReset={handleResetSettings}
+              />
+            )}
+          </div>
         </div>
         <div className="editor-toolbar-right">
           <button
@@ -88,10 +321,18 @@ function CodeEditor({ code, onCodeChange, onRun, loading, isDark, highlightLine 
           onChange={(value) => onCodeChange(value ?? '')}
           options={{
             minimap: { enabled: false },
-            fontSize: 13,
             scrollBeyondLastLine: false,
             lineNumbersMinChars: 3,
             padding: { top: 8 },
+            fontSize: settings.fontSize,
+            tabSize: settings.tabSize,
+            wordWrap: settings.wordWrap,
+            fontLigatures: settings.fontLigatures,
+            renderWhitespace: settings.renderWhitespace,
+            bracketPairColorization: { enabled: settings.bracketPairColorization },
+            smoothScrolling: settings.smoothScrolling,
+            folding: settings.folding,
+            renderLineHighlight: settings.renderLineHighlight,
           }}
         />
       </div>
