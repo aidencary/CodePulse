@@ -80,6 +80,14 @@
   letter-spacing: 0.08em;
   color: rgba(255, 255, 255, 0.5);
   margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.account-section-title svg {
+  opacity: 0.6;
+  flex-shrink: 0;
 }
 
 /* ─── Form elements ────────────────────────────────────────────── */
@@ -127,6 +135,25 @@
 .account-input--readonly {
   opacity: 0.55;
   cursor: default;
+  background: rgba(255, 255, 255, 0.04);
+  border-style: dashed;
+}
+
+.readonly-wrapper {
+  position: relative;
+}
+
+.readonly-wrapper .account-input {
+  padding-right: 2.25rem;
+}
+
+.lock-icon {
+  position: absolute;
+  right: 0.65rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(255, 255, 255, 0.3);
+  pointer-events: none;
 }
 
 /* ─── Buttons ──────────────────────────────────────────────────── */
@@ -157,6 +184,12 @@
   background: rgba(255, 255, 255, 0.88);
 }
 
+.account-btn--saved {
+  background: #4ade80 !important;
+  color: #052e16 !important;
+  transition: background 0.3s, color 0.3s;
+}
+
 .account-btn--danger {
   background: #dc2626;
   color: #ffffff;
@@ -181,13 +214,14 @@
 .avatar-section {
   display: flex;
   align-items: center;
-  gap: 1.25rem;
+  gap: 1.75rem;
   margin-bottom: 1rem;
+  padding: 0.5rem 0;
 }
 
 .avatar-preview {
-  width: 72px;
-  height: 72px;
+  width: 96px;
+  height: 96px;
   border-radius: 50%;
   border: 3px solid rgba(255, 255, 255, 0.25);
   display: flex;
@@ -195,7 +229,7 @@
   justify-content: center;
   overflow: hidden;
   flex-shrink: 0;
-  font-size: 1.6rem;
+  font-size: 2rem;
   font-weight: 700;
   color: #ffffff;
 }

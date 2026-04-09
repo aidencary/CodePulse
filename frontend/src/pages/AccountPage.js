@@ -34,6 +34,32 @@ function BackArrow() {
   )
 }
 
+function SectionIcon({ name }) {
+  const props = { width: 15, height: 15, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' }
+  switch (name) {
+    case 'profile':
+      return <svg {...props}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+    case 'avatar':
+      return <svg {...props}><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="12" cy="10" r="3" /><path d="M6 21v-1a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v1" /></svg>
+    case 'password':
+      return <svg {...props}><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
+    case 'bug':
+      return <svg {...props}><path d="M8 2l1.88 1.88M14.12 3.88L16 2M9 7.13v-1a3 3 0 0 1 6 0v1" /><path d="M12 20c-3.3 0-6-2.7-6-6v-3a6 6 0 0 1 12 0v3c0 3.3-2.7 6-6 6z" /><path d="M6 13H2M22 13h-4M6 17H3M21 17h-3" /></svg>
+    case 'danger':
+      return <svg {...props}><polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
+    default:
+      return null
+  }
+}
+
+function LockIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lock-icon">
+      <rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
+    </svg>
+  )
+}
+
 function AccountPage() {
   const { session, signOut, refreshSession } = useAuth()
   const navigate = useNavigate()
@@ -46,6 +72,7 @@ function AccountPage() {
   const [pageLoading, setPageLoading] = useState(true)
   const [username, setUsername] = useState('')
   const [profileMsg, setProfileMsg] = useState(null)
+  const [profileSaved, setProfileSaved] = useState(false)
   const [profileErr, setProfileErr] = useState(null)
   const [profileSaving, setProfileSaving] = useState(false)
 
@@ -104,6 +131,8 @@ function AccountPage() {
       setProfile(updated)
       setProfileMsg('Profile updated')
       toast('Profile updated', 'success')
+      setProfileSaved(true)
+      setTimeout(() => setProfileSaved(false), 2000)
       await refreshSession()
     } catch (err) {
       setProfileErr(err.message)
@@ -222,19 +251,22 @@ function AccountPage() {
       <div className="account-content">
         {/* ── Profile Section ── */}
         <section className="account-section">
-          <h2 className="account-section-title">Profile</h2>
+          <h2 className="account-section-title"><SectionIcon name="profile" /> Profile</h2>
           {profileMsg && <div className="account-success">{profileMsg}</div>}
           {profileErr && <div className="account-error">{profileErr}</div>}
           <form onSubmit={handleProfileSave}>
             <div className="account-field">
               <label className="account-label" htmlFor="account-email">Email</label>
-              <input
-                id="account-email"
-                className="account-input account-input--readonly"
-                type="email"
-                value={profile?.email || ''}
-                readOnly
-              />
+              <div className="readonly-wrapper">
+                <input
+                  id="account-email"
+                  className="account-input account-input--readonly"
+                  type="email"
+                  value={profile?.email || ''}
+                  readOnly
+                />
+                <LockIcon />
+              </div>
             </div>
             <div className="account-field">
               <label className="account-label" htmlFor="account-username">Username</label>
@@ -249,27 +281,30 @@ function AccountPage() {
             </div>
             <div className="account-field">
               <label className="account-label" htmlFor="account-role">Role</label>
-              <input
-                id="account-role"
-                className="account-input account-input--readonly"
-                type="text"
-                value={profile?.role || 'developer'}
-                readOnly
-              />
+              <div className="readonly-wrapper">
+                <input
+                  id="account-role"
+                  className="account-input account-input--readonly"
+                  type="text"
+                  value={profile?.role || 'developer'}
+                  readOnly
+                />
+                <LockIcon />
+              </div>
             </div>
             <button
               type="submit"
-              className="account-btn account-btn--primary"
+              className={`account-btn account-btn--primary${profileSaved ? ' account-btn--saved' : ''}`}
               disabled={profileSaving || username === profile?.username}
             >
-              {profileSaving ? 'Saving...' : 'Save Changes'}
+              {profileSaving ? 'Saving...' : profileSaved ? 'Saved \u2713' : 'Save Changes'}
             </button>
           </form>
         </section>
 
         {/* ── Avatar Section ── */}
         <section className="account-section">
-          <h2 className="account-section-title">Profile Picture</h2>
+          <h2 className="account-section-title"><SectionIcon name="avatar" /> Profile Picture</h2>
           {avatarMsg && <div className="account-success">{avatarMsg}</div>}
           {avatarErr && <div className="account-error">{avatarErr}</div>}
           <div className="avatar-section">
@@ -315,7 +350,7 @@ function AccountPage() {
 
         {/* ── Password Section ── */}
         <section className="account-section">
-          <h2 className="account-section-title">Change Password</h2>
+          <h2 className="account-section-title"><SectionIcon name="password" /> Change Password</h2>
           {pwMsg && <div className="account-success">{pwMsg}</div>}
           {pwErr && <div className="account-error">{pwErr}</div>}
           <form onSubmit={handlePasswordChange}>
@@ -369,7 +404,7 @@ function AccountPage() {
 
         {/* ── Report Bug ── */}
         <section className="account-section">
-          <h2 className="account-section-title">Report a Bug</h2>
+          <h2 className="account-section-title"><SectionIcon name="bug" /> Report a Bug</h2>
           <p className="account-hint">
             Encountered an issue with CodePulse? Send us a bug report and we'll look into it as soon as possible.
           </p>
@@ -383,7 +418,7 @@ function AccountPage() {
 
         {/* ── Danger Zone ── */}
         <section className="account-section danger-zone">
-          <h2 className="account-section-title">Danger Zone</h2>
+          <h2 className="account-section-title"><SectionIcon name="danger" /> Danger Zone</h2>
           <p className="danger-description">
             Permanently delete your account and all associated data including submissions,
             analysis reports, and findings. This action cannot be undone.
