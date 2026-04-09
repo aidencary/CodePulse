@@ -52,7 +52,7 @@ function SortControls({ field, direction, onFieldChange, onDirectionToggle }) {
  * SVG ring that fills like an arc based on score (0–100).
  * Renders as a circular track with a colored arc portion.
  */
-function ScoreRing({ score, level, size = 72, strokeWidth = 4 }) {
+function ScoreRing({ score, level, size = 88, strokeWidth = 4.5 }) {
   const radius = (size - strokeWidth) / 2
   const circumference = 2 * Math.PI * radius
   const filled = (score / 100) * circumference
@@ -230,7 +230,7 @@ function ResultsPanel({ results, loading, error, onHoverLine }) {
                 level={scoreLevel(results.overall_score)}
               />
               <div className="score-ring-text">
-                <span className="score-value">{results.overall_score}</span>
+                <span className={`score-value score-value--${scoreLevel(results.overall_score)}`}>{results.overall_score}</span>
                 <span className="score-label">/ 100</span>
               </div>
             </div>
@@ -258,9 +258,9 @@ function ResultsPanel({ results, loading, error, onHoverLine }) {
               sortedFindings.map((f) => (
                 <div
                   key={findingKey(f)}
-                  className="finding-item"
+                  className={`finding-item finding-sev-${f.severity.toLowerCase()}`}
                   data-testid={`finding-${f.issue_type}`}
-                  onMouseEnter={() => f.line_number != null && onHoverLine?.(f.line_number)}
+                  onMouseEnter={() => f.line_number != null && onHoverLine?.({ line: f.line_number, severity: f.severity.toLowerCase() })}
                   onMouseLeave={() => onHoverLine?.(null)}
                 >
                   <span
@@ -315,7 +315,7 @@ function ResultsPanel({ results, loading, error, onHoverLine }) {
       )
     }
     return (
-      <p className="results-placeholder">Run analysis to see results.</p>
+      <p className="results-placeholder">Add Python code code and run analysis to see results.</p>
     )
   }
 

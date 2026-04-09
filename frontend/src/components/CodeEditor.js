@@ -17,6 +17,7 @@ const DEFAULT_SETTINGS = {
   renderLineHighlight: 'gutter',
   mouseWheelZoom: true,
   theme: 'auto',
+  severityHighlight: true,
 }
 
 // ── Settings toggle helper ────────────────────────────────────────────────────
@@ -158,6 +159,16 @@ function EditorSettingsPanel({ settings, onChangeSetting, onReset }) {
       </div>
 
       <div className="settings-row">
+        <label className="settings-label" htmlFor="setting-severityHighlight">Severity Highlights</label>
+        <SettingsToggle
+          id="setting-severityHighlight"
+          checked={settings.severityHighlight}
+          onChange={(v) => onChangeSetting('severityHighlight', v)}
+        />
+      </div>
+      <div className="settings-row-hint">Color-code line highlights by severity</div>
+
+      <div className="settings-row">
         <label className="settings-label" htmlFor="setting-theme">Theme</label>
         <select
           id="setting-theme"
@@ -243,14 +254,20 @@ function CodeEditor({ code, onCodeChange, onRun, loading, isDark, highlightLine 
     const editor = editorRef.current
     if (!editor) return
     if (highlightLine != null) {
+      const line = typeof highlightLine === 'object' ? highlightLine.line : highlightLine
+      const severity = typeof highlightLine === 'object' ? highlightLine.severity : null
+      let className = 'editor-highlight-line'
+      if (settings.severityHighlight && severity) {
+        className = `editor-highlight-line editor-highlight-${severity}`
+      }
       decorationsRef.current = editor.deltaDecorations(decorationsRef.current, [{
-        range: { startLineNumber: highlightLine, endLineNumber: highlightLine, startColumn: 1, endColumn: 1 },
-        options: { isWholeLine: true, className: 'editor-highlight-line' },
+        range: { startLineNumber: line, endLineNumber: line, startColumn: 1, endColumn: 1 },
+        options: { isWholeLine: true, className },
       }])
     } else {
       decorationsRef.current = editor.deltaDecorations(decorationsRef.current, [])
     }
-  }, [highlightLine])
+  }, [highlightLine, settings.severityHighlight])
 
   useEffect(() => {
     if (!btnRef.current) return

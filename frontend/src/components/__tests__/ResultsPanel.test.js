@@ -217,7 +217,7 @@ describe('ResultsPanel — hover line highlight', () => {
       <ResultsPanel results={mockResults} loading={false} error={null} onHoverLine={onHoverLine} />
     )
     fireEvent.mouseEnter(screen.getByTestId('finding-long_line'))
-    expect(onHoverLine).toHaveBeenCalledWith(5)
+    expect(onHoverLine).toHaveBeenCalledWith({ line: 5, severity: 'low' })
   })
 
   // TC-REPORT-022
@@ -237,7 +237,7 @@ describe('ResultsPanel — hover line highlight', () => {
       <ResultsPanel results={mockResults} loading={false} error={null} onHoverLine={onHoverLine} />
     )
     fireEvent.mouseEnter(screen.getByTestId('bug-null_dereference'))
-    expect(onHoverLine).toHaveBeenCalledWith(8)
+    expect(onHoverLine).toHaveBeenCalledWith({ line: 8, severity: 'high' })
   })
 
   // TC-REPORT-024
