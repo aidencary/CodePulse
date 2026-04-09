@@ -233,7 +233,7 @@ function LoginPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   autoComplete="email"
-                  placeholder="you@example.com"
+                  placeholder="user@example.com"
                 />
               </div>
 
