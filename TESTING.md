@@ -45,8 +45,8 @@ All test files live in `__tests__/` directories next to the code they test.
 | `src/components/__tests__/CodeEditor.test.js` | Renders editor, button click fires onRun, disabled during loading, copy button; settings gear ARIA, panel open/close, outside-click dismiss, setting change, toggle, localStorage persist/init (11 tests) |
 | `src/components/__tests__/ResultsPanel.test.js` | Idle, loading, error, score, findings, predicted bugs (expand/collapse), empty states |
 | `src/context/__tests__/AuthContext.test.js` | `onAuthStateChange` lifecycle and cleanup, `signIn` / `signUp` / `signOut` call correct Supabase methods with correct arguments |
-| `src/pages/__tests__/LoginPage.test.js` | Log In / Sign Up form toggle, form submission handlers, error message display |
-| `src/pages/__tests__/AccountPage.test.js` | Profile load/display, username validation, update profile, change password validation/success, delete modal and confirmation (10 tests) |
+| `src/pages/__tests__/LoginPage.test.js` | Log In / Sign Up form toggle, form submission, error display, show/hide password toggle (type attribute + aria-label cycling), learn-more section headings, Show less button, MFA step-up, forgot password flow (23 tests) |
+| `src/pages/__tests__/AccountPage.test.js` | Profile load/display, username validation, update profile, change password validation/success, delete modal and confirmation, report bug mailto link (11 tests) |
 | `src/components/__tests__/SubmissionSidebar.test.js` | Render names, fallback to code, search filter, rename (kebab menu/Enter/Escape), delete confirmation, pin/star toggle, pinned icon display, collapsed state (11 tests) |
 | `src/components/__tests__/InviteModal.test.js` | Email invite modal — render, empty-email disable, submit handler, success toast, error display, cancel, backdrop click, loading state (9 tests) |
 | `src/components/__tests__/TwoFactorSection.test.js` | TOTP enrollment (enroll call, QR code, manual secret), verification (challengeAndVerify, error), successful enable, unenrollment, status display (11 tests) |

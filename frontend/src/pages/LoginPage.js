@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import supabase from '../services/supabaseClient'
@@ -16,9 +16,34 @@ function LoginPage() {
   const [step, setStep] = useState('credentials') // 'credentials' | 'mfa'
   const [mfaFactorId, setMfaFactorId] = useState(null)
   const [mfaCode, setMfaCode] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
 
   const { signIn, signUp } = useAuth()
   const navigate = useNavigate()
+  const heroRef = useRef(null)
+  const learnMoreRef = useRef(null)
+  const learnGridRef = useRef(null)
+
+  useEffect(() => {
+    const grid = learnGridRef.current
+    if (!grid) return
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) entry.target.classList.add('visible')
+        })
+      },
+      { threshold: 0.15 }
+    )
+    grid.querySelectorAll('.learn-card').forEach((card) => observer.observe(card))
+    return () => observer.disconnect()
+  }, [])
+
+  const scrollToLearnMore = () =>
+    learnMoreRef.current?.scrollIntoView({ behavior: 'smooth' })
+
+  const scrollToHero = () =>
+    heroRef.current?.scrollIntoView({ behavior: 'smooth' })
 
   // FR-AUTH-001
   // FR-AUTH-002
@@ -120,146 +145,274 @@ function LoginPage() {
 
   if (step === 'mfa') {
     return (
-      <div className="auth-container">
-        <div className="auth-card">
-          <h1 className="auth-title">CodePulse</h1>
-          <p className="auth-mfa-hint">
-            Enter the 6-digit code from your authenticator app.
-          </p>
-          <form onSubmit={handleSubmit} className="auth-form" aria-label="two-factor authentication">
-            <div className="form-group">
-              <label htmlFor="mfa-code">Authentication Code</label>
-              <input
-                id="mfa-code"
-                type="text"
-                inputMode="numeric"
-                value={mfaCode}
-                onChange={(e) => setMfaCode(e.target.value)}
-                required
-                maxLength={6}
-                placeholder="000000"
-                autoComplete="one-time-code"
-                autoFocus
-              />
+      <div className="login-page">
+        <section className="auth-hero">
+          <div className="auth-hero-inner">
+            <div className="auth-logo-row">
+              <img src="/CodePulseSlow.gif" alt="CodePulse logo" className="auth-logo-gif" />
+              <span className="auth-logo-wordmark">odePulse</span>
             </div>
-            {error && <p className="auth-error">{error}</p>}
-            <button type="submit" className="auth-submit" disabled={submitting}>
-              {submitting ? 'Please wait...' : 'Verify'}
-            </button>
-            <button type="button" className="auth-link" onClick={handleMfaBack}>
-              Back to Log In
-            </button>
-          </form>
-        </div>
+            <div className="auth-card">
+              <p className="auth-mfa-hint">
+                Enter the 6-digit code from your authenticator app.
+              </p>
+              <form onSubmit={handleSubmit} className="auth-form" aria-label="two-factor authentication">
+                <div className="form-group">
+                  <label htmlFor="mfa-code">Authentication Code</label>
+                  <input
+                    id="mfa-code"
+                    type="text"
+                    inputMode="numeric"
+                    value={mfaCode}
+                    onChange={(e) => setMfaCode(e.target.value)}
+                    required
+                    maxLength={6}
+                    placeholder="000000"
+                    autoComplete="one-time-code"
+                    autoFocus
+                  />
+                </div>
+                {error && <p className="auth-error">{error}</p>}
+                <button type="submit" className="auth-submit" disabled={submitting}>
+                  {submitting ? 'Please wait...' : 'Verify'}
+                </button>
+                <button type="button" className="auth-link" onClick={handleMfaBack}>
+                  Back to Log In
+                </button>
+              </form>
+            </div>
+          </div>
+        </section>
       </div>
     )
   }
 
   return (
-    <div className="auth-container">
-      <div className="auth-card">
-        <h1 className="auth-title">CodePulse</h1>
+    <div className="login-page">
+      {/* ── Hero ── */}
+      <section className="auth-hero" ref={heroRef}>
+        <div className="auth-hero-inner">
 
-        {mode !== 'forgot' && (
-          <div className="auth-toggle">
-            <button
-              className={mode === 'login' ? 'active' : ''}
-              onClick={() => switchMode('login')}
-            >
-              Log In
-            </button>
-            <button
-              className={mode === 'signup' ? 'active' : ''}
-              onClick={() => switchMode('signup')}
-            >
-              Sign Up
-            </button>
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="auth-form" aria-label="authentication">
-          {mode === 'signup' && (
-            <div className="form-group">
-              <label htmlFor="username">Username</label>
-              <input
-                id="username"
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required
-                autoComplete="username"
-                placeholder="your_username"
-                maxLength={20}
-                pattern="^[a-zA-Z0-9_-]{3,20}$"
-                title="3–20 characters: letters, numbers, underscores, hyphens"
-              />
-            </div>
-          )}
-
-          <div className="form-group">
-            <label htmlFor="email">Email</label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              autoComplete="email"
-              placeholder="you@example.com"
-            />
+          <div className="auth-logo-row">
+            <img src="/CodePulseSlow.gif" alt="CodePulse logo" className="auth-logo-gif" />
+            <span className="auth-logo-wordmark">odePulse</span>
           </div>
 
-          {mode !== 'forgot' && (
-            <div className="form-group">
-              <label htmlFor="password">Password</label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-                minLength={8}
-                maxLength={128}
-                placeholder="••••••••"
-              />
-            </div>
-          )}
+          <p className="auth-subtitle">
+            A Hybrid Static Analysis and Machine Learning Pipeline
+            for Automated Python Bug Detection
+          </p>
 
-          {mode === 'login' && loginFailed && (
-            <button
-              type="button"
-              className="auth-link"
-              onClick={() => switchMode('forgot')}
-            >
-              Forgot password?
-            </button>
-          )}
+          <div className="auth-card">
+            {mode !== 'forgot' && (
+              <div className="auth-toggle">
+                <div className={`auth-toggle-slider${mode === 'signup' ? ' right' : ''}`} />
+                <button
+                  className={mode === 'login' ? 'active' : ''}
+                  onClick={() => switchMode('login')}
+                >
+                  Log In
+                </button>
+                <button
+                  className={mode === 'signup' ? 'active' : ''}
+                  onClick={() => switchMode('signup')}
+                >
+                  Sign Up
+                </button>
+              </div>
+            )}
 
-          {error && <p className="auth-error">{error}</p>}
-          {success && <p className="auth-success">{success}</p>}
+            <form onSubmit={handleSubmit} className="auth-form" aria-label="authentication">
+              {mode === 'signup' && (
+                <div className="form-group">
+                  <label htmlFor="username">Username</label>
+                  <input
+                    id="username"
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    required
+                    autoComplete="username"
+                    placeholder="your_username"
+                    maxLength={20}
+                    pattern="^[a-zA-Z0-9_-]{3,20}$"
+                    title="3–20 characters: letters, numbers, underscores, hyphens"
+                  />
+                </div>
+              )}
 
-          <button type="submit" className="auth-submit" disabled={submitting}>
-            {submitting
-              ? 'Please wait...'
-              : mode === 'login'
-              ? 'Log In'
-              : mode === 'signup'
-              ? 'Create Account'
-              : 'Send Reset Email'}
+              <div className="form-group">
+                <label htmlFor="email">Email</label>
+                <input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  autoComplete="email"
+                  placeholder="user@example.com"
+                />
+              </div>
+
+              {mode !== 'forgot' && (
+                <div className="form-group">
+                  <label htmlFor="password">Password</label>
+                  <div className="password-wrapper">
+                    <input
+                      id="password"
+                      type={showPassword ? 'text' : 'password'}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+                      minLength={8}
+                      maxLength={128}
+                      placeholder="••••••••"
+                    />
+                    <button
+                      type="button"
+                      className="password-toggle"
+                      onClick={() => setShowPassword((v) => !v)}
+                      aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    >
+                      {showPassword ? (
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+                          <circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/>
+                          <line x1="1" y1="1" x2="23" y2="23"/>
+                        </svg>
+                      ) : (
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                          <circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/>
+                        </svg>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {mode === 'login' && loginFailed && (
+                <button
+                  type="button"
+                  className="auth-link"
+                  onClick={() => switchMode('forgot')}
+                >
+                  Forgot password?
+                </button>
+              )}
+
+              {error && <p className="auth-error">{error}</p>}
+              {success && <p className="auth-success">{success}</p>}
+
+              <button type="submit" className="auth-submit" disabled={submitting}>
+                {submitting
+                  ? 'Please wait...'
+                  : mode === 'login'
+                  ? 'Log In'
+                  : mode === 'signup'
+                  ? 'Create Account'
+                  : 'Send Reset Email'}
+              </button>
+
+              {mode === 'forgot' && (
+                <button
+                  type="button"
+                  className="auth-link"
+                  onClick={() => switchMode('login')}
+                >
+                  Back to Log In
+                </button>
+              )}
+            </form>
+          </div>
+
+          <div className="auth-scroll-divider" />
+          <button className="auth-scroll-cue" onClick={scrollToLearnMore}>
+            Learn more
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
           </button>
+        </div>
+      </section>
 
-          {mode === 'forgot' && (
-            <button
-              type="button"
-              className="auth-link"
-              onClick={() => switchMode('login')}
-            >
-              Back to Log In
-            </button>
-          )}
-        </form>
-      </div>
+      {/* ── Learn more ── */}
+      <section className="learn-more-section" ref={learnMoreRef}>
+        <h2 className="learn-section-title">How CodePulse Works</h2>
+        <p className="learn-section-intro">
+          Software defects remain a leading cause of increased development cost and delayed deployment,
+          especially as AI-generated code introduces subtle logical errors that traditional IDEs cannot catch.
+          CodePulse addresses this with a three-stage hybrid pipeline that combines static analysis,
+          large language model reasoning, and supervised learning into a single automated tool.
+        </p>
+        <div className="learn-grid" ref={learnGridRef}>
+          <div className="learn-card">
+            <span className="learn-card-icon">🌳</span>
+            <h3>AST-Based Static Analysis</h3>
+            <p>
+              The first stage parses Python source code into an abstract syntax tree (AST) and applies
+              rule-based checks to enforce PEP 8 compliance and verify structural correctness, catching
+              formatting violations, undefined references, and other surface-level defects before any
+              model is invoked.
+            </p>
+          </div>
+          <div className="learn-card">
+            <span className="learn-card-icon">🧠</span>
+            <h3>GPT-4o-mini Semantic Prediction</h3>
+            <p>
+              A fine-tuned GPT-4o-mini model performs semantic bug prediction on the parsed code,
+              identifying latent defects and logical errors that static rules cannot detect, including
+              the subtle issues common in AI-assisted code generation that existing IDEs routinely miss.
+            </p>
+          </div>
+          <div className="learn-card">
+            <span className="learn-card-icon">🛡️</span>
+            <h3>CodeBERT Validation Layer</h3>
+            <p>
+              A fine-tuned CodeBERT model, trained on the Defectors dataset of real-world vulnerability
+              patterns, acts as a validation layer, filtering unreliable GPT predictions and providing
+              localized confirmation of predicted defects to reduce false positives.
+            </p>
+          </div>
+          <div className="learn-card">
+            <span className="learn-card-icon">📊</span>
+            <h3>Severity-Weighted Quality Score</h3>
+            <p>
+              All three stages feed into a severity-weighted score from 0 to 100 reflecting overall code
+              quality. Results are surfaced instantly in the dashboard alongside a detailed bug report,
+              built on FastAPI, React, Supabase, and HuggingFace Transformers.
+            </p>
+          </div>
+          <div className="learn-card">
+            <span className="learn-card-icon">⚠️</span>
+            <h3>Why It Matters</h3>
+            <p>
+              Traditional IDEs detect syntax errors but miss semantic and logical bugs until runtime.
+              As AI-assisted code generation grows, so does the risk of subtle defects passing unnoticed
+              through standard tooling. CodePulse fills this gap with pre-execution defect analysis.
+            </p>
+          </div>
+          <div className="learn-card">
+            <span className="learn-card-icon">🔧</span>
+            <h3>Built With</h3>
+            <p>
+              The system is implemented using FastAPI for the analysis backend, React for the web
+              interface, Supabase for authentication and storage, and HuggingFace Transformers for
+              model deployment, all connected through a single submission pipeline.
+            </p>
+          </div>
+        </div>
+        <p className="learn-section-credit">
+          Research by Aiden Cary, Keller Willhite &amp; Zach Atchley, Faculty Mentor: Dr. Md Jobair Hossain Faruk
+        </p>
+        <button className="learn-show-less" onClick={scrollToHero}>
+          Show less ↑
+        </button>
+        <p className="learn-copyright">
+          &copy; {new Date().getFullYear()} CodePulseApp. All rights reserved.
+        </p>
+      </section>
     </div>
   )
 }

@@ -36,22 +36,22 @@ frontend/
     │   └── AuthContext.js      # Auth state, useAuth hook, signIn/signUp/signOut, refreshSession
     ├── components/
     │   ├── ProtectedRoute.js   # Redirects unauthenticated users to /login
-    │   ├── CodeEditor.js       # Monaco editor + Copy button + Run Analysis button; highlights hovered finding line; gear icon settings panel (font size, tab size, word wrap, ligatures, whitespace, bracket colors, smooth scroll, folding, line highlight, Ctrl+scroll zoom) persisted to localStorage
-    │   ├── ResultsPanel.js     # Score circle, static findings and AI bug cards; SortControls with Severity|Line pills + ↑/↓ direction toggle; combined two-key sort; per-item ignore/dismiss
-    │   ├── BugCard.js          # Collapsible AI bug prediction card with ignore and hover-highlight support
+    │   ├── CodeEditor.js       # Monaco editor + Copy button + Run Analysis button; severity-colored line highlights (togglable); gear icon settings panel (font size, tab size, word wrap, ligatures, whitespace, bracket colors, smooth scroll, folding, line highlight, Ctrl+scroll zoom, severity highlights) persisted to localStorage
+    │   ├── ResultsPanel.js     # SVG score ring, resizable panel (220–600px), static findings and AI bug cards with severity borders + hover effects + entrance animations; SortControls; per-item ignore/dismiss; header icon + dynamic issue count
+    │   ├── BugCard.js          # Collapsible AI bug prediction card with severity border accent, ignore and hover-highlight support
     │   ├── ProfileDropdown.js  # User avatar and dropdown menu (links to /account)
     │   ├── SubmissionSidebar.js # Collapsible sidebar with rename/delete/pin via kebab menu; skips API call if name unchanged
     │   ├── TwoFactorSection.js # TOTP 2FA enrollment/unenrollment — QR code display, verify, disable
     │   └── Toast.js            # Toast notification system (ToastProvider + useToast)
     ├── pages/
-    │   ├── LoginPage.js        # Log In / Sign Up / Forgot Password form (toggled); MFA step-up (TOTP)
+    │   ├── LoginPage.js        # Log In / Sign Up sliding toggle / Forgot Password; MFA step-up (TOTP); purple focus glow; learn-more cards with hover lift + scroll-triggered entrance + light mode support; chevron scroll cue
     │   ├── DashboardPage.js    # Dashboard shell — editor + results + submission naming
-    │   ├── AccountPage.js      # Account settings — profile, avatar, password, delete
+    │   ├── AccountPage.js      # Account settings — profile, avatar (96px), password, delete; section title icons, lock icons on read-only fields, save confirmation flash
     │   └── ResetPasswordPage.js # Password reset form — validates token, updates password
     └── styles/
-        ├── auth.css            # Login/sign-up form styles
-        ├── dashboard.css       # Dashboard + toast + submission naming styles
-        └── account.css         # Account settings page styles
+        ├── auth.css            # Login/sign-up form styles — sliding toggle, focus glow, learn-more hover/entrance/light-mode, chevron scroll cue
+        ├── dashboard.css       # Dashboard + toast + submission naming + resizable results panel + SVG score ring + severity borders/highlights + entrance animations
+        └── account.css         # Account settings page — section icons, lock icon, larger avatar, save confirmation flash
 ```
 
 ---
@@ -127,15 +127,15 @@ npm test -- --watchAll=false   # Run once and exit (used in CI)
 |-----------|----------|
 | `components/__tests__/ProtectedRoute.test.js` | Loading state, unauthenticated redirect, authenticated render |
 | `context/__tests__/AuthContext.test.js` | Auth lifecycle, signIn / signUp / signOut calls |
-| `pages/__tests__/LoginPage.test.js` | Form toggle, submission handlers, error display (5 tests); forgot password flow (7 tests); MFA step-up (5 tests) — 17 total |
+| `pages/__tests__/LoginPage.test.js` | Form toggle, submission handlers, error display, show/hide password, learn-more section (11 tests); forgot password flow (7 tests); MFA step-up (5 tests) — 23 total |
 | `components/__tests__/TwoFactorSection.test.js` | No-factor state, enrolled state, enroll + QR display, secret display, verify, verify error, success state, disable, re-enable, disable error (11 tests) |
 | `pages/__tests__/ResetPasswordPage.test.js` | Loading state, PASSWORD_RECOVERY trigger, validation, updateUser call, toast + navigation, error on expired link, submit disabled while pending (8 tests) |
 | `components/__tests__/CodeEditor.test.js` | Renders editor, button click fires onRun, disabled during loading, copy button disabled when empty; gear button ARIA, panel open/close, outside-click dismiss, setting change, toggle flip, localStorage persist, localStorage init (11 tests) |
-| `components/__tests__/ResultsPanel.test.js` | Idle, loading, error, score, findings, bugs (expand/collapse), empty states, ignore/dismiss, hover line, severity sort, line sort, tiebreaker, null-line sort (29 tests) |
+| `components/__tests__/ResultsPanel.test.js` | Idle, loading, error, score, findings, bugs (expand/collapse), empty states, ignore/dismiss, severity hover line highlight, severity sort, line sort, tiebreaker, null-line sort (28 tests) |
 | `components/__tests__/SubmissionSidebar.test.js` | Render names, fallback, search, rename no-op, rename, delete, pin/star, collapse (12 tests) |
 | `pages/__tests__/AccountPage.test.js` | Profile load/display, username validation, password change, delete modal (10 tests) |
 
-113 tests, all passing.
+120 tests, all passing.
 
 ---
 
@@ -177,11 +177,19 @@ A pull request cannot be merged if any step fails.
 | Code editor / submission flow | Done |
 | Results display (Severity/Line field selector pills + ↑/↓ direction toggle; two-key combined sort; resets on submission change) | Done |
 | Copy-to-clipboard button in editor toolbar | Done |
-| Hover finding/bug to highlight corresponding editor line | Done |
+| Hover finding/bug to highlight corresponding editor line (severity-colored, togglable) | Done |
 | Ignore/dismiss individual findings and bugs | Done |
 | Account settings page (profile, avatar, password, delete) | Done |
 | Submission sidebar (rename, delete, pin/star via kebab menu) | Done |
 | Submission naming (name input, GPT auto-generation) | Done |
 | Toast notification system | Done |
 | Session refresh after profile updates | Done |
-| Dark/light theme toggle | Done |
+| Dark/light theme toggle (including login learn-more section) | Done |
+| Resizable results panel (drag handle, 220–600px) | Done |
+| SVG score ring (arc fills proportionally, severity-colored text) | Done |
+| Severity left-border accents on findings and bug cards | Done |
+| Hover feedback on findings and bug cards | Done |
+| Staggered entrance animations on results | Done |
+| Results panel header icon + dynamic issue count | Done |
+| Login page — sliding toggle, focus glow, card hover lift, scroll entrance animations, chevron scroll cue | Done |
+| Account page — section title icons, lock icons on read-only fields, larger avatar, save confirmation flash | Done |

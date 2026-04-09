@@ -3,6 +3,16 @@ import { MemoryRouter } from 'react-router-dom'
 import LoginPage from '../LoginPage'
 import { useAuth } from '../../context/AuthContext'
 
+// jsdom does not provide IntersectionObserver
+beforeAll(() => {
+  global.IntersectionObserver = class {
+    constructor() {}
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  }
+})
+
 jest.mock('../../context/AuthContext', () => ({
   useAuth: jest.fn(),
 }))
@@ -51,6 +61,10 @@ const renderLoginPage = () =>
   render(<MemoryRouter><LoginPage /></MemoryRouter>)
 
 // Helper: submit the form
+// NOTE: uses exact label 'Password' (not /password/i) to avoid matching the
+// "Show password" aria-label on the visibility toggle button.
+const getPasswordInput = () => screen.getByLabelText('Password')
+
 const submitForm = () =>
   fireEvent.submit(screen.getByRole('form', { name: /authentication/i }))
 
@@ -59,7 +73,7 @@ describe('LoginPage', () => {
   it('renders Log In form by default without username field', () => {
     renderLoginPage()
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/password/i)).toBeInTheDocument()
+    expect(getPasswordInput()).toBeInTheDocument()
     expect(screen.queryByLabelText(/username/i)).not.toBeInTheDocument()
   })
 
@@ -76,7 +90,7 @@ describe('LoginPage', () => {
     mockSignIn.mockResolvedValue({ error: null })
     renderLoginPage()
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'user@example.com' } })
-    fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'password123' } })
+    fireEvent.change(getPasswordInput(), { target: { value: 'password123' } })
     submitForm()
     await waitFor(() =>
       expect(mockSignIn).toHaveBeenCalledWith('user@example.com', 'password123')
@@ -90,7 +104,7 @@ describe('LoginPage', () => {
     fireEvent.click(screen.getByRole('button', { name: /sign up/i }))
     fireEvent.change(screen.getByLabelText(/username/i), { target: { value: 'testuser' } })
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'user@example.com' } })
-    fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'password123' } })
+    fireEvent.change(getPasswordInput(), { target: { value: 'password123' } })
     submitForm()
     await waitFor(() =>
       expect(mockSignUp).toHaveBeenCalledWith('user@example.com', 'password123', 'testuser')
@@ -102,9 +116,55 @@ describe('LoginPage', () => {
     mockSignIn.mockResolvedValue({ error: { message: 'Invalid login credentials' } })
     renderLoginPage()
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'user@example.com' } })
-    fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'wrongpassword' } })
+    fireEvent.change(getPasswordInput(), { target: { value: 'wrongpassword' } })
     submitForm()
     expect(await screen.findByText('Invalid login credentials')).toBeInTheDocument()
+  })
+
+  // TC-AUTH-040
+  it('password field starts as type="password" (masked)', () => {
+    renderLoginPage()
+    expect(getPasswordInput()).toHaveAttribute('type', 'password')
+  })
+
+  // TC-AUTH-041
+  it('toggles password field to type="text" when show-password button is clicked', () => {
+    renderLoginPage()
+    const toggle = screen.getByRole('button', { name: /show password/i })
+    fireEvent.click(toggle)
+    expect(getPasswordInput()).toHaveAttribute('type', 'text')
+  })
+
+  // TC-AUTH-042
+  it('toggles password field back to type="password" on second click', () => {
+    renderLoginPage()
+    const toggle = screen.getByRole('button', { name: /show password/i })
+    fireEvent.click(toggle)
+    fireEvent.click(screen.getByRole('button', { name: /hide password/i }))
+    expect(getPasswordInput()).toHaveAttribute('type', 'password')
+  })
+
+  // TC-AUTH-043
+  it('renders the "Learn more" scroll button', () => {
+    renderLoginPage()
+    expect(screen.getByRole('button', { name: /learn more/i })).toBeInTheDocument()
+  })
+
+  // TC-AUTH-044
+  it('renders the learn-more section with all pipeline stage headings', () => {
+    renderLoginPage()
+    expect(screen.getByText(/AST-Based Static Analysis/i)).toBeInTheDocument()
+    expect(screen.getByText(/GPT-4o-mini Semantic Prediction/i)).toBeInTheDocument()
+    expect(screen.getByText(/CodeBERT Validation Layer/i)).toBeInTheDocument()
+    expect(screen.getByText(/Severity-Weighted Quality Score/i)).toBeInTheDocument()
+    expect(screen.getByText(/Why It Matters/i)).toBeInTheDocument()
+    expect(screen.getByText(/Built With/i)).toBeInTheDocument()
+  })
+
+  // TC-AUTH-045
+  it('renders the "Show less" button in the learn-more section', () => {
+    renderLoginPage()
+    expect(screen.getByRole('button', { name: /show less/i })).toBeInTheDocument()
   })
 })
 
@@ -113,7 +173,7 @@ describe('LoginPage — forgot password', () => {
   async function triggerFailedLogin() {
     mockSignIn.mockResolvedValue({ error: { message: 'Invalid login credentials' } })
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'user@example.com' } })
-    fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'wrongpassword' } })
+    fireEvent.change(getPasswordInput(), { target: { value: 'wrongpassword' } })
     submitForm()
     await screen.findByText('Invalid login credentials')
   }
@@ -137,7 +197,7 @@ describe('LoginPage — forgot password', () => {
     await triggerFailedLogin()
     fireEvent.click(screen.getByRole('button', { name: /forgot password/i }))
     expect(screen.getByRole('button', { name: /send reset email/i })).toBeInTheDocument()
-    expect(screen.queryByLabelText(/^password$/i)).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('Password')).not.toBeInTheDocument()
   })
 
   // TC-AUTH-031
@@ -186,7 +246,7 @@ describe('LoginPage — forgot password', () => {
     await triggerFailedLogin()
     fireEvent.click(screen.getByRole('button', { name: /forgot password/i }))
     fireEvent.click(screen.getByRole('button', { name: /back to log in/i }))
-    expect(screen.getByLabelText(/password/i)).toBeInTheDocument()
+    expect(getPasswordInput()).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /send reset email/i })).not.toBeInTheDocument()
   })
 })
@@ -201,7 +261,7 @@ describe('LoginPage — MFA step-up', () => {
     mockListFactors.mockResolvedValue({ data: { totp: [mfaFactor] } })
     renderLoginPage()
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'user@example.com' } })
-    fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'password123' } })
+    fireEvent.change(getPasswordInput(), { target: { value: 'password123' } })
     submitForm()
     // Wait for MFA form
     await screen.findByRole('form', { name: /two-factor authentication/i })
@@ -220,7 +280,7 @@ describe('LoginPage — MFA step-up', () => {
     // Default mocks already set nextLevel: 'aal1' — no MFA step-up
     renderLoginPage()
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'user@example.com' } })
-    fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'password123' } })
+    fireEvent.change(getPasswordInput(), { target: { value: 'password123' } })
     submitForm()
     // MFA form should never appear
     await waitFor(() => expect(mockGetAAL).toHaveBeenCalled())
