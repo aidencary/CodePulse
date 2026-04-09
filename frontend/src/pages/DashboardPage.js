@@ -44,7 +44,7 @@ function DashboardPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [activeId, setActiveId] = useState(null)
-  const [hoveredLine, setHoveredLine] = useState(null)
+  const [hoveredLine, setHoveredLine] = useState(null) // null or { line, severity }
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [theme, setTheme] = useState(
     () => localStorage.getItem('cp-theme') || 'dark'

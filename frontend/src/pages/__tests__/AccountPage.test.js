@@ -71,7 +71,18 @@ describe('AccountPage', () => {
     expect(
       screen.getByRole('heading', { name: 'Change Password' })
     ).toBeInTheDocument()
+    expect(screen.getByText('Report a Bug')).toBeInTheDocument()
     expect(screen.getByText('Danger Zone')).toBeInTheDocument()
+  })
+
+  // TC-ACCT-036
+  it('renders the report bug mailto link with correct address', async () => {
+    renderAccountPage()
+    await waitFor(() => {
+      expect(screen.getByText('Report a Bug')).toBeInTheDocument()
+    })
+    const link = screen.getByRole('link', { name: /codepulsepp@gmail\.com/i })
+    expect(link).toHaveAttribute('href', expect.stringContaining('codepulsepp@gmail.com'))
   })
 
   // TC-ACCT-027
