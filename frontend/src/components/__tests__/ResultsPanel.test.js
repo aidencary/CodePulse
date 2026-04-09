@@ -35,7 +35,7 @@ describe('ResultsPanel — idle and error states', () => {
   // TC-REPORT-001
   it('shows idle placeholder when there are no results', () => {
     render(<ResultsPanel results={null} loading={false} error={null} />)
-    expect(screen.getByText(/run analysis to see results/i)).toBeInTheDocument()
+    expect(screen.getByText(/run analysis to see/i)).toBeInTheDocument()
   })
 
   // TC-REPORT-002

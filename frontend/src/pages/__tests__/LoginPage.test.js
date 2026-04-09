@@ -3,6 +3,16 @@ import { MemoryRouter } from 'react-router-dom'
 import LoginPage from '../LoginPage'
 import { useAuth } from '../../context/AuthContext'
 
+// jsdom does not provide IntersectionObserver
+beforeAll(() => {
+  global.IntersectionObserver = class {
+    constructor() {}
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  }
+})
+
 jest.mock('../../context/AuthContext', () => ({
   useAuth: jest.fn(),
 }))
