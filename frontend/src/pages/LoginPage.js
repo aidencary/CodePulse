@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import supabase from '../services/supabaseClient'
@@ -22,6 +22,22 @@ function LoginPage() {
   const navigate = useNavigate()
   const heroRef = useRef(null)
   const learnMoreRef = useRef(null)
+  const learnGridRef = useRef(null)
+
+  useEffect(() => {
+    const grid = learnGridRef.current
+    if (!grid) return
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) entry.target.classList.add('visible')
+        })
+      },
+      { threshold: 0.15 }
+    )
+    grid.querySelectorAll('.learn-card').forEach((card) => observer.observe(card))
+    return () => observer.disconnect()
+  }, [])
 
   const scrollToLearnMore = () =>
     learnMoreRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -190,6 +206,7 @@ function LoginPage() {
           <div className="auth-card">
             {mode !== 'forgot' && (
               <div className="auth-toggle">
+                <div className={`auth-toggle-slider${mode === 'signup' ? ' right' : ''}`} />
                 <button
                   className={mode === 'login' ? 'active' : ''}
                   onClick={() => switchMode('login')}
@@ -310,8 +327,12 @@ function LoginPage() {
             </form>
           </div>
 
+          <div className="auth-scroll-divider" />
           <button className="auth-scroll-cue" onClick={scrollToLearnMore}>
-            Learn more ↓
+            Learn more
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
           </button>
         </div>
       </section>
@@ -325,7 +346,7 @@ function LoginPage() {
           CodePulse addresses this with a three-stage hybrid pipeline that combines static analysis,
           large language model reasoning, and supervised learning into a single automated tool.
         </p>
-        <div className="learn-grid">
+        <div className="learn-grid" ref={learnGridRef}>
           <div className="learn-card">
             <span className="learn-card-icon">🌳</span>
             <h3>AST-Based Static Analysis</h3>
