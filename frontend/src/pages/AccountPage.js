@@ -83,7 +83,6 @@ function AccountPage() {
   }, [token])
 
   // ── Profile handlers ──
-  // FR-ACCT-001
   const handleProfileSave = async (e) => {
     e.preventDefault()
     setProfileMsg(null)
@@ -114,7 +113,6 @@ function AccountPage() {
   }
 
   // ── Avatar handlers ──
-  // FR-ACCT-002
   const handleFileSelect = (e) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -149,7 +147,6 @@ function AccountPage() {
   }
 
   // ── Password handlers ──
-  // FR-ACCT-003
   const handlePasswordChange = async (e) => {
     e.preventDefault()
     setPwMsg(null)
@@ -184,7 +181,6 @@ function AccountPage() {
   }
 
   // ── Delete handlers ──
-  // FR-ACCT-004
   const handleDelete = async () => {
     setDeleteErr(null)
     setDeleting(true)
@@ -206,224 +202,242 @@ function AccountPage() {
     return <div className="account-loading">Loading account...</div>
   }
 
+  // ── Purple gradient background style ──
+  const backgroundStyle = {
+    minHeight: '100vh',
+    background: 'linear-gradient(135deg, #6A00E6, #4B0099)', // soft purple gradient
+    padding: '2rem',
+    boxSizing: 'border-box',
+  }
+
+  const contentWrapperStyle = {
+    maxWidth: '1000px',
+    margin: '0 auto',
+    backgroundColor: '#1E0B3B', // slightly darker content background
+    borderRadius: '12px',
+    padding: '2rem',
+    boxShadow: '0 0 20px rgba(0,0,0,0.5)',
+  }
+
   return (
-    <div className="account-page">
-      {/* ── Navbar ── */}
-      <nav className="account-nav">
-        <div className="account-nav-left">
-          <button className="back-btn" onClick={() => navigate('/dashboard')}>
-            <BackArrow /> Dashboard
-          </button>
-        </div>
-        <span className="account-nav-title">Account Settings</span>
-        <div style={{ width: 100 }} />
-      </nav>
-
-      <div className="account-content">
-        {/* ── Profile Section ── */}
-        <section className="account-section">
-          <h2 className="account-section-title">Profile</h2>
-          {profileMsg && <div className="account-success">{profileMsg}</div>}
-          {profileErr && <div className="account-error">{profileErr}</div>}
-          <form onSubmit={handleProfileSave}>
-            <div className="account-field">
-              <label className="account-label" htmlFor="account-email">Email</label>
-              <input
-                id="account-email"
-                className="account-input account-input--readonly"
-                type="email"
-                value={profile?.email || ''}
-                readOnly
-              />
-            </div>
-            <div className="account-field">
-              <label className="account-label" htmlFor="account-username">Username</label>
-              <input
-                id="account-username"
-                className="account-input"
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                maxLength={20}
-              />
-            </div>
-            <div className="account-field">
-              <label className="account-label" htmlFor="account-role">Role</label>
-              <input
-                id="account-role"
-                className="account-input account-input--readonly"
-                type="text"
-                value={profile?.role || 'developer'}
-                readOnly
-              />
-            </div>
-            <button
-              type="submit"
-              className="account-btn account-btn--primary"
-              disabled={profileSaving || username === profile?.username}
-            >
-              {profileSaving ? 'Saving...' : 'Save Changes'}
+    <div style={backgroundStyle}>
+      <div style={contentWrapperStyle} className="account-page">
+        {/* ── Navbar ── */}
+        <nav className="account-nav">
+          <div className="account-nav-left">
+            <button className="back-btn" onClick={() => navigate('/dashboard')}>
+              <BackArrow /> Dashboard
             </button>
-          </form>
-        </section>
+          </div>
+          <span className="account-nav-title">Account Settings</span>
+          <div style={{ width: 100 }} />
+        </nav>
 
-        {/* ── Avatar Section ── */}
-        <section className="account-section">
-          <h2 className="account-section-title">Profile Picture</h2>
-          {avatarMsg && <div className="account-success">{avatarMsg}</div>}
-          {avatarErr && <div className="account-error">{avatarErr}</div>}
-          <div className="avatar-section">
-            <div
-              className="avatar-preview"
-              style={!displayAvatar ? { background: avatarColor } : undefined}
-            >
-              {displayAvatar ? (
-                <img src={displayAvatar} alt="avatar" />
-              ) : (
-                <span>{initial}</span>
-              )}
-            </div>
-            <div className="avatar-actions">
-              <input
-                ref={fileInputRef}
-                type="file"
-                className="avatar-file-input"
-                accept="image/png,image/jpeg,image/webp"
-                onChange={handleFileSelect}
-              />
+        <div className="account-content">
+          {/* ── Profile Section ── */}
+          <section className="account-section">
+            <h2 className="account-section-title">Profile</h2>
+            {profileMsg && <div className="account-success">{profileMsg}</div>}
+            {profileErr && <div className="account-error">{profileErr}</div>}
+            <form onSubmit={handleProfileSave}>
+              <div className="account-field">
+                <label className="account-label" htmlFor="account-email">Email</label>
+                <input
+                  id="account-email"
+                  className="account-input account-input--readonly"
+                  type="email"
+                  value={profile?.email || ''}
+                  readOnly
+                />
+              </div>
+              <div className="account-field">
+                <label className="account-label" htmlFor="account-username">Username</label>
+                <input
+                  id="account-username"
+                  className="account-input"
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  maxLength={20}
+                />
+              </div>
+              <div className="account-field">
+                <label className="account-label" htmlFor="account-role">Role</label>
+                <input
+                  id="account-role"
+                  className="account-input account-input--readonly"
+                  type="text"
+                  value={profile?.role || 'developer'}
+                  readOnly
+                />
+              </div>
               <button
-                className="account-btn account-btn--outline"
-                onClick={() => fileInputRef.current?.click()}
-                type="button"
+                type="submit"
+                className="account-btn account-btn--primary"
+                disabled={profileSaving || username === profile?.username}
               >
-                Choose Image
+                {profileSaving ? 'Saving...' : 'Save Changes'}
               </button>
-              {avatarFile && (
+            </form>
+          </section>
+
+          {/* ── Avatar Section ── */}
+          <section className="account-section">
+            <h2 className="account-section-title">Profile Picture</h2>
+            {avatarMsg && <div className="account-success">{avatarMsg}</div>}
+            {avatarErr && <div className="account-error">{avatarErr}</div>}
+            <div className="avatar-section">
+              <div
+                className="avatar-preview"
+                style={!displayAvatar ? { background: avatarColor } : undefined}
+              >
+                {displayAvatar ? (
+                  <img src={displayAvatar} alt="avatar" />
+                ) : (
+                  <span>{initial}</span>
+                )}
+              </div>
+              <div className="avatar-actions">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  className="avatar-file-input"
+                  accept="image/png,image/jpeg,image/webp"
+                  onChange={handleFileSelect}
+                />
                 <button
-                  className="account-btn account-btn--primary"
-                  onClick={handleAvatarUpload}
-                  disabled={avatarSaving}
+                  className="account-btn account-btn--outline"
+                  onClick={() => fileInputRef.current?.click()}
                   type="button"
                 >
-                  {avatarSaving ? 'Uploading...' : 'Upload'}
+                  Choose Image
                 </button>
-              )}
-              <span className="avatar-hint">PNG, JPEG, or WebP. Max 2 MB.</span>
+                {avatarFile && (
+                  <button
+                    className="account-btn account-btn--primary"
+                    onClick={handleAvatarUpload}
+                    disabled={avatarSaving}
+                    type="button"
+                  >
+                    {avatarSaving ? 'Uploading...' : 'Upload'}
+                  </button>
+                )}
+                <span className="avatar-hint">PNG, JPEG, or WebP. Max 2 MB.</span>
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
 
-        {/* ── Password Section ── */}
-        <section className="account-section">
-          <h2 className="account-section-title">Change Password</h2>
-          {pwMsg && <div className="account-success">{pwMsg}</div>}
-          {pwErr && <div className="account-error">{pwErr}</div>}
-          <form onSubmit={handlePasswordChange}>
-            <div className="account-field">
-              <label className="account-label" htmlFor="current-password">Current Password</label>
-              <input
-                id="current-password"
-                className="account-input"
-                type="password"
-                value={currentPw}
-                onChange={(e) => setCurrentPw(e.target.value)}
-                autoComplete="current-password"
-              />
-            </div>
-            <div className="account-field">
-              <label className="account-label" htmlFor="new-password">New Password</label>
-              <input
-                id="new-password"
-                className="account-input"
-                type="password"
-                value={newPw}
-                onChange={(e) => setNewPw(e.target.value)}
-                placeholder="8–128 characters"
-                autoComplete="new-password"
-              />
-            </div>
-            <div className="account-field">
-              <label className="account-label" htmlFor="confirm-password">Confirm New Password</label>
-              <input
-                id="confirm-password"
-                className="account-input"
-                type="password"
-                value={confirmPw}
-                onChange={(e) => setConfirmPw(e.target.value)}
-                autoComplete="new-password"
-              />
-            </div>
-            <button
-              type="submit"
-              className="account-btn account-btn--primary"
-              disabled={pwSaving || !currentPw || !newPw || !confirmPw}
-            >
-              {pwSaving ? 'Changing...' : 'Change Password'}
-            </button>
-          </form>
-        </section>
+          {/* ── Password Section ── */}
+          <section className="account-section">
+            <h2 className="account-section-title">Change Password</h2>
+            {pwMsg && <div className="account-success">{pwMsg}</div>}
+            {pwErr && <div className="account-error">{pwErr}</div>}
+            <form onSubmit={handlePasswordChange}>
+              <div className="account-field">
+                <label className="account-label" htmlFor="current-password">Current Password</label>
+                <input
+                  id="current-password"
+                  className="account-input"
+                  type="password"
+                  value={currentPw}
+                  onChange={(e) => setCurrentPw(e.target.value)}
+                  autoComplete="current-password"
+                />
+              </div>
+              <div className="account-field">
+                <label className="account-label" htmlFor="new-password">New Password</label>
+                <input
+                  id="new-password"
+                  className="account-input"
+                  type="password"
+                  value={newPw}
+                  onChange={(e) => setNewPw(e.target.value)}
+                  placeholder="8–128 characters"
+                  autoComplete="new-password"
+                />
+              </div>
+              <div className="account-field">
+                <label className="account-label" htmlFor="confirm-password">Confirm New Password</label>
+                <input
+                  id="confirm-password"
+                  className="account-input"
+                  type="password"
+                  value={confirmPw}
+                  onChange={(e) => setConfirmPw(e.target.value)}
+                  autoComplete="new-password"
+                />
+              </div>
+              <button
+                type="submit"
+                className="account-btn account-btn--primary"
+                disabled={pwSaving || !currentPw || !newPw || !confirmPw}
+              >
+                {pwSaving ? 'Changing...' : 'Change Password'}
+              </button>
+            </form>
+          </section>
 
-        {/* ── Security Section ── */}
-        {/* FR-AUTH-003 FR-AUTH-004 FR-AUTH-005 */}
-        <TwoFactorSection />
+          {/* ── Security Section ── */}
+          <TwoFactorSection />
 
-        {/* ── Danger Zone ── */}
-        <section className="account-section danger-zone">
-          <h2 className="account-section-title">Danger Zone</h2>
-          <p className="danger-description">
-            Permanently delete your account and all associated data including submissions,
-            analysis reports, and findings. This action cannot be undone.
-          </p>
-          <button
-            className="account-btn account-btn--danger"
-            onClick={() => setShowDeleteModal(true)}
-            type="button"
-          >
-            Delete Account
-          </button>
-        </section>
-      </div>
-
-      {/* ── Delete Confirmation Modal ── */}
-      {showDeleteModal && (
-        <div className="modal-overlay" onClick={() => !deleting && setShowDeleteModal(false)}>
-          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
-            <h3 className="modal-title">Delete Account</h3>
-            <p className="modal-text">
-              This will permanently delete your account and all your data.
-              Type <strong>{profile?.username}</strong> to confirm.
+          {/* ── Danger Zone ── */}
+          <section className="account-section danger-zone">
+            <h2 className="account-section-title">Danger Zone</h2>
+            <p className="danger-description">
+              Permanently delete your account and all associated data including submissions,
+              analysis reports, and findings. This action cannot be undone.
             </p>
-            {deleteErr && <div className="account-error">{deleteErr}</div>}
-            <div className="account-field">
-              <input
-                className="account-input"
-                type="text"
-                value={deleteConfirm}
-                onChange={(e) => setDeleteConfirm(e.target.value)}
-                placeholder="Type your username"
-              />
-            </div>
-            <div className="modal-actions">
-              <button
-                className="account-btn account-btn--outline"
-                onClick={() => setShowDeleteModal(false)}
-                disabled={deleting}
-                type="button"
-              >
-                Cancel
-              </button>
-              <button
-                className="account-btn account-btn--danger"
-                onClick={handleDelete}
-                disabled={deleting || deleteConfirm !== profile?.username}
-                type="button"
-              >
-                {deleting ? 'Deleting...' : 'Delete My Account'}
-              </button>
+            <button
+              className="account-btn account-btn--danger"
+              onClick={() => setShowDeleteModal(true)}
+              type="button"
+            >
+              Delete Account
+            </button>
+          </section>
+        </div>
+
+        {/* ── Delete Confirmation Modal ── */}
+        {showDeleteModal && (
+          <div className="modal-overlay" onClick={() => !deleting && setShowDeleteModal(false)}>
+            <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+              <h3 className="modal-title">Delete Account</h3>
+              <p className="modal-text">
+                This will permanently delete your account and all your data.
+                Type <strong>{profile?.username}</strong> to confirm.
+              </p>
+              {deleteErr && <div className="account-error">{deleteErr}</div>}
+              <div className="account-field">
+                <input
+                  className="account-input"
+                  type="text"
+                  value={deleteConfirm}
+                  onChange={(e) => setDeleteConfirm(e.target.value)}
+                  placeholder="Type your username"
+                />
+              </div>
+              <div className="modal-actions">
+                <button
+                  className="account-btn account-btn--outline"
+                  onClick={() => setShowDeleteModal(false)}
+                  disabled={deleting}
+                  type="button"
+                >
+                  Cancel
+                </button>
+                <button
+                  className="account-btn account-btn--danger"
+                  onClick={handleDelete}
+                  disabled={deleting || deleteConfirm !== profile?.username}
+                  type="button"
+                >
+                  {deleting ? 'Deleting...' : 'Delete My Account'}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   )
 }
