@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react'
 import BugCard from './BugCard'
 
 /** Severity rank maps (higher number = more severe). */
@@ -48,6 +48,47 @@ function SortControls({ field, direction, onFieldChange, onDirectionToggle }) {
 // FR-REPORT-003
 // FR-REPORT-004
 // FR-REPORT-005
+/**
+ * SVG ring that fills like an arc based on score (0–100).
+ * Renders as a circular track with a colored arc portion.
+ */
+function ScoreRing({ score, level, size = 88, strokeWidth = 4.5 }) {
+  const radius = (size - strokeWidth) / 2
+  const circumference = 2 * Math.PI * radius
+  const filled = (score / 100) * circumference
+  const gap = circumference - filled
+
+  const colorMap = { good: '#4ade80', fair: '#facc15', poor: 'var(--danger)' }
+  const color = colorMap[level] || 'var(--border)'
+
+  return (
+    <svg width={size} height={size} className="score-ring">
+      {/* background track */}
+      <circle
+        cx={size / 2}
+        cy={size / 2}
+        r={radius}
+        fill="none"
+        stroke="var(--border)"
+        strokeWidth={strokeWidth}
+      />
+      {/* filled arc */}
+      <circle
+        cx={size / 2}
+        cy={size / 2}
+        r={radius}
+        fill="none"
+        stroke={color}
+        strokeWidth={strokeWidth}
+        strokeDasharray={`${filled} ${gap}`}
+        strokeDashoffset={circumference / 4}
+        strokeLinecap="round"
+        style={{ transition: 'stroke-dasharray 0.6s ease' }}
+      />
+    </svg>
+  )
+}
+
 function ResultsPanel({ results, loading, error, onHoverLine }) {
   const [findingSort, setFindingSort] = useState('desc')
   const [findingSortField, setFindingSortField] = useState('severity')
@@ -55,6 +96,27 @@ function ResultsPanel({ results, loading, error, onHoverLine }) {
   const [bugSortField, setBugSortField] = useState('severity')
   const [ignoredFindings, setIgnoredFindings] = useState(new Set())
   const [ignoredBugs, setIgnoredBugs] = useState(new Set())
+  const [panelWidth, setPanelWidth] = useState(320)
+  const isResizing = useRef(false)
+
+  const handleMouseDown = useCallback((e) => {
+    e.preventDefault()
+    isResizing.current = true
+    const startX = e.clientX
+    const startWidth = panelWidth
+
+    const onMouseMove = (ev) => {
+      const delta = startX - ev.clientX
+      setPanelWidth(Math.max(220, Math.min(600, startWidth + delta)))
+    }
+    const onMouseUp = () => {
+      isResizing.current = false
+      document.removeEventListener('mousemove', onMouseMove)
+      document.removeEventListener('mouseup', onMouseUp)
+    }
+    document.addEventListener('mousemove', onMouseMove)
+    document.addEventListener('mouseup', onMouseUp)
+  }, [panelWidth])
 
   // Reset sort and ignore state when a new submission is loaded
   useEffect(() => {
@@ -162,12 +224,15 @@ function ResultsPanel({ results, loading, error, onHoverLine }) {
         <>
           {/* Score */}
           <div className="score-section">
-            <div
-              className="score-circle"
-              data-level={scoreLevel(results.overall_score)}
-            >
-              <span className="score-value">{results.overall_score}</span>
-              <span className="score-label">/ 100</span>
+            <div className="score-ring-wrapper">
+              <ScoreRing
+                score={results.overall_score}
+                level={scoreLevel(results.overall_score)}
+              />
+              <div className="score-ring-text">
+                <span className={`score-value score-value--${scoreLevel(results.overall_score)}`}>{results.overall_score}</span>
+                <span className="score-label">/ 100</span>
+              </div>
             </div>
             <p className="score-summary">{results.summary}</p>
           </div>
@@ -193,9 +258,9 @@ function ResultsPanel({ results, loading, error, onHoverLine }) {
               sortedFindings.map((f) => (
                 <div
                   key={findingKey(f)}
-                  className="finding-item"
+                  className={`finding-item finding-sev-${f.severity.toLowerCase()}`}
                   data-testid={`finding-${f.issue_type}`}
-                  onMouseEnter={() => f.line_number != null && onHoverLine?.(f.line_number)}
+                  onMouseEnter={() => f.line_number != null && onHoverLine?.({ line: f.line_number, severity: f.severity.toLowerCase() })}
                   onMouseLeave={() => onHoverLine?.(null)}
                 >
                   <span
@@ -250,12 +315,13 @@ function ResultsPanel({ results, loading, error, onHoverLine }) {
       )
     }
     return (
-      <p className="results-placeholder">Run analysis to see results.</p>
+      <p className="results-placeholder">Add Python code code and run analysis to see results.</p>
     )
   }
 
   return (
-    <div className="results-panel">
+    <div className="results-panel" style={{ width: panelWidth }}>
+      <div className="resize-handle" onMouseDown={handleMouseDown} />
       <div className="panel-header">
         <h2 className="panel-title">Results</h2>
       </div>

@@ -367,6 +367,20 @@ function AccountPage() {
         {/* FR-AUTH-003 FR-AUTH-004 FR-AUTH-005 */}
         <TwoFactorSection />
 
+        {/* ── Report Bug ── */}
+        <section className="account-section">
+          <h2 className="account-section-title">Report a Bug</h2>
+          <p className="account-hint">
+            Encountered an issue with CodePulse? Send us a bug report and we'll look into it as soon as possible.
+          </p>
+          <a
+            href="mailto:codepulsepp@gmail.com?subject=CodePulse%20Bug%20Report"
+            className="account-btn account-btn--outline"
+          >
+            Email codepulsepp@gmail.com
+          </a>
+        </section>
+
         {/* ── Danger Zone ── */}
         <section className="account-section danger-zone">
           <h2 className="account-section-title">Danger Zone</h2>
