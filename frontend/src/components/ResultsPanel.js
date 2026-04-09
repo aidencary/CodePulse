@@ -315,15 +315,26 @@ function ResultsPanel({ results, loading, error, onHoverLine }) {
       )
     }
     return (
-      <p className="results-placeholder">Add Python code code and run analysis to see results.</p>
+      <p className="results-placeholder">Add Python code and run analysis to see the results!</p>
     )
   }
+
+  const totalIssues = results ? sortedFindings.length + sortedBugs.length : 0
 
   return (
     <div className="results-panel" style={{ width: panelWidth }}>
       <div className="resize-handle" onMouseDown={handleMouseDown} />
       <div className="panel-header">
-        <h2 className="panel-title">Results</h2>
+        <h2 className="panel-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="panel-title-icon">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+            <polyline points="14 2 14 8 20 8" />
+            <line x1="16" y1="13" x2="8" y2="13" />
+            <line x1="16" y1="17" x2="8" y2="17" />
+          </svg>
+          Results
+          {results && <span className="panel-title-count">{totalIssues} {totalIssues === 1 ? 'issue' : 'issues'}</span>}
+        </h2>
       </div>
       <div className="results-body">
         {renderContent()}

@@ -402,6 +402,55 @@ body {
   color: #a78bfa;
 }
 
+/* ─── Learn more — light mode ──────────────────────────────────── */
+:root[data-theme="light"] .learn-more-section {
+  background: #f0f0ee;
+}
+
+:root[data-theme="light"] .learn-more-section h2.learn-section-title {
+  color: #1a1a18;
+}
+
+:root[data-theme="light"] .learn-section-intro {
+  color: #555552;
+}
+
+:root[data-theme="light"] .learn-section-credit {
+  color: #888885;
+}
+
+:root[data-theme="light"] .learn-copyright {
+  color: #b0b0ae;
+}
+
+:root[data-theme="light"] .learn-card {
+  background: #ffffff;
+  border-color: #d0d0ce;
+}
+
+:root[data-theme="light"] .learn-card:hover {
+  border-color: rgba(124, 58, 237, 0.35);
+  box-shadow: 0 8px 24px rgba(124, 58, 237, 0.1);
+}
+
+:root[data-theme="light"] .learn-card h3 {
+  color: #7c3aed;
+}
+
+:root[data-theme="light"] .learn-card p {
+  color: #555552;
+}
+
+:root[data-theme="light"] .learn-show-less {
+  border-color: #c0c0be;
+  color: #737370;
+}
+
+:root[data-theme="light"] .learn-show-less:hover {
+  border-color: #7c3aed;
+  color: #7c3aed;
+}
+
 /* ─── Learn card scroll entrance ────────────────────────────────── */
 @keyframes learn-fade-in-up {
   from {
