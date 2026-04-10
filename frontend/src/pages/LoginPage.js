@@ -4,6 +4,24 @@ import { useAuth } from '../context/AuthContext'
 import supabase from '../services/supabaseClient'
 import '../styles/auth.css'
 
+export function getPasswordStrength(pw) {
+  if (!pw || pw.length < 6) return 0
+  let criteria = 0
+  if (/[a-z]/.test(pw) && /[A-Z]/.test(pw)) criteria++
+  if (/\d/.test(pw)) criteria++
+  if (/[^a-zA-Z0-9]/.test(pw)) criteria++
+  if (pw.length >= 8 && criteria >= 3) return 3
+  if (pw.length >= 8 && criteria >= 2) return 2
+  return 1
+}
+
+const STRENGTH_CONFIG = [
+  null,
+  { label: 'Weak', color: '#f87171' },
+  { label: 'Fair', color: '#fbbf24' },
+  { label: 'Strong', color: '#86efac' },
+]
+
 function LoginPage() {
   const [mode, setMode] = useState('login') // 'login' | 'signup' | 'forgot'
   const [email, setEmail] = useState('')
@@ -318,6 +336,27 @@ function LoginPage() {
                   </div>
                 </div>
               )}
+
+              {mode === 'signup' && password.length > 0 && (() => {
+                const strength = getPasswordStrength(password)
+                const config = STRENGTH_CONFIG[strength]
+                return config ? (
+                  <div className="pw-strength">
+                    <div className="pw-strength-bar">
+                      {[1, 2, 3].map((seg) => (
+                        <div
+                          key={seg}
+                          className={`pw-strength-segment${seg <= strength ? ' active' : ''}`}
+                          style={seg <= strength ? { background: config.color } : undefined}
+                        />
+                      ))}
+                    </div>
+                    <span className="pw-strength-label" style={{ color: config.color }}>
+                      {config.label}
+                    </span>
+                  </div>
+                ) : null
+              })()}
 
               {mode === 'signup' && (
                 <div className="form-group">

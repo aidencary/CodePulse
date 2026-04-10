@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import LoginPage from '../LoginPage'
+import LoginPage, { getPasswordStrength } from '../LoginPage'
 import { useAuth } from '../../context/AuthContext'
 
 // jsdom does not provide IntersectionObserver
@@ -401,5 +401,51 @@ describe('LoginPage — MFA step-up', () => {
     fireEvent.click(screen.getByRole('button', { name: /back to log in/i }))
     await waitFor(() => expect(mockSignOut).toHaveBeenCalled())
     expect(screen.getByRole('form', { name: /authentication/i })).toBeInTheDocument()
+  })
+})
+
+describe('getPasswordStrength', () => {
+  // TC-AUTH-054
+  it('returns 0 for empty or short passwords', () => {
+    expect(getPasswordStrength('')).toBe(0)
+    expect(getPasswordStrength('abc')).toBe(0)
+    expect(getPasswordStrength('Ab1!x')).toBe(0)
+  })
+
+  // TC-AUTH-055
+  it('returns 1 (Weak) for >= 6 chars with few criteria', () => {
+    expect(getPasswordStrength('abcdef')).toBe(1)
+    expect(getPasswordStrength('abcdefgh')).toBe(1)
+  })
+
+  // TC-AUTH-056
+  it('returns 2 (Fair) for >= 8 chars with 2 criteria', () => {
+    expect(getPasswordStrength('Abcdefg1')).toBe(2)
+    expect(getPasswordStrength('abcdef!1')).toBe(2)
+  })
+
+  // TC-AUTH-057
+  it('returns 3 (Strong) for >= 8 chars with all 3 criteria', () => {
+    expect(getPasswordStrength('Abcdef1!')).toBe(3)
+    expect(getPasswordStrength('MyP@ss99')).toBe(3)
+  })
+})
+
+describe('LoginPage — password strength bar', () => {
+  // TC-AUTH-058
+  it('does not render strength bar in login mode', () => {
+    renderLoginPage()
+    fireEvent.change(getPasswordInput(), { target: { value: 'password123' } })
+    expect(screen.queryByText('Weak')).not.toBeInTheDocument()
+    expect(screen.queryByText('Fair')).not.toBeInTheDocument()
+    expect(screen.queryByText('Strong')).not.toBeInTheDocument()
+  })
+
+  // TC-AUTH-059
+  it('renders strength bar in signup mode when typing', () => {
+    renderLoginPage()
+    fireEvent.click(screen.getByRole('button', { name: /sign up/i }))
+    fireEvent.change(getPasswordInput(), { target: { value: 'Abcdef1!' } })
+    expect(screen.getByText('Strong')).toBeInTheDocument()
   })
 })

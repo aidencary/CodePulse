@@ -213,6 +213,33 @@ body {
   border-radius: 3px;
 }
 
+/* ─── Password strength indicator ───────────────────────────────── */
+.pw-strength {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.pw-strength-bar {
+  display: flex;
+  gap: 4px;
+  flex: 1;
+}
+
+.pw-strength-segment {
+  height: 4px;
+  flex: 1;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.15);
+  transition: background 0.2s;
+}
+
+.pw-strength-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
 /* ─── Error / success banners ────────────────────────────────────── */
 .auth-error {
   font-size: 0.83rem;
