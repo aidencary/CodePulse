@@ -141,10 +141,13 @@
 
 .readonly-wrapper {
   position: relative;
+  width: 100%;
 }
 
 .readonly-wrapper .account-input {
   padding-right: 2.25rem;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .lock-icon {
@@ -284,6 +287,13 @@
   line-height: 1.5;
 }
 
+/* ─── Member since ─────────────────────────────────────────────── */
+.account-member-since {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.45);
+  margin-top: 0.5rem;
+}
+
 /* ─── Danger zone ──────────────────────────────────────────────── */
 .danger-zone {
   border-color: rgba(248, 113, 113, 0.4);
@@ -299,6 +309,12 @@
   color: rgba(255, 255, 255, 0.55);
   margin-bottom: 1rem;
   line-height: 1.5;
+}
+
+.danger-divider {
+  border: none;
+  border-top: 1px solid rgba(248, 113, 113, 0.2);
+  margin: 1rem 0;
 }
 
 /* ─── Delete confirmation modal ────────────────────────────────── */

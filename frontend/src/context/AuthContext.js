@@ -11,6 +11,17 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
+        // Session-only login: if the tab was closed and reopened, sign out
+        if (
+          session &&
+          localStorage.getItem('codepulse-remember-me') === 'false' &&
+          !sessionStorage.getItem('codepulse-session-active')
+        ) {
+          supabase.auth.signOut()
+          localStorage.removeItem('codepulse-remember-me')
+          return
+        }
+
         setSession(session)
         setUser(session?.user ?? null)
         setLoading(false)
@@ -30,10 +41,24 @@ export function AuthProvider({ children }) {
       options: { data: { username } },
     })
 
-  const signIn = (email, password) =>
-    supabase.auth.signInWithPassword({ email, password })
+  const signIn = async (email, password, rememberMe = true) => {
+    const result = await supabase.auth.signInWithPassword({ email, password })
+    if (!result.error) {
+      if (rememberMe) {
+        localStorage.setItem('codepulse-remember-me', 'true')
+      } else {
+        localStorage.setItem('codepulse-remember-me', 'false')
+        sessionStorage.setItem('codepulse-session-active', '1')
+      }
+    }
+    return result
+  }
 
-  const signOut = () => supabase.auth.signOut()
+  const signOut = () => {
+    localStorage.removeItem('codepulse-remember-me')
+    sessionStorage.removeItem('codepulse-session-active')
+    return supabase.auth.signOut()
+  }
 
   const refreshSession = async () => {
     const { data } = await supabase.auth.refreshSession()

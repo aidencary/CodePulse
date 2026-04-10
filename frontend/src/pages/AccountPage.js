@@ -7,8 +7,10 @@ import {
   updateProfile,
   uploadAvatar,
   changePassword,
+  exportData,
   deleteAccount,
 } from '../services/accountService'
+import supabase from '../services/supabaseClient'
 import TwoFactorSection from '../components/TwoFactorSection'
 import '../styles/dashboard.css'
 import '../styles/account.css'
@@ -45,6 +47,8 @@ function SectionIcon({ name }) {
       return <svg {...props}><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
     case 'bug':
       return <svg {...props}><path d="M8 2l1.88 1.88M14.12 3.88L16 2M9 7.13v-1a3 3 0 0 1 6 0v1" /><path d="M12 20c-3.3 0-6-2.7-6-6v-3a6 6 0 0 1 12 0v3c0 3.3-2.7 6-6 6z" /><path d="M6 13H2M22 13h-4M6 17H3M21 17h-3" /></svg>
+    case 'download':
+      return <svg {...props}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
     case 'danger':
       return <svg {...props}><polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
     default:
@@ -90,6 +94,9 @@ function AccountPage() {
   const [pwMsg, setPwMsg] = useState(null)
   const [pwErr, setPwErr] = useState(null)
   const [pwSaving, setPwSaving] = useState(false)
+
+  // Export state
+  const [exporting, setExporting] = useState(false)
 
   // Delete state
   const [showDeleteModal, setShowDeleteModal] = useState(false)
@@ -209,6 +216,28 @@ function AccountPage() {
     }
   }
 
+  // ── Export handler ──
+  const handleExport = async () => {
+    setExporting(true)
+    try {
+      const data = await exportData(token)
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'codepulse-data.json'
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+      toast('Data exported successfully', 'success')
+    } catch (err) {
+      toast(err.message, 'error')
+    } finally {
+      setExporting(false)
+    }
+  }
+
   // ── Delete handlers ──
   const handleDelete = async () => {
     setDeleteErr(null)
@@ -283,6 +312,27 @@ function AccountPage() {
                   className="account-input account-input--readonly"
                   type="text"
                   value={profile?.role || 'developer'}
+                  readOnly
+                />
+                <LockIcon />
+              </div>
+            </div>
+            <div className="account-field">
+              <label className="account-label" htmlFor="account-member-since">Member since</label>
+              <div className="readonly-wrapper">
+                <input
+                  id="account-member-since"
+                  className="account-input account-input--readonly"
+                  type="text"
+                  value={
+                    profile?.created_at
+                      ? new Date(profile.created_at).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                        })
+                      : 'Not found'
+                  }
                   readOnly
                 />
                 <LockIcon />
@@ -411,9 +461,42 @@ function AccountPage() {
           </a>
         </section>
 
+        {/* ── Download My Data ── */}
+        <section className="account-section">
+          <h2 className="account-section-title"><SectionIcon name="download" /> Download My Data</h2>
+          <p className="account-hint">
+            Export all your data including your profile, submissions, and analysis reports as a JSON file.
+          </p>
+          <button
+            className="account-btn account-btn--outline"
+            onClick={handleExport}
+            disabled={exporting}
+            type="button"
+          >
+            {exporting ? 'Exporting...' : 'Download My Data'}
+          </button>
+        </section>
+
         {/* ── Danger Zone ── */}
         <section className="account-section danger-zone">
           <h2 className="account-section-title"><SectionIcon name="danger" /> Danger Zone</h2>
+
+          <p className="danger-description">
+            Immediately sign out of all active sessions on all devices, including this one.
+          </p>
+          <button
+            className="account-btn account-btn--danger"
+            onClick={async () => {
+              await supabase.auth.signOut({ scope: 'global' })
+              navigate('/login')
+            }}
+            type="button"
+          >
+            Sign Out All Devices
+          </button>
+
+          <hr className="danger-divider" />
+
           <p className="danger-description">
             Permanently delete your account and all associated data including submissions,
             analysis reports, and findings. This action cannot be undone.

@@ -59,3 +59,10 @@ class InviteUserRequest(BaseModel):
     """Payload for inviting a new user by email."""
 
     email: str = Field(..., min_length=3, max_length=254)
+
+
+class DataExportResponse(BaseModel):
+    """Full data export for GDPR/CCPA compliance."""
+
+    profile: ProfileResponse
+    submissions: list[dict]

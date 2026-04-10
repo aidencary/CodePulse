@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import LoginPage from '../LoginPage'
+import LoginPage, { getPasswordStrength } from '../LoginPage'
 import { useAuth } from '../../context/AuthContext'
 
 // jsdom does not provide IntersectionObserver
@@ -28,6 +28,7 @@ const mockListFactors = jest.fn()
 const mockChallenge = jest.fn()
 const mockVerify = jest.fn()
 const mockSignOut = jest.fn()
+const mockSignInWithOAuth = jest.fn()
 
 jest.mock('../../services/supabaseClient', () => ({
   __esModule: true,
@@ -35,6 +36,7 @@ jest.mock('../../services/supabaseClient', () => ({
     auth: {
       resetPasswordForEmail: (...args) => mockResetPasswordForEmail(...args),
       signOut: (...args) => mockSignOut(...args),
+      signInWithOAuth: (...args) => mockSignInWithOAuth(...args),
       mfa: {
         getAuthenticatorAssuranceLevel: (...args) => mockGetAAL(...args),
         listFactors: (...args) => mockListFactors(...args),
@@ -93,7 +95,7 @@ describe('LoginPage', () => {
     fireEvent.change(getPasswordInput(), { target: { value: 'password123' } })
     submitForm()
     await waitFor(() =>
-      expect(mockSignIn).toHaveBeenCalledWith('user@example.com', 'password123')
+      expect(mockSignIn).toHaveBeenCalledWith('user@example.com', 'password123', false)
     )
   })
 
@@ -105,6 +107,7 @@ describe('LoginPage', () => {
     fireEvent.change(screen.getByLabelText(/username/i), { target: { value: 'testuser' } })
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'user@example.com' } })
     fireEvent.change(getPasswordInput(), { target: { value: 'password123' } })
+    fireEvent.change(screen.getByLabelText('Confirm Password'), { target: { value: 'password123' } })
     submitForm()
     await waitFor(() =>
       expect(mockSignUp).toHaveBeenCalledWith('user@example.com', 'password123', 'testuser')
@@ -142,6 +145,111 @@ describe('LoginPage', () => {
     fireEvent.click(toggle)
     fireEvent.click(screen.getByRole('button', { name: /hide password/i }))
     expect(getPasswordInput()).toHaveAttribute('type', 'password')
+  })
+
+  // TC-AUTH-046
+  it('renders "Remember me" checkbox in login mode', () => {
+    renderLoginPage()
+    expect(screen.getByLabelText(/remember me/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/remember me/i)).not.toBeChecked()
+  })
+
+  // TC-AUTH-047
+  it('hides "Remember me" checkbox in signup mode', () => {
+    renderLoginPage()
+    fireEvent.click(screen.getByRole('button', { name: /sign up/i }))
+    expect(screen.queryByLabelText(/remember me/i)).not.toBeInTheDocument()
+  })
+
+  // TC-AUTH-048
+  it('hides "Remember me" checkbox in forgot password mode', async () => {
+    mockSignIn.mockResolvedValue({ error: { message: 'Invalid login credentials' } })
+    renderLoginPage()
+    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'user@example.com' } })
+    fireEvent.change(getPasswordInput(), { target: { value: 'wrong' } })
+    submitForm()
+    await screen.findByText('Invalid login credentials')
+    fireEvent.click(screen.getByRole('button', { name: /forgot password/i }))
+    expect(screen.queryByLabelText(/remember me/i)).not.toBeInTheDocument()
+  })
+
+  // TC-AUTH-049
+  it('renders "Confirm Password" field in signup mode', () => {
+    renderLoginPage()
+    fireEvent.click(screen.getByRole('button', { name: /sign up/i }))
+    expect(screen.getByLabelText('Confirm Password')).toBeInTheDocument()
+  })
+
+  // TC-AUTH-050
+  it('hides "Confirm Password" field in login mode', () => {
+    renderLoginPage()
+    expect(screen.queryByLabelText('Confirm Password')).not.toBeInTheDocument()
+  })
+
+  // TC-AUTH-051
+  it('shows error and blocks signUp when passwords do not match', async () => {
+    renderLoginPage()
+    fireEvent.click(screen.getByRole('button', { name: /sign up/i }))
+    fireEvent.change(screen.getByLabelText(/username/i), { target: { value: 'testuser' } })
+    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'user@example.com' } })
+    fireEvent.change(getPasswordInput(), { target: { value: 'password123' } })
+    fireEvent.change(screen.getByLabelText('Confirm Password'), { target: { value: 'different456' } })
+    submitForm()
+    expect(await screen.findByText('Passwords do not match')).toBeInTheDocument()
+    expect(mockSignUp).not.toHaveBeenCalled()
+  })
+
+  // TC-AUTH-052
+  it('calls signUp when passwords match', async () => {
+    mockSignUp.mockResolvedValue({ error: null })
+    renderLoginPage()
+    fireEvent.click(screen.getByRole('button', { name: /sign up/i }))
+    fireEvent.change(screen.getByLabelText(/username/i), { target: { value: 'testuser' } })
+    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'user@example.com' } })
+    fireEvent.change(getPasswordInput(), { target: { value: 'password123' } })
+    fireEvent.change(screen.getByLabelText('Confirm Password'), { target: { value: 'password123' } })
+    submitForm()
+    await waitFor(() =>
+      expect(mockSignUp).toHaveBeenCalledWith('user@example.com', 'password123', 'testuser')
+    )
+  })
+
+  // TC-AUTH-053
+  it('has independent show/hide toggles for password and confirm password', () => {
+    renderLoginPage()
+    fireEvent.click(screen.getByRole('button', { name: /sign up/i }))
+    const showPw = screen.getByRole('button', { name: /^show password$/i })
+    const showConfirm = screen.getByRole('button', { name: /show confirm password/i })
+    fireEvent.click(showPw)
+    expect(getPasswordInput()).toHaveAttribute('type', 'text')
+    expect(screen.getByLabelText('Confirm Password')).toHaveAttribute('type', 'password')
+    fireEvent.click(showConfirm)
+    expect(screen.getByLabelText('Confirm Password')).toHaveAttribute('type', 'text')
+  })
+
+  // TC-AUTH-060
+  it('shows legal notice in signup mode', () => {
+    renderLoginPage()
+    fireEvent.click(screen.getByRole('button', { name: /sign up/i }))
+    expect(screen.getByText(/by creating an account/i)).toBeInTheDocument()
+  })
+
+  // TC-AUTH-061
+  it('hides legal notice in login mode', () => {
+    renderLoginPage()
+    expect(screen.queryByText(/by creating an account/i)).not.toBeInTheDocument()
+  })
+
+  // TC-AUTH-062
+  it('hides legal notice in forgot password mode', async () => {
+    mockSignIn.mockResolvedValue({ error: { message: 'fail' } })
+    renderLoginPage()
+    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'a@b.com' } })
+    fireEvent.change(getPasswordInput(), { target: { value: 'wrong' } })
+    submitForm()
+    await screen.findByText('fail')
+    fireEvent.click(screen.getByRole('button', { name: /forgot password/i }))
+    expect(screen.queryByText(/by creating an account/i)).not.toBeInTheDocument()
   })
 
   // TC-AUTH-043
@@ -320,5 +428,101 @@ describe('LoginPage — MFA step-up', () => {
     fireEvent.click(screen.getByRole('button', { name: /back to log in/i }))
     await waitFor(() => expect(mockSignOut).toHaveBeenCalled())
     expect(screen.getByRole('form', { name: /authentication/i })).toBeInTheDocument()
+  })
+})
+
+describe('getPasswordStrength', () => {
+  // TC-AUTH-054
+  it('returns 0 for empty or short passwords', () => {
+    expect(getPasswordStrength('')).toBe(0)
+    expect(getPasswordStrength('abc')).toBe(0)
+    expect(getPasswordStrength('Ab1!x')).toBe(0)
+  })
+
+  // TC-AUTH-055
+  it('returns 1 (Weak) for >= 6 chars with few criteria', () => {
+    expect(getPasswordStrength('abcdef')).toBe(1)
+    expect(getPasswordStrength('abcdefgh')).toBe(1)
+  })
+
+  // TC-AUTH-056
+  it('returns 2 (Fair) for >= 8 chars with 2 criteria', () => {
+    expect(getPasswordStrength('Abcdefg1')).toBe(2)
+    expect(getPasswordStrength('abcdef!1')).toBe(2)
+  })
+
+  // TC-AUTH-057
+  it('returns 3 (Strong) for >= 8 chars with all 3 criteria', () => {
+    expect(getPasswordStrength('Abcdef1!')).toBe(3)
+    expect(getPasswordStrength('MyP@ss99')).toBe(3)
+  })
+})
+
+describe('LoginPage — password strength bar', () => {
+  // TC-AUTH-058
+  it('does not render strength bar in login mode', () => {
+    renderLoginPage()
+    fireEvent.change(getPasswordInput(), { target: { value: 'password123' } })
+    expect(screen.queryByText('Weak')).not.toBeInTheDocument()
+    expect(screen.queryByText('Fair')).not.toBeInTheDocument()
+    expect(screen.queryByText('Strong')).not.toBeInTheDocument()
+  })
+
+  // TC-AUTH-059
+  it('renders strength bar in signup mode when typing', () => {
+    renderLoginPage()
+    fireEvent.click(screen.getByRole('button', { name: /sign up/i }))
+    fireEvent.change(getPasswordInput(), { target: { value: 'Abcdef1!' } })
+    expect(screen.getByText('Strong')).toBeInTheDocument()
+  })
+})
+
+describe('LoginPage — OAuth buttons', () => {
+  // TC-AUTH-063
+  it('renders Google and GitHub buttons in login mode', () => {
+    renderLoginPage()
+    expect(screen.getByRole('button', { name: /continue with google/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /continue with github/i })).toBeInTheDocument()
+  })
+
+  // TC-AUTH-064
+  it('renders Google and GitHub buttons in signup mode', () => {
+    renderLoginPage()
+    fireEvent.click(screen.getByRole('button', { name: /sign up/i }))
+    expect(screen.getByRole('button', { name: /continue with google/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /continue with github/i })).toBeInTheDocument()
+  })
+
+  // TC-AUTH-065
+  it('hides OAuth buttons in forgot password mode', async () => {
+    mockSignIn.mockResolvedValue({ error: { message: 'fail' } })
+    renderLoginPage()
+    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'a@b.com' } })
+    fireEvent.change(getPasswordInput(), { target: { value: 'wrong' } })
+    submitForm()
+    await screen.findByText('fail')
+    fireEvent.click(screen.getByRole('button', { name: /forgot password/i }))
+    expect(screen.queryByRole('button', { name: /continue with google/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /continue with github/i })).not.toBeInTheDocument()
+  })
+
+  // TC-AUTH-066
+  it('calls signInWithOAuth with "google" when Google button is clicked', () => {
+    renderLoginPage()
+    fireEvent.click(screen.getByRole('button', { name: /continue with google/i }))
+    expect(mockSignInWithOAuth).toHaveBeenCalledWith({
+      provider: 'google',
+      options: { redirectTo: expect.stringContaining('/dashboard') },
+    })
+  })
+
+  // TC-AUTH-067
+  it('calls signInWithOAuth with "github" when GitHub button is clicked', () => {
+    renderLoginPage()
+    fireEvent.click(screen.getByRole('button', { name: /continue with github/i }))
+    expect(mockSignInWithOAuth).toHaveBeenCalledWith({
+      provider: 'github',
+      options: { redirectTo: expect.stringContaining('/dashboard') },
+    })
   })
 })

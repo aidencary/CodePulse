@@ -1,0 +1,91 @@
+/* ─── Legal pages (Terms / Privacy) ─────────────────────────────── */
+.legal-page {
+  min-height: 100vh;
+  background: linear-gradient(to bottom, #9333ea 0%, #7b30d4 30%, #6e2ebb 55%, #3a1580 78%, #141414 100%);
+  background-attachment: fixed;
+  display: flex;
+  justify-content: center;
+  padding: 3rem 2rem 6rem;
+}
+
+.legal-card {
+  width: 100%;
+  max-width: 720px;
+  background: rgba(109, 40, 217, 0.22);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 16px;
+  padding: 2.5rem 3rem;
+  height: fit-content;
+}
+
+.legal-back {
+  display: inline-block;
+  color: rgba(255, 255, 255, 0.6);
+  text-decoration: none;
+  font-size: 0.85rem;
+  margin-bottom: 1.5rem;
+  transition: color 0.2s;
+}
+
+.legal-back:hover {
+  color: #ffffff;
+}
+
+.legal-card h1 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 0.25rem;
+}
+
+.legal-updated {
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.4);
+  margin-bottom: 2rem;
+}
+
+.legal-card section {
+  margin-bottom: 1.75rem;
+}
+
+.legal-card h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 0.5rem;
+}
+
+.legal-card p {
+  font-size: 0.88rem;
+  color: rgba(255, 255, 255, 0.65);
+  line-height: 1.7;
+  margin-bottom: 0.5rem;
+}
+
+.legal-card ul {
+  margin: 0.5rem 0 0.5rem 1.5rem;
+  padding: 0;
+}
+
+.legal-card li {
+  font-size: 0.88rem;
+  color: rgba(255, 255, 255, 0.65);
+  line-height: 1.7;
+  margin-bottom: 0.25rem;
+}
+
+.legal-card a {
+  color: #a78bfa;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.legal-card a:hover {
+  color: #c4b5fd;
+}
+
+.legal-card strong {
+  color: rgba(255, 255, 255, 0.8);
+}

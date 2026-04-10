@@ -71,6 +71,15 @@ export async function inviteUser(token, email) {
   return res.json()
 }
 
+// FR-ACCT-006
+export async function exportData(token) {
+  const res = await fetch(`${API_URL}/api/v1/account/export`, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  if (!res.ok) throw new Error(`Failed to export data (${res.status})`)
+  return res.json()
+}
+
 // FR-ACCT-004
 export async function deleteAccount(token) {
   const res = await fetch(`${API_URL}/api/v1/account`, {

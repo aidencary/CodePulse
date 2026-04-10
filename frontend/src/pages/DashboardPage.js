@@ -49,6 +49,7 @@ function DashboardPage() {
   const [theme, setTheme] = useState(
     () => localStorage.getItem('cp-theme') || 'dark'
   )
+  const [submissionName, setSubmissionName] = useState(null)
   const [inviteOpen, setInviteOpen] = useState(false)
 
   useEffect(() => {
@@ -75,6 +76,7 @@ function DashboardPage() {
       )
       setResults(data)
       setActiveId(data.submission_id)
+      setSubmissionName(data.name || null)
       sidebarRef.current?.refresh()
     } catch (err) {
       setError(err.message)
@@ -89,12 +91,14 @@ function DashboardPage() {
       setResults(null)
       setError(null)
       setActiveId(null)
+      setSubmissionName(null)
       return
     }
 
     setCode(submission.code)
     setError(null)
     setActiveId(submission.submission_id)
+    setSubmissionName(submission.name || null)
 
     // Fetch full analysis (findings + predicted bugs) from the database.
     try {
@@ -170,7 +174,7 @@ function DashboardPage() {
             highlightLine={hoveredLine}
           />
           {/* FR-DASH-006 FR-REPORT-005 */}
-          <ResultsPanel results={results} loading={loading} error={error} onHoverLine={setHoveredLine} />
+          <ResultsPanel results={results} loading={loading} error={error} onHoverLine={setHoveredLine} submissionName={submissionName} />
         </main>
       </div>
     </div>

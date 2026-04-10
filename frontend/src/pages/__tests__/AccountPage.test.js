@@ -7,6 +7,7 @@ import {
   getProfile,
   updateProfile,
   changePassword,
+  exportData,
 } from '../../services/accountService'
 
 jest.mock('../../context/AuthContext', () => ({
@@ -21,6 +22,24 @@ jest.mock('../../services/accountService', () => ({
   getProfile: jest.fn(),
   updateProfile: jest.fn(),
   changePassword: jest.fn(),
+  exportData: jest.fn(),
+}))
+
+const mockSupabaseSignOut = jest.fn(() => Promise.resolve({}))
+
+jest.mock('../../services/supabaseClient', () => ({
+  __esModule: true,
+  default: {
+    auth: {
+      get signOut() { return mockSupabaseSignOut },
+      mfa: {
+        listFactors: () => Promise.resolve({ data: { totp: [] } }),
+        enroll: jest.fn(),
+        challengeAndVerify: jest.fn(),
+        unenroll: jest.fn(),
+      },
+    },
+  },
 }))
 
 const mockNavigate = jest.fn()
@@ -36,7 +55,7 @@ const mockProfile = {
   username: 'testuser',
   role: 'developer',
   profile_picture: null,
-  created_at: '2024-01-01T00:00:00Z',
+  created_at: '2024-01-15T12:00:00Z',
 }
 
 const mockToast = jest.fn()
@@ -72,6 +91,9 @@ describe('AccountPage', () => {
       screen.getByRole('heading', { name: 'Change Password' })
     ).toBeInTheDocument()
     expect(screen.getByText('Report a Bug')).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', { name: 'Download My Data' })
+    ).toBeInTheDocument()
     expect(screen.getByText('Danger Zone')).toBeInTheDocument()
   })
 
@@ -93,6 +115,15 @@ describe('AccountPage', () => {
     })
     expect(screen.getByDisplayValue('testuser')).toBeInTheDocument()
     expect(screen.getByDisplayValue('developer')).toBeInTheDocument()
+  })
+
+  // TC-ACCT-037
+  it('displays formatted "Member since" date', async () => {
+    renderAccountPage()
+    await waitFor(() => {
+      expect(screen.getByDisplayValue('January 15, 2024')).toBeInTheDocument()
+    })
+    expect(screen.getByDisplayValue('January 15, 2024')).toHaveAttribute('readOnly')
   })
 
   // TC-ACCT-028
@@ -245,5 +276,63 @@ describe('AccountPage', () => {
       target: { value: 'testuser' },
     })
     expect(confirmBtn).not.toBeDisabled()
+  })
+
+  // TC-ACCT-038
+  it('renders "Sign Out All Devices" button with description', async () => {
+    renderAccountPage()
+    await waitFor(() => {
+      expect(screen.getByText('Danger Zone')).toBeInTheDocument()
+    })
+    expect(screen.getByRole('button', { name: /sign out all devices/i })).toBeInTheDocument()
+    expect(screen.getByText(/sign out of all active sessions/i)).toBeInTheDocument()
+  })
+
+  // TC-ACCT-039
+  it('calls signOut with global scope and navigates to /login', async () => {
+    renderAccountPage()
+    await waitFor(() => {
+      expect(screen.getByText('Danger Zone')).toBeInTheDocument()
+    })
+    fireEvent.click(screen.getByRole('button', { name: /sign out all devices/i }))
+    await waitFor(() => {
+      expect(mockSupabaseSignOut).toHaveBeenCalledWith({ scope: 'global' })
+    })
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith('/login')
+    })
+  })
+
+  // TC-ACCT-040
+  it('renders "Download My Data" button with description', async () => {
+    renderAccountPage()
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Download My Data' })).toBeInTheDocument()
+    })
+    expect(screen.getByRole('button', { name: /download my data/i })).toBeInTheDocument()
+    expect(screen.getByText(/export all your data/i)).toBeInTheDocument()
+  })
+
+  // TC-ACCT-041
+  it('calls exportData and triggers download on click', async () => {
+    const mockExportData = { profile: mockProfile, submissions: [] }
+    exportData.mockResolvedValue(mockExportData)
+
+    // Mock URL.createObjectURL and URL.revokeObjectURL
+    const mockUrl = 'blob:http://localhost/fake'
+    global.URL.createObjectURL = jest.fn(() => mockUrl)
+    global.URL.revokeObjectURL = jest.fn()
+
+    renderAccountPage()
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Download My Data' })).toBeInTheDocument()
+    })
+    fireEvent.click(screen.getByRole('button', { name: /download my data/i }))
+    await waitFor(() => {
+      expect(exportData).toHaveBeenCalledWith('fake-token')
+    })
+    await waitFor(() => {
+      expect(mockToast).toHaveBeenCalledWith('Data exported successfully', 'success')
+    })
   })
 })

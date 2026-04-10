@@ -79,6 +79,64 @@ body {
   padding: 2rem;
 }
 
+/* ─── OAuth buttons ─────────────────────────────────────────────── */
+.oauth-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.oauth-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.6rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s, box-shadow 0.2s;
+  border: none;
+}
+
+.oauth-btn:hover {
+  opacity: 0.9;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.oauth-btn--google {
+  background: #ffffff;
+  color: #3c4043;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.oauth-btn--github {
+  background: #24292e;
+  color: #ffffff;
+}
+
+/* ─── OAuth divider ─────────────────────────────────────────────── */
+.oauth-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+
+.oauth-divider-line {
+  flex: 1;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.oauth-divider-text {
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.45);
+  text-transform: lowercase;
+}
+
 /* ─── Login / signup toggle ─────────────────────────────────────── */
 .auth-toggle {
   display: flex;
@@ -191,6 +249,71 @@ body {
 
 .password-toggle:hover {
   color: rgba(255, 255, 255, 0.9);
+}
+
+/* ─── Remember me checkbox ──────────────────────────────────────── */
+.remember-me {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.83rem;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+}
+
+.remember-me input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  accent-color: #a78bfa;
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 3px;
+}
+
+/* ─── Password strength indicator ───────────────────────────────── */
+.pw-strength {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.pw-strength-bar {
+  display: flex;
+  gap: 4px;
+  flex: 1;
+}
+
+.pw-strength-segment {
+  height: 4px;
+  flex: 1;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.15);
+  transition: background 0.2s;
+}
+
+.pw-strength-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* ─── Legal notice (sign-up) ─────────────────────────────────────── */
+.auth-legal {
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.45);
+  text-align: center;
+  line-height: 1.5;
+}
+
+.auth-legal a {
+  color: rgba(255, 255, 255, 0.65);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.auth-legal a:hover {
+  color: #ffffff;
 }
 
 /* ─── Error / success banners ────────────────────────────────────── */
@@ -332,6 +455,24 @@ body {
   color: #555552;
   margin-top: 2.25rem;
   letter-spacing: 0.01em;
+}
+
+.learn-legal-links {
+  text-align: center;
+  font-size: 0.78rem;
+  color: #555552;
+  margin-top: 1rem;
+}
+
+.learn-legal-links a {
+  color: #888885;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color 0.2s;
+}
+
+.learn-legal-links a:hover {
+  color: #a78bfa;
 }
 
 .learn-copyright {

@@ -324,3 +324,38 @@ describe('ResultsPanel — sort controls', () => {
     expect(items[items.length - 1].textContent).toBe('msg-null')
   })
 })
+
+// Download report button
+describe('ResultsPanel — download report button', () => {
+  // TC-REPORT-029
+  it('shows Export button when results are present', () => {
+    render(<ResultsPanel results={mockResults} loading={false} error={null} />)
+    expect(screen.getByRole('button', { name: /export/i })).toBeInTheDocument()
+  })
+
+  // TC-REPORT-030
+  it('hides Export button when results are null', () => {
+    render(<ResultsPanel results={null} loading={false} error={null} />)
+    expect(screen.queryByRole('button', { name: /export/i })).not.toBeInTheDocument()
+  })
+
+  // TC-REPORT-031
+  it('hides Export button during loading', () => {
+    render(<ResultsPanel results={null} loading={true} error={null} />)
+    expect(screen.queryByRole('button', { name: /export/i })).not.toBeInTheDocument()
+  })
+
+  // TC-REPORT-032
+  it('creates a Blob with text/html on click', () => {
+    global.URL.createObjectURL = jest.fn(() => 'blob:fake')
+    global.URL.revokeObjectURL = jest.fn()
+
+    render(<ResultsPanel results={mockResults} loading={false} error={null} submissionName="test.py" />)
+    fireEvent.click(screen.getByRole('button', { name: /export/i }))
+
+    expect(global.URL.createObjectURL).toHaveBeenCalled()
+    const blob = global.URL.createObjectURL.mock.calls[0][0]
+    expect(blob).toBeInstanceOf(Blob)
+    expect(blob.type).toBe('text/html')
+  })
+})

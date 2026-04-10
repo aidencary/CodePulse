@@ -10,6 +10,7 @@ from app.dependencies import get_current_user
 from app.models.account import (
     AvatarUploadResponse,
     ChangePasswordRequest,
+    DataExportResponse,
     InviteUserRequest,
     ProfileResponse,
     ProfileUpdateRequest,
@@ -226,6 +227,86 @@ async def invite_user(
         )
 
     return {"detail": f"Invite sent to {body.email}"}
+
+
+# ------------------------------------------------------------------
+# GET /account/export
+# ------------------------------------------------------------------
+# FR-ACCT-006
+@router.get("/export", response_model=DataExportResponse)
+async def export_data(user_id: str = Depends(get_current_user)):
+    """Return all user data (profile + submissions + reports) for GDPR/CCPA export."""
+    sb = get_supabase_client()
+
+    # Fetch profile
+    profile_result = sb.table("profiles").select("*").eq("id", user_id).execute()
+    if not profile_result.data:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Profile not found"
+        )
+    profile = profile_result.data[0]
+
+    # Fetch email from auth
+    auth_user = sb.auth.admin.get_user_by_id(user_id)
+    email = auth_user.user.email if auth_user and auth_user.user else ""
+
+    # Fetch submissions with their analysis reports
+    submissions_result = (
+        sb.table("submissions")
+        .select("*")
+        .eq("user_id", user_id)
+        .order("created_at", desc=True)
+        .execute()
+    )
+    submissions = submissions_result.data or []
+
+    # For each submission, fetch its analysis report and related data
+    enriched_submissions = []
+    for sub in submissions:
+        entry = dict(sub)
+        report_result = (
+            sb.table("analysis_reports")
+            .select("*")
+            .eq("submission_id", sub["submission_id"])
+            .execute()
+        )
+        if report_result.data:
+            report = report_result.data[0]
+            entry["report"] = report
+
+            # Fetch findings
+            findings_result = (
+                sb.table("findings")
+                .select("*")
+                .eq("report_id", report["report_id"])
+                .execute()
+            )
+            entry["report"]["findings"] = findings_result.data or []
+
+            # Fetch predicted bugs
+            bugs_result = (
+                sb.table("predicted_bugs")
+                .select("*")
+                .eq("report_id", report["report_id"])
+                .execute()
+            )
+            entry["report"]["predicted_bugs"] = bugs_result.data or []
+        else:
+            entry["report"] = None
+
+        enriched_submissions.append(entry)
+
+    return DataExportResponse(
+        profile=ProfileResponse(
+            id=profile["id"],
+            email=email,
+            username=profile["username"],
+            role=profile.get("role", "developer"),
+            profile_picture=profile.get("profile_picture"),
+            created_at=profile["created_at"],
+        ),
+        submissions=enriched_submissions,
+    )
 
 
 # ------------------------------------------------------------------
