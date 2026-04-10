@@ -93,7 +93,7 @@ describe('LoginPage', () => {
     fireEvent.change(getPasswordInput(), { target: { value: 'password123' } })
     submitForm()
     await waitFor(() =>
-      expect(mockSignIn).toHaveBeenCalledWith('user@example.com', 'password123')
+      expect(mockSignIn).toHaveBeenCalledWith('user@example.com', 'password123', false)
     )
   })
 
@@ -142,6 +142,32 @@ describe('LoginPage', () => {
     fireEvent.click(toggle)
     fireEvent.click(screen.getByRole('button', { name: /hide password/i }))
     expect(getPasswordInput()).toHaveAttribute('type', 'password')
+  })
+
+  // TC-AUTH-046
+  it('renders "Remember me" checkbox in login mode', () => {
+    renderLoginPage()
+    expect(screen.getByLabelText(/remember me/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/remember me/i)).not.toBeChecked()
+  })
+
+  // TC-AUTH-047
+  it('hides "Remember me" checkbox in signup mode', () => {
+    renderLoginPage()
+    fireEvent.click(screen.getByRole('button', { name: /sign up/i }))
+    expect(screen.queryByLabelText(/remember me/i)).not.toBeInTheDocument()
+  })
+
+  // TC-AUTH-048
+  it('hides "Remember me" checkbox in forgot password mode', async () => {
+    mockSignIn.mockResolvedValue({ error: { message: 'Invalid login credentials' } })
+    renderLoginPage()
+    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'user@example.com' } })
+    fireEvent.change(getPasswordInput(), { target: { value: 'wrong' } })
+    submitForm()
+    await screen.findByText('Invalid login credentials')
+    fireEvent.click(screen.getByRole('button', { name: /forgot password/i }))
+    expect(screen.queryByLabelText(/remember me/i)).not.toBeInTheDocument()
   })
 
   // TC-AUTH-043

@@ -17,6 +17,7 @@ function LoginPage() {
   const [mfaCode, setMfaCode] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loginFailed, setLoginFailed] = useState(false)
+  const [rememberMe, setRememberMe] = useState(false)
 
   const { signIn, signUp } = useAuth()
   const navigate = useNavigate()
@@ -103,7 +104,7 @@ function LoginPage() {
 
     const { error } =
       mode === 'login'
-        ? await signIn(email, password)
+        ? await signIn(email, password, rememberMe)
         : await signUp(email, password, username)
 
     if (error) {
@@ -147,6 +148,7 @@ function LoginPage() {
     setError(null)
     setSuccess(null)
     setLoginFailed(false)
+    setRememberMe(false)
   }
 
   const handleMfaBack = async () => {
@@ -305,6 +307,17 @@ function LoginPage() {
                     </button>
                   </div>
                 </div>
+              )}
+
+              {mode === 'login' && (
+                <label className="remember-me">
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                  />
+                  Remember me
+                </label>
               )}
 
               {mode === 'login' && loginFailed && (

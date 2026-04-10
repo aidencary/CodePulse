@@ -193,6 +193,26 @@ body {
   color: rgba(255, 255, 255, 0.9);
 }
 
+/* ─── Remember me checkbox ──────────────────────────────────────── */
+.remember-me {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.83rem;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+}
+
+.remember-me input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  accent-color: #a78bfa;
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 3px;
+}
+
 /* ─── Error / success banners ────────────────────────────────────── */
 .auth-error {
   font-size: 0.83rem;
