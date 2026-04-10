@@ -225,6 +225,32 @@ describe('LoginPage', () => {
     expect(screen.getByLabelText('Confirm Password')).toHaveAttribute('type', 'text')
   })
 
+  // TC-AUTH-060
+  it('shows legal notice in signup mode', () => {
+    renderLoginPage()
+    fireEvent.click(screen.getByRole('button', { name: /sign up/i }))
+    expect(screen.getByText(/terms of service/i)).toBeInTheDocument()
+    expect(screen.getByText(/privacy policy/i)).toBeInTheDocument()
+  })
+
+  // TC-AUTH-061
+  it('hides legal notice in login mode', () => {
+    renderLoginPage()
+    expect(screen.queryByText(/terms of service/i)).not.toBeInTheDocument()
+  })
+
+  // TC-AUTH-062
+  it('hides legal notice in forgot password mode', async () => {
+    mockSignIn.mockResolvedValue({ error: { message: 'fail' } })
+    renderLoginPage()
+    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'a@b.com' } })
+    fireEvent.change(getPasswordInput(), { target: { value: 'wrong' } })
+    submitForm()
+    await screen.findByText('fail')
+    fireEvent.click(screen.getByRole('button', { name: /forgot password/i }))
+    expect(screen.queryByText(/terms of service/i)).not.toBeInTheDocument()
+  })
+
   // TC-AUTH-043
   it('renders the "Learn more" scroll button', () => {
     renderLoginPage()

@@ -240,6 +240,24 @@ body {
   white-space: nowrap;
 }
 
+/* ─── Legal notice (sign-up) ─────────────────────────────────────── */
+.auth-legal {
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.45);
+  text-align: center;
+  line-height: 1.5;
+}
+
+.auth-legal a {
+  color: rgba(255, 255, 255, 0.65);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.auth-legal a:hover {
+  color: #ffffff;
+}
+
 /* ─── Error / success banners ────────────────────────────────────── */
 .auth-error {
   font-size: 0.83rem;

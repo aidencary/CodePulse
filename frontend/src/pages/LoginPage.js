@@ -430,6 +430,15 @@ function LoginPage() {
                   : 'Send Reset Email'}
               </button>
 
+              {mode === 'signup' && (
+                <p className="auth-legal">
+                  By creating an account you agree to our{' '}
+                  <a href="/terms" target="_blank" rel="noopener noreferrer">Terms of Service</a>{' '}
+                  and{' '}
+                  <a href="/privacy" target="_blank" rel="noopener noreferrer">Privacy Policy</a>.
+                </p>
+              )}
+
               {mode === 'forgot' && (
                 <button
                   type="button"
