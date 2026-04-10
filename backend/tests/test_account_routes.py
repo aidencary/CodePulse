@@ -55,6 +55,23 @@ def _make_headers(user_id: str = _USER_ID) -> dict[str, str]:
     return {"Authorization": f"Bearer {_make_token(user_id)}"}
 
 
+_SUBMISSION_ROW = {
+    "submission_id": "sub-001",
+    "user_id": _USER_ID,
+    "name": "test.py",
+    "code": "print('hello')",
+    "pinned_at": None,
+    "created_at": "2025-02-01T00:00:00+00:00",
+}
+
+_REPORT_ROW = {
+    "report_id": "rpt-001",
+    "submission_id": "sub-001",
+    "overall_score": 85,
+    "summary": "Good code quality",
+}
+
+
 def _make_mock_supabase(
     profile_row: dict | None = None,
     existing_username_data: list | None = None,
@@ -390,4 +407,65 @@ def test_invite_user_no_auth() -> None:
         "/api/v1/account/invite",
         json={"email": "newuser@example.com"},
     )
+    assert resp.status_code == 422
+
+
+# ------------------------------------------------------------------
+# GET /api/v1/account/export
+# ------------------------------------------------------------------
+
+
+# TC-ACCT-017
+def test_export_data_success() -> None:
+    """GET /export returns 200 with profile and submissions."""
+    sb, _ = _make_mock_supabase()
+
+    # Track which table is being queried to return different data
+    call_count = {"n": 0}
+    table_calls = []
+
+    original_table = sb.table
+
+    def _table_side_effect(name):
+        table_calls.append(name)
+        builder = MagicMock()
+        builder.select.return_value = builder
+        builder.eq.return_value = builder
+        builder.order.return_value = builder
+
+        if name == "profiles":
+            builder.execute.return_value = MagicMock(data=[dict(_PROFILE_ROW)])
+        elif name == "submissions":
+            builder.execute.return_value = MagicMock(data=[dict(_SUBMISSION_ROW)])
+        elif name == "analysis_reports":
+            builder.execute.return_value = MagicMock(data=[dict(_REPORT_ROW)])
+        elif name == "findings":
+            builder.execute.return_value = MagicMock(data=[])
+        elif name == "predicted_bugs":
+            builder.execute.return_value = MagicMock(data=[])
+        else:
+            builder.execute.return_value = MagicMock(data=[])
+
+        return builder
+
+    sb.table.side_effect = _table_side_effect
+
+    with patch("app.routes.account.get_supabase_client", return_value=sb):
+        resp = client.get("/api/v1/account/export", headers=_make_headers())
+
+    assert resp.status_code == 200
+    body = resp.json()
+    assert "profile" in body
+    assert "submissions" in body
+    assert body["profile"]["id"] == _USER_ID
+    assert body["profile"]["email"] == "test@example.com"
+    assert len(body["submissions"]) == 1
+    assert body["submissions"][0]["submission_id"] == "sub-001"
+    assert body["submissions"][0]["report"]["overall_score"] == 85
+
+
+# TC-ACCT-018
+def test_export_data_no_auth() -> None:
+    """GET /export without Authorization header returns 422."""
+    resp = client.get("/api/v1/account/export")
     assert resp.status_code == 422

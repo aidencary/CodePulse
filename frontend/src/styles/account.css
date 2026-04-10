@@ -141,10 +141,13 @@
 
 .readonly-wrapper {
   position: relative;
+  width: 100%;
 }
 
 .readonly-wrapper .account-input {
   padding-right: 2.25rem;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .lock-icon {

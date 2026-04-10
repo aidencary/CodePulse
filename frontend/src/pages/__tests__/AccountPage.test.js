@@ -7,6 +7,7 @@ import {
   getProfile,
   updateProfile,
   changePassword,
+  exportData,
 } from '../../services/accountService'
 
 jest.mock('../../context/AuthContext', () => ({
@@ -21,6 +22,7 @@ jest.mock('../../services/accountService', () => ({
   getProfile: jest.fn(),
   updateProfile: jest.fn(),
   changePassword: jest.fn(),
+  exportData: jest.fn(),
 }))
 
 const mockSupabaseSignOut = jest.fn(() => Promise.resolve({}))
@@ -89,6 +91,9 @@ describe('AccountPage', () => {
       screen.getByRole('heading', { name: 'Change Password' })
     ).toBeInTheDocument()
     expect(screen.getByText('Report a Bug')).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', { name: 'Download My Data' })
+    ).toBeInTheDocument()
     expect(screen.getByText('Danger Zone')).toBeInTheDocument()
   })
 
@@ -295,6 +300,39 @@ describe('AccountPage', () => {
     })
     await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith('/login')
+    })
+  })
+
+  // TC-ACCT-040
+  it('renders "Download My Data" button with description', async () => {
+    renderAccountPage()
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Download My Data' })).toBeInTheDocument()
+    })
+    expect(screen.getByRole('button', { name: /download my data/i })).toBeInTheDocument()
+    expect(screen.getByText(/export all your data/i)).toBeInTheDocument()
+  })
+
+  // TC-ACCT-041
+  it('calls exportData and triggers download on click', async () => {
+    const mockExportData = { profile: mockProfile, submissions: [] }
+    exportData.mockResolvedValue(mockExportData)
+
+    // Mock URL.createObjectURL and URL.revokeObjectURL
+    const mockUrl = 'blob:http://localhost/fake'
+    global.URL.createObjectURL = jest.fn(() => mockUrl)
+    global.URL.revokeObjectURL = jest.fn()
+
+    renderAccountPage()
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Download My Data' })).toBeInTheDocument()
+    })
+    fireEvent.click(screen.getByRole('button', { name: /download my data/i }))
+    await waitFor(() => {
+      expect(exportData).toHaveBeenCalledWith('fake-token')
+    })
+    await waitFor(() => {
+      expect(mockToast).toHaveBeenCalledWith('Data exported successfully', 'success')
     })
   })
 })
