@@ -36,7 +36,7 @@ const mockProfile = {
   username: 'testuser',
   role: 'developer',
   profile_picture: null,
-  created_at: '2024-01-01T00:00:00Z',
+  created_at: '2024-01-15T12:00:00Z',
 }
 
 const mockToast = jest.fn()
@@ -93,6 +93,15 @@ describe('AccountPage', () => {
     })
     expect(screen.getByDisplayValue('testuser')).toBeInTheDocument()
     expect(screen.getByDisplayValue('developer')).toBeInTheDocument()
+  })
+
+  // TC-ACCT-037
+  it('displays formatted "Member since" date', async () => {
+    renderAccountPage()
+    await waitFor(() => {
+      expect(screen.getByDisplayValue('January 15, 2024')).toBeInTheDocument()
+    })
+    expect(screen.getByDisplayValue('January 15, 2024')).toHaveAttribute('readOnly')
   })
 
   // TC-ACCT-028

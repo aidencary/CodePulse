@@ -288,6 +288,27 @@ function AccountPage() {
                 <LockIcon />
               </div>
             </div>
+            <div className="account-field">
+              <label className="account-label" htmlFor="account-member-since">Member since</label>
+              <div className="readonly-wrapper">
+                <input
+                  id="account-member-since"
+                  className="account-input account-input--readonly"
+                  type="text"
+                  value={
+                    profile?.created_at
+                      ? new Date(profile.created_at).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                        })
+                      : 'Not found'
+                  }
+                  readOnly
+                />
+                <LockIcon />
+              </div>
+            </div>
             <button
               type="submit"
               className={`account-btn account-btn--primary${profileSaved ? ' account-btn--saved' : ''}`}

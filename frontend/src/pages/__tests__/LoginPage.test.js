@@ -231,14 +231,13 @@ describe('LoginPage', () => {
   it('shows legal notice in signup mode', () => {
     renderLoginPage()
     fireEvent.click(screen.getByRole('button', { name: /sign up/i }))
-    expect(screen.getByText(/terms of service/i)).toBeInTheDocument()
-    expect(screen.getByText(/privacy policy/i)).toBeInTheDocument()
+    expect(screen.getByText(/by creating an account/i)).toBeInTheDocument()
   })
 
   // TC-AUTH-061
   it('hides legal notice in login mode', () => {
     renderLoginPage()
-    expect(screen.queryByText(/terms of service/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/by creating an account/i)).not.toBeInTheDocument()
   })
 
   // TC-AUTH-062
@@ -250,7 +249,7 @@ describe('LoginPage', () => {
     submitForm()
     await screen.findByText('fail')
     fireEvent.click(screen.getByRole('button', { name: /forgot password/i }))
-    expect(screen.queryByText(/terms of service/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/by creating an account/i)).not.toBeInTheDocument()
   })
 
   // TC-AUTH-043

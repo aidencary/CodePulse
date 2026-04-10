@@ -284,6 +284,13 @@
   line-height: 1.5;
 }
 
+/* ─── Member since ─────────────────────────────────────────────── */
+.account-member-since {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.45);
+  margin-top: 0.5rem;
+}
+
 /* ─── Danger zone ──────────────────────────────────────────────── */
 .danger-zone {
   border-color: rgba(248, 113, 113, 0.4);

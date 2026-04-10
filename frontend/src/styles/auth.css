@@ -457,6 +457,24 @@ body {
   letter-spacing: 0.01em;
 }
 
+.learn-legal-links {
+  text-align: center;
+  font-size: 0.78rem;
+  color: #555552;
+  margin-top: 1rem;
+}
+
+.learn-legal-links a {
+  color: #888885;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color 0.2s;
+}
+
+.learn-legal-links a:hover {
+  color: #a78bfa;
+}
+
 .learn-copyright {
   text-align: center;
   font-size: 0.75rem;

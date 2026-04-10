@@ -565,6 +565,11 @@ function LoginPage() {
         <p className="learn-section-credit">
           Research by Aiden Cary, Keller Willhite &amp; Zach Atchley, Faculty Mentor: Dr. Md Jobair Hossain Faruk
         </p>
+        <p className="learn-legal-links">
+          <a href="/terms" target="_blank" rel="noopener noreferrer">Terms of Service</a>
+          {' · '}
+          <a href="/privacy" target="_blank" rel="noopener noreferrer">Privacy Policy</a>
+        </p>
         <button className="learn-show-less" onClick={scrollToHero}>
           Show less ↑
         </button>
