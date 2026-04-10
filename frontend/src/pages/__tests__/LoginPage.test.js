@@ -28,6 +28,7 @@ const mockListFactors = jest.fn()
 const mockChallenge = jest.fn()
 const mockVerify = jest.fn()
 const mockSignOut = jest.fn()
+const mockSignInWithOAuth = jest.fn()
 
 jest.mock('../../services/supabaseClient', () => ({
   __esModule: true,
@@ -35,6 +36,7 @@ jest.mock('../../services/supabaseClient', () => ({
     auth: {
       resetPasswordForEmail: (...args) => mockResetPasswordForEmail(...args),
       signOut: (...args) => mockSignOut(...args),
+      signInWithOAuth: (...args) => mockSignInWithOAuth(...args),
       mfa: {
         getAuthenticatorAssuranceLevel: (...args) => mockGetAAL(...args),
         listFactors: (...args) => mockListFactors(...args),
@@ -473,5 +475,55 @@ describe('LoginPage — password strength bar', () => {
     fireEvent.click(screen.getByRole('button', { name: /sign up/i }))
     fireEvent.change(getPasswordInput(), { target: { value: 'Abcdef1!' } })
     expect(screen.getByText('Strong')).toBeInTheDocument()
+  })
+})
+
+describe('LoginPage — OAuth buttons', () => {
+  // TC-AUTH-063
+  it('renders Google and GitHub buttons in login mode', () => {
+    renderLoginPage()
+    expect(screen.getByRole('button', { name: /continue with google/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /continue with github/i })).toBeInTheDocument()
+  })
+
+  // TC-AUTH-064
+  it('renders Google and GitHub buttons in signup mode', () => {
+    renderLoginPage()
+    fireEvent.click(screen.getByRole('button', { name: /sign up/i }))
+    expect(screen.getByRole('button', { name: /continue with google/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /continue with github/i })).toBeInTheDocument()
+  })
+
+  // TC-AUTH-065
+  it('hides OAuth buttons in forgot password mode', async () => {
+    mockSignIn.mockResolvedValue({ error: { message: 'fail' } })
+    renderLoginPage()
+    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'a@b.com' } })
+    fireEvent.change(getPasswordInput(), { target: { value: 'wrong' } })
+    submitForm()
+    await screen.findByText('fail')
+    fireEvent.click(screen.getByRole('button', { name: /forgot password/i }))
+    expect(screen.queryByRole('button', { name: /continue with google/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /continue with github/i })).not.toBeInTheDocument()
+  })
+
+  // TC-AUTH-066
+  it('calls signInWithOAuth with "google" when Google button is clicked', () => {
+    renderLoginPage()
+    fireEvent.click(screen.getByRole('button', { name: /continue with google/i }))
+    expect(mockSignInWithOAuth).toHaveBeenCalledWith({
+      provider: 'google',
+      options: { redirectTo: expect.stringContaining('/dashboard') },
+    })
+  })
+
+  // TC-AUTH-067
+  it('calls signInWithOAuth with "github" when GitHub button is clicked', () => {
+    renderLoginPage()
+    fireEvent.click(screen.getByRole('button', { name: /continue with github/i }))
+    expect(mockSignInWithOAuth).toHaveBeenCalledWith({
+      provider: 'github',
+      options: { redirectTo: expect.stringContaining('/dashboard') },
+    })
   })
 })
