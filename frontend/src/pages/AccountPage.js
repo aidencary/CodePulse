@@ -9,6 +9,7 @@ import {
   changePassword,
   deleteAccount,
 } from '../services/accountService'
+import supabase from '../services/supabaseClient'
 import TwoFactorSection from '../components/TwoFactorSection'
 import '../styles/dashboard.css'
 import '../styles/account.css'
@@ -435,6 +436,23 @@ function AccountPage() {
         {/* ── Danger Zone ── */}
         <section className="account-section danger-zone">
           <h2 className="account-section-title"><SectionIcon name="danger" /> Danger Zone</h2>
+
+          <p className="danger-description">
+            Immediately sign out of all active sessions on all devices, including this one.
+          </p>
+          <button
+            className="account-btn account-btn--danger"
+            onClick={async () => {
+              await supabase.auth.signOut({ scope: 'global' })
+              navigate('/login')
+            }}
+            type="button"
+          >
+            Sign Out All Devices
+          </button>
+
+          <hr className="danger-divider" />
+
           <p className="danger-description">
             Permanently delete your account and all associated data including submissions,
             analysis reports, and findings. This action cannot be undone.

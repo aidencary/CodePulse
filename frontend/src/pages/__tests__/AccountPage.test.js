@@ -23,6 +23,23 @@ jest.mock('../../services/accountService', () => ({
   changePassword: jest.fn(),
 }))
 
+const mockSupabaseSignOut = jest.fn(() => Promise.resolve({}))
+
+jest.mock('../../services/supabaseClient', () => ({
+  __esModule: true,
+  default: {
+    auth: {
+      get signOut() { return mockSupabaseSignOut },
+      mfa: {
+        listFactors: () => Promise.resolve({ data: { totp: [] } }),
+        enroll: jest.fn(),
+        challengeAndVerify: jest.fn(),
+        unenroll: jest.fn(),
+      },
+    },
+  },
+}))
+
 const mockNavigate = jest.fn()
 
 jest.mock('react-router-dom', () => ({
@@ -254,5 +271,30 @@ describe('AccountPage', () => {
       target: { value: 'testuser' },
     })
     expect(confirmBtn).not.toBeDisabled()
+  })
+
+  // TC-ACCT-038
+  it('renders "Sign Out All Devices" button with description', async () => {
+    renderAccountPage()
+    await waitFor(() => {
+      expect(screen.getByText('Danger Zone')).toBeInTheDocument()
+    })
+    expect(screen.getByRole('button', { name: /sign out all devices/i })).toBeInTheDocument()
+    expect(screen.getByText(/sign out of all active sessions/i)).toBeInTheDocument()
+  })
+
+  // TC-ACCT-039
+  it('calls signOut with global scope and navigates to /login', async () => {
+    renderAccountPage()
+    await waitFor(() => {
+      expect(screen.getByText('Danger Zone')).toBeInTheDocument()
+    })
+    fireEvent.click(screen.getByRole('button', { name: /sign out all devices/i }))
+    await waitFor(() => {
+      expect(mockSupabaseSignOut).toHaveBeenCalledWith({ scope: 'global' })
+    })
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith('/login')
+    })
   })
 })
