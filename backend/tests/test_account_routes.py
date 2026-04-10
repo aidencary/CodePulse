@@ -421,10 +421,7 @@ def test_export_data_success() -> None:
     sb, _ = _make_mock_supabase()
 
     # Track which table is being queried to return different data
-    call_count = {"n": 0}
     table_calls = []
-
-    original_table = sb.table
 
     def _table_side_effect(name):
         table_calls.append(name)
