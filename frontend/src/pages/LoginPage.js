@@ -18,6 +18,8 @@ function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [loginFailed, setLoginFailed] = useState(false)
   const [rememberMe, setRememberMe] = useState(false)
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
   const { signIn, signUp } = useAuth()
   const navigate = useNavigate()
@@ -102,6 +104,12 @@ function LoginPage() {
       return
     }
 
+    if (mode === 'signup' && password !== confirmPassword) {
+      setError('Passwords do not match')
+      setSubmitting(false)
+      return
+    }
+
     const { error } =
       mode === 'login'
         ? await signIn(email, password, rememberMe)
@@ -149,6 +157,8 @@ function LoginPage() {
     setSuccess(null)
     setLoginFailed(false)
     setRememberMe(false)
+    setConfirmPassword('')
+    setShowConfirmPassword(false)
   }
 
   const handleMfaBack = async () => {
@@ -293,6 +303,44 @@ function LoginPage() {
                       aria-label={showPassword ? 'Hide password' : 'Show password'}
                     >
                       {showPassword ? (
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+                          <circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/>
+                          <line x1="1" y1="1" x2="23" y2="23"/>
+                        </svg>
+                      ) : (
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                          <circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/>
+                        </svg>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {mode === 'signup' && (
+                <div className="form-group">
+                  <label htmlFor="confirm-password">Confirm Password</label>
+                  <div className="password-wrapper">
+                    <input
+                      id="confirm-password"
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      required
+                      autoComplete="new-password"
+                      minLength={8}
+                      maxLength={128}
+                      placeholder="••••••••"
+                    />
+                    <button
+                      type="button"
+                      className="password-toggle"
+                      onClick={() => setShowConfirmPassword((v) => !v)}
+                      aria-label={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
+                    >
+                      {showConfirmPassword ? (
                         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
                           <circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/>

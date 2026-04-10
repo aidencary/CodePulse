@@ -105,6 +105,7 @@ describe('LoginPage', () => {
     fireEvent.change(screen.getByLabelText(/username/i), { target: { value: 'testuser' } })
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'user@example.com' } })
     fireEvent.change(getPasswordInput(), { target: { value: 'password123' } })
+    fireEvent.change(screen.getByLabelText('Confirm Password'), { target: { value: 'password123' } })
     submitForm()
     await waitFor(() =>
       expect(mockSignUp).toHaveBeenCalledWith('user@example.com', 'password123', 'testuser')
@@ -168,6 +169,60 @@ describe('LoginPage', () => {
     await screen.findByText('Invalid login credentials')
     fireEvent.click(screen.getByRole('button', { name: /forgot password/i }))
     expect(screen.queryByLabelText(/remember me/i)).not.toBeInTheDocument()
+  })
+
+  // TC-AUTH-049
+  it('renders "Confirm Password" field in signup mode', () => {
+    renderLoginPage()
+    fireEvent.click(screen.getByRole('button', { name: /sign up/i }))
+    expect(screen.getByLabelText('Confirm Password')).toBeInTheDocument()
+  })
+
+  // TC-AUTH-050
+  it('hides "Confirm Password" field in login mode', () => {
+    renderLoginPage()
+    expect(screen.queryByLabelText('Confirm Password')).not.toBeInTheDocument()
+  })
+
+  // TC-AUTH-051
+  it('shows error and blocks signUp when passwords do not match', async () => {
+    renderLoginPage()
+    fireEvent.click(screen.getByRole('button', { name: /sign up/i }))
+    fireEvent.change(screen.getByLabelText(/username/i), { target: { value: 'testuser' } })
+    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'user@example.com' } })
+    fireEvent.change(getPasswordInput(), { target: { value: 'password123' } })
+    fireEvent.change(screen.getByLabelText('Confirm Password'), { target: { value: 'different456' } })
+    submitForm()
+    expect(await screen.findByText('Passwords do not match')).toBeInTheDocument()
+    expect(mockSignUp).not.toHaveBeenCalled()
+  })
+
+  // TC-AUTH-052
+  it('calls signUp when passwords match', async () => {
+    mockSignUp.mockResolvedValue({ error: null })
+    renderLoginPage()
+    fireEvent.click(screen.getByRole('button', { name: /sign up/i }))
+    fireEvent.change(screen.getByLabelText(/username/i), { target: { value: 'testuser' } })
+    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'user@example.com' } })
+    fireEvent.change(getPasswordInput(), { target: { value: 'password123' } })
+    fireEvent.change(screen.getByLabelText('Confirm Password'), { target: { value: 'password123' } })
+    submitForm()
+    await waitFor(() =>
+      expect(mockSignUp).toHaveBeenCalledWith('user@example.com', 'password123', 'testuser')
+    )
+  })
+
+  // TC-AUTH-053
+  it('has independent show/hide toggles for password and confirm password', () => {
+    renderLoginPage()
+    fireEvent.click(screen.getByRole('button', { name: /sign up/i }))
+    const showPw = screen.getByRole('button', { name: /^show password$/i })
+    const showConfirm = screen.getByRole('button', { name: /show confirm password/i })
+    fireEvent.click(showPw)
+    expect(getPasswordInput()).toHaveAttribute('type', 'text')
+    expect(screen.getByLabelText('Confirm Password')).toHaveAttribute('type', 'password')
+    fireEvent.click(showConfirm)
+    expect(screen.getByLabelText('Confirm Password')).toHaveAttribute('type', 'text')
   })
 
   // TC-AUTH-043
