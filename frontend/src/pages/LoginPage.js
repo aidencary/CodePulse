@@ -23,6 +23,11 @@ function LoginPage() {
   const heroRef = useRef(null)
   const learnMoreRef = useRef(null)
   const learnGridRef = useRef(null)
+  const emailRef = useRef(null)
+
+  useEffect(() => {
+    if (step !== 'mfa') emailRef.current?.focus()
+  }, [mode, step])
 
   useEffect(() => {
     const grid = learnGridRef.current
@@ -254,6 +259,7 @@ function LoginPage() {
                 <label htmlFor="email">Email</label>
                 <input
                   id="email"
+                  ref={emailRef}
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
