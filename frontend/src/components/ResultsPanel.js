@@ -1,9 +1,7 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react'
 import BugCard from './BugCard'
-
-/** Severity rank maps (higher number = more severe). */
-const FINDING_SEV_RANK = { high: 3, med: 2, low: 1 }
-const BUG_SEV_RANK = { critical: 4, high: 3, medium: 2, low: 1 }
+import { FINDING_SEV_RANK, BUG_SEV_RANK, scoreLevel } from '../utils/scoreHelpers'
+import generateReportHTML from '../utils/generateReport'
 
 /**
  * Inline sort controls: "Severity" and "Line" field-selector pills plus a direction toggle.
@@ -89,7 +87,7 @@ function ScoreRing({ score, level, size = 88, strokeWidth = 4.5 }) {
   )
 }
 
-function ResultsPanel({ results, loading, error, onHoverLine }) {
+function ResultsPanel({ results, loading, error, onHoverLine, submissionName }) {
   const [findingSort, setFindingSort] = useState('desc')
   const [findingSortField, setFindingSortField] = useState('severity')
   const [bugSort, setBugSort] = useState('desc')
@@ -118,6 +116,21 @@ function ResultsPanel({ results, loading, error, onHoverLine }) {
     document.addEventListener('mouseup', onMouseUp)
   }, [panelWidth])
 
+  const handleDownloadReport = useCallback(() => {
+    if (!results) return
+    const html = generateReportHTML(results, submissionName)
+    const blob = new Blob([html], { type: 'text/html' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    const safeName = (submissionName || 'report').replace(/[^a-z0-9_-]/gi, '_')
+    a.download = `codepulse-report-${safeName}.html`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }, [results, submissionName])
+
   // Reset sort and ignore state when a new submission is loaded
   useEffect(() => {
     setFindingSort('desc')
@@ -130,12 +143,6 @@ function ResultsPanel({ results, loading, error, onHoverLine }) {
 
   const findingKey = (f) => `${f.issue_type}|${f.line_number}|${f.message}`
   const bugKey = (b) => `${b.bug_type}|${b.line_number}`
-
-  const scoreLevel = (score) => {
-    if (score >= 80) return 'good'
-    if (score >= 50) return 'fair'
-    return 'poor'
-  }
 
   const visibleFindings = useMemo(() => {
     return (results?.findings || []).filter((f) => !ignoredFindings.has(findingKey(f)))
@@ -335,6 +342,16 @@ function ResultsPanel({ results, loading, error, onHoverLine }) {
           Results
           {results && <span className="panel-title-count">{totalIssues} {totalIssues === 1 ? 'issue' : 'issues'}</span>}
         </h2>
+        {results && (
+          <button className="download-report-btn" onClick={handleDownloadReport} title="Download HTML report">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            Export
+          </button>
+        )}
       </div>
       <div className="results-body">
         {renderContent()}

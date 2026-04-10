@@ -917,6 +917,32 @@ body {
   margin-left: auto;
 }
 
+.download-report-btn {
+  margin-left: auto;
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 0.68rem;
+  padding: 3px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.download-report-btn:hover {
+  color: var(--purple-lite);
+  border-color: var(--purple-lite);
+}
+
+.download-report-btn svg {
+  width: 12px;
+  height: 12px;
+}
+
 .results-body {
   flex: 1;
   overflow-y: auto;
