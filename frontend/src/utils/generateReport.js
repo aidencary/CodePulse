@@ -43,7 +43,7 @@ export default function generateReportHTML(results, submissionName) {
         return `<tr>
           <td><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:0.75rem;font-weight:600;color:${color};background:${bg};">${escapeHTML(f.severity)}</span></td>
           <td style="font-weight:500;">${escapeHTML(f.issue_type)}</td>
-          <td style="text-align:center;">${f.line_number != null ? f.line_number : '—'}</td>
+          <td style="text-align:center;">${f.line_number != null ? escapeHTML(String(f.line_number)) : '—'}</td>
           <td>${escapeHTML(f.message)}</td>
         </tr>`
       }).join('\n')
@@ -58,7 +58,7 @@ export default function generateReportHTML(results, submissionName) {
           <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;">
             <span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:0.75rem;font-weight:600;color:${color};background:${bg};">${escapeHTML(b.severity)}</span>
             <strong>${escapeHTML(b.bug_type)}</strong>
-            ${b.line_number != null ? `<span style="color:#6b7280;font-size:0.85rem;">Line ${b.line_number}</span>` : ''}
+            ${b.line_number != null ? `<span style="color:#6b7280;font-size:0.85rem;">Line ${escapeHTML(String(b.line_number))}</span>` : ''}
           </div>
           <p style="margin:0 0 0.5rem;color:#374151;line-height:1.5;">${escapeHTML(b.description)}</p>
           <div style="background:#f3f4f6;border-radius:6px;padding:0.75rem;"><strong style="font-size:0.8rem;color:#6b7280;">Suggested Fix</strong><pre style="margin:0.4rem 0 0;white-space:pre-wrap;font-size:0.85rem;color:#1f2937;">${escapeHTML(b.suggested_fix)}</pre></div>
