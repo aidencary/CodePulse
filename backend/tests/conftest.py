@@ -7,6 +7,8 @@ a valid HF_TOKEN — neither is appropriate for unit tests.
 
 from __future__ import annotations
 
+from types import SimpleNamespace
+
 import pytest
 
 from app.services import codebert_validator
@@ -27,6 +29,16 @@ def _disable_codebert_network(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(codebert_validator, "_model", None)
     monkeypatch.setattr(codebert_validator, "_tokenizer", None)
     monkeypatch.setattr(codebert_validator, "load_model", lambda: None)
+    # CI has no .env, so constructing real Settings would fail validation.
+    # Stub get_settings with the threshold the validator actually reads.
+    monkeypatch.setattr(
+        codebert_validator,
+        "get_settings",
+        lambda: SimpleNamespace(
+            codebert_flag_threshold=0.3,
+            codebert_context_window=1,
+        ),
+    )
     # The inference cache is module-global — clear it so fake-model results
     # from one test never leak into another.
     codebert_validator._score_cache.clear()
