@@ -7,6 +7,7 @@ import ResultsPanel from '../components/ResultsPanel'
 import SubmissionSidebar from '../components/SubmissionSidebar'
 import ProfileDropdown from '../components/ProfileDropdown'
 import InviteModal from '../components/InviteModal'
+import HelpModal from '../components/HelpModal'
 import '../styles/dashboard.css'
 
 function SunIcon() {
@@ -51,6 +52,7 @@ function DashboardPage() {
   )
   const [submissionName, setSubmissionName] = useState(null)
   const [inviteOpen, setInviteOpen] = useState(false)
+  const [helpOpen, setHelpOpen] = useState(false)
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
@@ -135,6 +137,7 @@ function DashboardPage() {
 
       {/* FR-DASH-005 */}
       {inviteOpen && <InviteModal onClose={() => setInviteOpen(false)} />}
+      {helpOpen && <HelpModal onClose={() => setHelpOpen(false)} />}
 
       <div className="dashboard-right">
         <nav className="dashboard-nav">
@@ -145,6 +148,15 @@ function DashboardPage() {
             tabIndex={0}
           >CodePulse</span>
           <div className="nav-user">
+            <button
+              className="nav-help-btn"
+              onClick={() => setHelpOpen(true)}
+              aria-label="How CodePulse works"
+              title="How CodePulse works"
+              type="button"
+            >
+              ?
+            </button>
             <button
               className="nav-invite-btn"
               onClick={() => setInviteOpen(true)}

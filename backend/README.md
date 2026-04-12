@@ -11,7 +11,7 @@ Python FastAPI backend for the CodePulse code quality and bug prediction dashboa
 | Framework | Python 3.x, FastAPI |
 | Database | Supabase (PostgreSQL + Auth + RLS) |
 | Auth | Supabase JWT verification |
-| Analysis Engine | AST-based static analysis + OpenAI GPT bug prediction |
+| Analysis Engine | AST-based static analysis + OpenAI GPT bug prediction + CodeBERT confidence validation |
 | API Docs | Swagger / OpenAPI (available at `/docs` when `DEBUG=true`) |
 
 ---
@@ -41,6 +41,7 @@ backend/
 │       │   ├── __init__.py
 │       │   └── python_prompt.py    # GPT prompt templates for Python code analysis
 │       ├── gpt_predictor.py        # OpenAI GPT bug prediction with graceful fallback
+│       ├── codebert_validator.py   # Fine-tuned CodeBERT confidence scoring + flag pass (aidencary/codepulse-codebert)
 │       └── persistence_service.py  # Supabase write sequence (submissions → reports → findings → bugs)
 ├── tests/
 │   ├── test_placeholder.py
@@ -48,6 +49,7 @@ backend/
 │   ├── test_analyze_route.py       # Route integration tests (mocked services)
 │   ├── test_analysis_engine.py     # Static analyzer unit tests (113 tests — 46 PEP 8 checks)
 │   ├── test_gpt_predictor.py       # GPT predictor unit tests (mocked OpenAI)
+│   ├── test_codebert_validator.py  # CodeBERT validator unit tests (mocked model/tokenizer)
 │   ├── test_account_routes.py      # Account CRUD route tests (16 tests — includes invite)
 │   └── test_submission_routes.py   # Submission CRUD route tests (13 tests)
 ├── database/
@@ -71,7 +73,7 @@ Defined in `database/schema.sql`. Run in the Supabase SQL Editor to apply.
 | `analysis_reports` | Analysis results linked to a submission |
 | `findings` | Individual issues found in a report |
 | `actionable_fixes` | Suggested fix for a finding |
-| `predicted_bugs` | GPT-predicted bugs linked to a report |
+| `predicted_bugs` | GPT-predicted bugs linked to a report, including CodeBERT `confidence` + `flagged` fields |
 
 Row Level Security (RLS) is enabled on all tables. Users can only access their own data.
 
@@ -149,6 +151,10 @@ uvicorn app.main:app --reload   # Runs at http://localhost:8000
 | `SUPABASE_JWT_SECRET` | Yes | Supabase Dashboard → Settings → API → JWT Secret |
 | `OPENAI_API_KEY` | Yes | OpenAI Dashboard → API Keys — used by the GPT bug predictor |
 | `GPT_MODEL` | No | GPT model name (default: `gpt-4o-mini`) |
+| `HF_TOKEN` | No | HuggingFace access token used to pull the private CodeBERT checkpoint |
+| `CODEBERT_MODEL_PATH` | No | HuggingFace model ID (default: `aidencary/codepulse-codebert`) |
+| `CODEBERT_FLAG_THRESHOLD` | No | P(buggy) below which predictions are flagged and skipped in scoring (default: `0.3`) |
+| `CODEBERT_CONTEXT_WINDOW` | No | Lines of context fed to CodeBERT on each side of the bug line (default: `2`) |
 | `SITE_URL` | No | Production frontend URL used as invite redirect (default: `https://code-pulse-six.vercel.app`) |
 | `ALLOWED_ORIGINS` | Yes | Comma-separated allowed CORS origins (e.g. `http://localhost:3000`) |
 | `DEBUG` | No | Set to `true` locally to enable `/docs` and `/redoc`; omit in production |
@@ -202,7 +208,7 @@ pytest tests/test_gpt_predictor.py -v    # GPT predictor tests (mocked)
 pytest tests/test_analyze_route.py -v    # Route integration tests
 ```
 
-163 tests, all passing. Add a corresponding test file in `tests/` for each new service module.
+187 tests, all passing. Add a corresponding test file in `tests/` for each new service module.
 
 ---
 
@@ -251,3 +257,4 @@ A pull request cannot be merged if any CI step fails. All new code must be Black
 | User invite endpoint (`POST /api/v1/account/invite`) | Done |
 | Submission CRUD endpoints (list, rename, delete, pin) | Done |
 | Submission naming (user-provided or GPT-generated) | Done |
+| CodeBERT confidence validator (`app/services/codebert_validator.py`) — fine-tuned `aidencary/codepulse-codebert`, label index auto-resolved from `model.config.label2id`, bounded in-memory cache, non-blocking via `asyncio.to_thread`, flagged bugs skipped in `compute_score` | Done |

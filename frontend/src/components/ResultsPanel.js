@@ -94,6 +94,7 @@ function ResultsPanel({ results, loading, error, onHoverLine, submissionName }) 
   const [bugSortField, setBugSortField] = useState('severity')
   const [ignoredFindings, setIgnoredFindings] = useState(new Set())
   const [ignoredBugs, setIgnoredBugs] = useState(new Set())
+  const [bugConfidenceFilter, setBugConfidenceFilter] = useState(0)
   const [panelWidth, setPanelWidth] = useState(320)
   const isResizing = useRef(false)
 
@@ -139,6 +140,7 @@ function ResultsPanel({ results, loading, error, onHoverLine, submissionName }) 
     setBugSortField('severity')
     setIgnoredFindings(new Set())
     setIgnoredBugs(new Set())
+    setBugConfidenceFilter(0)
   }, [results])
 
   const findingKey = (f) => `${f.issue_type}|${f.line_number}|${f.message}`
@@ -149,8 +151,19 @@ function ResultsPanel({ results, loading, error, onHoverLine, submissionName }) 
   }, [results?.findings, ignoredFindings]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const visibleBugs = useMemo(() => {
-    return (results?.predicted_bugs || []).filter((b) => !ignoredBugs.has(bugKey(b)))
-  }, [results?.predicted_bugs, ignoredBugs]) // eslint-disable-line react-hooks/exhaustive-deps
+    return (results?.predicted_bugs || []).filter((b) => {
+      if (ignoredBugs.has(bugKey(b))) return false
+      if (bugConfidenceFilter === 0) return true
+      // Bugs without a confidence score (CodeBERT disabled or failed) always show.
+      if (b.confidence == null) return true
+      return b.confidence >= bugConfidenceFilter
+    })
+  }, [results?.predicted_bugs, ignoredBugs, bugConfidenceFilter]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const anyBugHasConfidence = useMemo(
+    () => (results?.predicted_bugs || []).some((b) => b.confidence != null),
+    [results?.predicted_bugs]
+  )
 
   const sortedFindings = useMemo(() => {
     const findings = visibleFindings
@@ -305,6 +318,24 @@ function ResultsPanel({ results, loading, error, onHoverLine, submissionName }) 
                 />
               )}
             </h3>
+            {anyBugHasConfidence && (
+              <div className="confidence-filter">
+                <label htmlFor="bug-conf-filter">Min confidence:</label>
+                <input
+                  id="bug-conf-filter"
+                  type="range"
+                  min="0"
+                  max="100"
+                  step="5"
+                  value={Math.round(bugConfidenceFilter * 100)}
+                  onChange={(e) => setBugConfidenceFilter(Number(e.target.value) / 100)}
+                  aria-label="Minimum CodeBERT confidence"
+                />
+                <span className="confidence-filter-value">
+                  {Math.round(bugConfidenceFilter * 100)}%
+                </span>
+              </div>
+            )}
             {sortedBugs.length === 0 ? (
               <p className="results-placeholder">No predicted bugs found.</p>
             ) : (

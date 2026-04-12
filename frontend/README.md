@@ -38,7 +38,8 @@ frontend/
     │   ├── ProtectedRoute.js   # Redirects unauthenticated users to /login
     │   ├── CodeEditor.js       # Monaco editor + Copy button + Run Analysis button; severity-colored line highlights (togglable); gear icon settings panel (font size, tab size, word wrap, ligatures, whitespace, bracket colors, smooth scroll, folding, line highlight, Ctrl+scroll zoom, severity highlights) persisted to localStorage
     │   ├── ResultsPanel.js     # SVG score ring, resizable panel (220–600px), static findings and AI bug cards with severity borders + hover effects + entrance animations; SortControls; per-item ignore/dismiss; header icon + dynamic issue count
-    │   ├── BugCard.js          # Collapsible AI bug prediction card with severity border accent, ignore and hover-highlight support
+    │   ├── BugCard.js          # Collapsible AI bug prediction card with severity border accent, ignore and hover-highlight support, CodeBERT confidence badge
+    │   ├── HelpModal.js        # "How CodePulse Works" modal — getting started, score, static analysis, AI predictions, CodeBERT confidence tiers, tips
     │   ├── ProfileDropdown.js  # User avatar and dropdown menu (links to /account)
     │   ├── SubmissionSidebar.js # Collapsible sidebar with rename/delete/pin via kebab menu; skips API call if name unchanged
     │   ├── TwoFactorSection.js # TOTP 2FA enrollment/unenrollment — QR code display, verify, disable
@@ -135,7 +136,7 @@ npm test -- --watchAll=false   # Run once and exit (used in CI)
 | `components/__tests__/SubmissionSidebar.test.js` | Render names, fallback, search, rename no-op, rename, delete, pin/star, collapse (12 tests) |
 | `pages/__tests__/AccountPage.test.js` | Profile load/display, username validation, password change, delete modal (10 tests) |
 
-120 tests, all passing.
+167 tests, all passing.
 
 ---
 
@@ -193,3 +194,5 @@ A pull request cannot be merged if any step fails.
 | Results panel header icon + dynamic issue count | Done |
 | Login page — sliding toggle, focus glow, card hover lift, scroll entrance animations, chevron scroll cue | Done |
 | Account page — section title icons, lock icons on read-only fields, larger avatar, save confirmation flash | Done |
+| CodeBERT confidence badge on bug cards + min-confidence filter slider in results panel (flagged bugs dimmed, excluded from score) | Done |
+| HelpModal — in-dashboard "?" button explaining pipeline, scoring, and CodeBERT tiers | Done |

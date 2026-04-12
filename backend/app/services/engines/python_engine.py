@@ -1534,6 +1534,9 @@ class PythonEngine:
         for f in findings:
             penalty += _SEVERITY_PENALTIES.get(f.severity, 0)
         for b in predicted_bugs:
+            # CodeBERT flagged this as a likely GPT hallucination — zero penalty.
+            if getattr(b, "flagged", False):
+                continue
             penalty += _SEVERITY_PENALTIES.get(b.severity, 0)
         return max(0, 100 - penalty)
 

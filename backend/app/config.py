@@ -16,6 +16,14 @@ class Settings(BaseSettings):
     gpt_model: str = "gpt-4o-mini"
     site_url: str = "http://localhost:3000"
 
+    # CodeBERT validation layer — reviews GPT bug predictions.
+    hf_token: str | None = None
+    codebert_model_path: str = "aidencary/codepulse-codebert"
+    codebert_flag_threshold: float = 0.3
+    # Number of lines of context to include above and below the bug line when
+    # scoring with CodeBERT. 0 = single line only (original training window).
+    codebert_context_window: int = 2
+
     model_config = SettingsConfigDict(
         env_file=".env", env_file_encoding="utf-8", extra="ignore"
     )

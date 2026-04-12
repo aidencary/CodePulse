@@ -22,6 +22,11 @@ python-multipart==0.0.22
 
 # AI / ML
 openai==1.30.1
+transformers==4.46.3
+# CPU-only torch wheel — smaller footprint for Render free tier
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.9.1
+huggingface_hub==0.25.1
 
 # Linting / formatting
 black==24.3.0

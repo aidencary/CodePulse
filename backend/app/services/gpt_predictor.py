@@ -54,7 +54,8 @@ async def predict_bugs(
                 {"role": "system", "content": build_system_prompt(findings, language)},
                 {"role": "user", "content": build_user_message(code, language)},
             ],
-            temperature=0.2,
+            temperature=0,
+            seed=42,
             max_tokens=2048,
         )
 

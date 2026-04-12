@@ -1224,9 +1224,73 @@ body {
 .bug-card.bug-sev-high     { border-left-color: var(--danger); }
 .bug-card.bug-sev-critical { border-left-color: #ff4444; }
 
+.bug-card.flagged {
+  opacity: 0.55;
+  border-left-color: var(--muted);
+}
+
+.bug-card.flagged .bug-type {
+  text-decoration: line-through;
+  text-decoration-color: var(--muted);
+}
+
 .bug-card:hover {
   background: rgba(124, 58, 237, 0.06);
   transition: background 0.15s;
+}
+
+.bug-card.flagged:hover {
+  opacity: 0.8;
+}
+
+/* CodeBERT confidence badge — sits next to the line number in the card header. */
+.confidence-badge {
+  margin-left: auto;
+  flex-shrink: 0;
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+  border: 1px solid rgba(124, 58, 237, 0.4);
+  background: rgba(124, 58, 237, 0.12);
+  color: var(--text);
+  font-size: 0.68rem;
+  font-weight: 600;
+  font-family: 'Fira Code', 'Cascadia Code', monospace;
+  letter-spacing: 0.02em;
+  cursor: help;
+}
+
+.confidence-badge.flagged {
+  border-color: var(--muted);
+  background: transparent;
+  color: var(--muted);
+}
+
+/* Filter slider in the AI Bug Predictions section header. */
+.confidence-filter {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.1rem 0.6rem;
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.confidence-filter label {
+  white-space: nowrap;
+}
+
+.confidence-filter input[type="range"] {
+  flex: 1;
+  min-width: 0;
+  accent-color: #9333ea;
+}
+
+.confidence-filter-value {
+  font-family: 'Fira Code', 'Cascadia Code', monospace;
+  font-size: 0.7rem;
+  color: var(--text);
+  min-width: 2.4rem;
+  text-align: right;
 }
 
 .bug-card:last-child { margin-bottom: 0; }
@@ -1236,9 +1300,27 @@ body {
   align-items: center;
   gap: 0.4rem;
   margin-bottom: 0.35rem;
+  /* min-width: 0 here lets ``.bug-type`` below actually shrink inside the
+     flex row — without it the header happily overflows the panel. */
+  min-width: 0;
+}
+
+/* Every fixed-width child must refuse to shrink so the confidence badge,
+   line-number chip, severity badge, and ignore button stay pinned in view
+   when the bug title is long. Only ``.bug-type`` flexes. */
+.bug-card-header > .severity-badge,
+.bug-card-header > .finding-line,
+.bug-card-header > .confidence-badge,
+.bug-card-header > .ignore-btn {
+  flex-shrink: 0;
 }
 
 .bug-type {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-weight: 600;
   font-family: 'Fira Code', 'Cascadia Code', monospace;
   font-size: 0.75rem;
@@ -1849,3 +1931,165 @@ body {
   from { opacity: 0; transform: translateY(12px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+
+/* ─── Help button (nav) ─────────────────────────────────────────── */
+.nav-help-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  line-height: 1;
+  flex-shrink: 0;
+  transition: background 0.15s, border-color 0.15s, transform 0.15s;
+}
+
+.nav-help-btn:hover {
+  background: rgba(255, 255, 255, 0.22);
+  border-color: rgba(255, 255, 255, 0.7);
+  transform: scale(1.08);
+}
+
+/* ─── Help modal ────────────────────────────────────────────────── */
+.help-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 24px;
+  animation: toast-in 0.18s ease-out;
+}
+
+.help-modal {
+  background: #2d2d2d;
+  border: 1px solid #3a3a3a;
+  border-radius: 14px;
+  width: 100%;
+  max-width: 720px;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+  overflow: hidden;
+}
+
+:root[data-theme="light"] .help-modal {
+  background: #f6f6f4;
+  border-color: #d0d0ce;
+}
+
+.help-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 24px;
+  border-bottom: 1px solid #3a3a3a;
+  background: linear-gradient(135deg, #9333ea 0%, #6e2ebb 100%);
+  color: #ffffff;
+}
+
+:root[data-theme="light"] .help-header {
+  border-bottom-color: #d0d0ce;
+}
+
+.help-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.help-close {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  color: #ffffff;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+
+.help-close:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.help-body {
+  padding: 20px 26px 26px;
+  overflow-y: auto;
+  color: var(--text);
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.help-section {
+  margin-bottom: 18px;
+}
+
+.help-section:last-child {
+  margin-bottom: 0;
+}
+
+.help-section h3 {
+  margin: 0 0 6px;
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: #b085f5;
+}
+
+:root[data-theme="light"] .help-section h3 {
+  color: #7c3aed;
+}
+
+.help-section p,
+.help-section ol,
+.help-section ul {
+  margin: 0 0 6px;
+  color: var(--text);
+}
+
+.help-section ol,
+.help-section ul {
+  padding-left: 22px;
+}
+
+.help-section li {
+  margin-bottom: 4px;
+}
+
+.help-section code {
+  background: rgba(124, 58, 237, 0.15);
+  border: 1px solid rgba(124, 58, 237, 0.3);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-size: 0.82rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.help-swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin: 0 2px 0 4px;
+  vertical-align: middle;
+}
+
+.help-swatch--good { background: #22c55e; }
+.help-swatch--fair { background: #eab308; }
+.help-swatch--poor { background: #ef4444; }

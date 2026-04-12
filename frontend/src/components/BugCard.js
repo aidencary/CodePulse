@@ -11,9 +11,17 @@ import { useState } from 'react'
 function BugCard({ bug, onIgnore, onHoverLine }) {
   const [expanded, setExpanded] = useState(false)
 
+  const cardClass = [
+    'bug-card',
+    `bug-sev-${bug.severity}`,
+    bug.flagged ? 'flagged' : '',
+  ]
+    .filter(Boolean)
+    .join(' ')
+
   return (
     <div
-      className={`bug-card bug-sev-${bug.severity}`}
+      className={cardClass}
       data-testid={`bug-${bug.bug_type}`}
       onMouseEnter={() => bug.line_number != null && onHoverLine?.({ line: bug.line_number, severity: bug.severity.toLowerCase() })}
       onMouseLeave={() => onHoverLine?.(null)}
@@ -22,9 +30,22 @@ function BugCard({ bug, onIgnore, onHoverLine }) {
         <span className={`severity-badge severity-${bug.severity}`}>
           {bug.severity}
         </span>
-        <span className="bug-type">{bug.bug_type}</span>
+        <span className="bug-type" title={bug.bug_type}>{bug.bug_type}</span>
         {bug.line_number != null && (
           <span className="finding-line">L{bug.line_number}</span>
+        )}
+        {bug.confidence != null && (
+          <span
+            className={`confidence-badge${bug.flagged ? ' flagged' : ''}`}
+            data-testid="confidence-badge"
+            title={
+              bug.flagged
+                ? 'CodeBERT flagged this as likely false positive — excluded from score'
+                : 'CodeBERT confidence that this is a real bug'
+            }
+          >
+            {Math.round(bug.confidence * 100)}%
+          </span>
         )}
         <button className="ignore-btn" onClick={onIgnore} title="Ignore this bug">
           ✕

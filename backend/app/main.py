@@ -1,14 +1,32 @@
 """CodePulse Backend — FastAPI application entry point."""
 
+import logging
 import os
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 
 from app.routes import account, analysis, submissions
+from app.services.codebert_validator import load_model as load_codebert
+
+logger = logging.getLogger(__name__)
 
 _debug = os.environ.get("DEBUG", "false").lower() == "true"
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # CodeBERT load failures (including OOM on Render free tier) are
+    # non-fatal — the validator no-ops and the analysis pipeline degrades
+    # to pre-CodeBERT behavior rather than taking the API down.
+    try:
+        load_codebert()
+    except Exception as exc:
+        logger.error("CodeBERT failed to load — validator will pass through: %s", exc)
+    yield
+
 
 app = FastAPI(
     title="CodePulse API",
@@ -16,6 +34,7 @@ app = FastAPI(
     description="Gateway between the CodePulse frontend and the analysis engine.",
     docs_url="/docs" if _debug else None,
     redoc_url="/redoc" if _debug else None,
+    lifespan=lifespan,
 )
 
 _raw_origins = os.environ.get("ALLOWED_ORIGINS", "http://localhost:3000")

@@ -23,13 +23,15 @@ class Finding(BaseModel):
 
 
 class PredictedBug(BaseModel):
-    """A single GPT-predicted bug."""
+    """A single GPT-predicted bug, optionally validated by CodeBERT."""
 
     line_number: int | None
     bug_type: str
     severity: Literal["low", "medium", "high", "critical"]
     description: str
     suggested_fix: str
+    confidence: float | None = None
+    flagged: bool = False
 
 
 class AnalyzeResponse(BaseModel):
