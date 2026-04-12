@@ -60,6 +60,7 @@ CREATE TABLE actionable_fixes (
 );
 
 -- 6. Predicted Bugs (AI-generated bug predictions per report)
+--    confidence + flagged come from the CodeBERT validation layer.
 CREATE TABLE predicted_bugs (
     bug_id        UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     report_id     UUID REFERENCES analysis_reports(report_id) ON DELETE CASCADE,
@@ -67,8 +68,18 @@ CREATE TABLE predicted_bugs (
     bug_type      TEXT NOT NULL,
     severity      TEXT NOT NULL CHECK (severity IN ('low', 'medium', 'high', 'critical')),
     description   TEXT NOT NULL,
-    suggested_fix TEXT NOT NULL
+    suggested_fix TEXT NOT NULL,
+    confidence    NUMERIC(4,3) CHECK (confidence IS NULL OR (confidence >= 0 AND confidence <= 1)),
+    flagged       BOOLEAN NOT NULL DEFAULT FALSE
 );
+
+-- Migration 2026-04-11: CodeBERT validation fields
+-- For existing deployments, run this in the Supabase SQL editor
+-- (fresh deployments get these columns from the CREATE TABLE above).
+--
+-- ALTER TABLE predicted_bugs
+--   ADD COLUMN IF NOT EXISTS confidence NUMERIC(4,3),
+--   ADD COLUMN IF NOT EXISTS flagged BOOLEAN NOT NULL DEFAULT FALSE;
 
 -- ============================================================
 -- Row Level Security

@@ -97,6 +97,8 @@ async def persist_analysis(
                     "severity": b.severity,
                     "description": b.description,
                     "suggested_fix": b.suggested_fix,
+                    "confidence": b.confidence,
+                    "flagged": b.flagged,
                 }
                 for b in predicted_bugs
             ]
@@ -216,6 +218,8 @@ async def reanalyze_submission(
                     "severity": b.severity,
                     "description": b.description,
                     "suggested_fix": b.suggested_fix,
+                    "confidence": b.confidence,
+                    "flagged": b.flagged,
                 }
                 for b in predicted_bugs
             ]

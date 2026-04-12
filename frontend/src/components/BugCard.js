@@ -11,20 +11,52 @@ import { useState } from 'react'
 function BugCard({ bug, onIgnore, onHoverLine }) {
   const [expanded, setExpanded] = useState(false)
 
+  const cardClass = [
+    'bug-card',
+    `bug-sev-${bug.severity}`,
+    bug.flagged ? 'flagged' : '',
+  ]
+    .filter(Boolean)
+    .join(' ')
+
   return (
     <div
-      className={`bug-card bug-sev-${bug.severity}`}
+      className={cardClass}
       data-testid={`bug-${bug.bug_type}`}
       onMouseEnter={() => bug.line_number != null && onHoverLine?.({ line: bug.line_number, severity: bug.severity.toLowerCase() })}
       onMouseLeave={() => onHoverLine?.(null)}
     >
       <div className="bug-card-header">
+        {bug.flagged && (
+          <span
+            className="bug-flag-icon"
+            title="CodeBERT flagged this as a likely false positive — excluded from score"
+            aria-label="Flagged as likely false positive"
+          >
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M5 3a1 1 0 0 1 1 1v16a1 1 0 1 1-2 0V4a1 1 0 0 1 1-1zm2 1h11.382a1 1 0 0 1 .894 1.447L17.618 9l1.658 3.553A1 1 0 0 1 18.382 14H7V4z" />
+            </svg>
+          </span>
+        )}
         <span className={`severity-badge severity-${bug.severity}`}>
           {bug.severity}
         </span>
-        <span className="bug-type">{bug.bug_type}</span>
+        <span className="bug-type" title={bug.bug_type}>{bug.bug_type}</span>
         {bug.line_number != null && (
           <span className="finding-line">L{bug.line_number}</span>
+        )}
+        {bug.confidence != null && (
+          <span
+            className={`confidence-badge${bug.flagged ? ' flagged' : ''}`}
+            data-testid="confidence-badge"
+            title={
+              bug.flagged
+                ? 'CodeBERT flagged this as likely false positive — excluded from score'
+                : 'CodeBERT confidence that this is a real bug'
+            }
+          >
+            {Math.round(bug.confidence * 100)}%
+          </span>
         )}
         <button className="ignore-btn" onClick={onIgnore} title="Ignore this bug">
           ✕

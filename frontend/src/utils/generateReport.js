@@ -54,11 +54,18 @@ export default function generateReportHTML(results, submissionName) {
         const sev = b.severity.toLowerCase()
         const color = BUG_SEV_COLORS[sev] || '#6b7280'
         const bg = BUG_SEV_BG[sev] || '#f9fafb'
-        return `<div style="border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:0.75rem;">
+        const cardStyle = b.flagged
+          ? 'border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:0.75rem;opacity:0.6;'
+          : 'border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:0.75rem;'
+        const confidenceBadge = b.confidence != null
+          ? `<span style="margin-left:auto;padding:2px 8px;border-radius:999px;font-size:0.72rem;font-weight:600;color:#6d28d9;background:#f5f3ff;border:1px solid #ddd6fe;">${escapeHTML(String(Math.round(b.confidence * 100)))}%${b.flagged ? ' flagged' : ''}</span>`
+          : ''
+        return `<div style="${cardStyle}">
           <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;">
             <span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:0.75rem;font-weight:600;color:${color};background:${bg};">${escapeHTML(b.severity)}</span>
             <strong>${escapeHTML(b.bug_type)}</strong>
             ${b.line_number != null ? `<span style="color:#6b7280;font-size:0.85rem;">Line ${escapeHTML(String(b.line_number))}</span>` : ''}
+            ${confidenceBadge}
           </div>
           <p style="margin:0 0 0.5rem;color:#374151;line-height:1.5;">${escapeHTML(b.description)}</p>
           <div style="background:#f3f4f6;border-radius:6px;padding:0.75rem;"><strong style="font-size:0.8rem;color:#6b7280;">Suggested Fix</strong><pre style="margin:0.4rem 0 0;white-space:pre-wrap;font-size:0.85rem;color:#1f2937;">${escapeHTML(b.suggested_fix)}</pre></div>

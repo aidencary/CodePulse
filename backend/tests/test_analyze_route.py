@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
+import pytest
 from fastapi.testclient import TestClient
 from jose import jwt
 
@@ -190,6 +191,46 @@ def test_analyze_predicted_bugs_have_required_fields() -> None:
     for bug in resp.json()["predicted_bugs"]:
         for field in ("bug_type", "severity", "description", "suggested_fix"):
             assert field in bug
+        # New CodeBERT validation fields are always present (with defaults).
+        assert "confidence" in bug
+        assert "flagged" in bug
+
+
+# TC-ANALYSIS-081b — CodeBERT validation
+def test_analyze_flagged_bug_does_not_lower_score() -> None:
+    """When validate_predictions flags a bug, compute_score skips its penalty."""
+    flagged_bug = _MOCK_BUG.model_copy(
+        update={"confidence": 0.1, "flagged": True, "severity": "critical"}
+    )
+    with (
+        patch("app.routes.analysis.run_static_analysis", return_value=([], 100)),
+        patch(
+            "app.routes.analysis.predict_bugs",
+            new=AsyncMock(return_value=[_MOCK_BUG]),
+        ),
+        patch(
+            "app.routes.analysis.validate_predictions",
+            new=AsyncMock(return_value=[flagged_bug]),
+        ),
+        patch(
+            "app.routes.analysis.generate_submission_name",
+            new=AsyncMock(return_value="Test Submission"),
+        ),
+        patch(
+            "app.routes.analysis.persist_analysis",
+            new=AsyncMock(return_value=("sub-1", "Test Submission")),
+        ),
+    ):
+        resp = client.post(
+            "/api/v1/analyze",
+            json={"code": _SAMPLE_CODE},
+            headers=_make_headers(),
+        )
+
+    body = resp.json()
+    assert body["overall_score"] == 100  # flagged critical bug contributes nothing
+    assert body["predicted_bugs"][0]["flagged"] is True
+    assert body["predicted_bugs"][0]["confidence"] == pytest.approx(0.1)
 
 
 # ---------------------------------------------------------------------------

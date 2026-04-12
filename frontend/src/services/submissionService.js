@@ -32,7 +32,7 @@ export async function getSubmissionDetail(submissionId) {
       + 'analysis_reports(overall_score, summary, '
       + 'findings(finding_id, issue_type, line_number, line_severity, message, '
       + 'actionable_fixes(original_snippet, suggested_snippet, rationale, tags)), '
-      + 'predicted_bugs(bug_id, bug_type, severity, description, suggested_fix, line_number))'
+      + 'predicted_bugs(bug_id, bug_type, severity, description, suggested_fix, line_number, confidence, flagged))'
     )
     .eq('submission_id', submissionId)
     .single()

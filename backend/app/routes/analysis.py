@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends
 
 from app.dependencies import get_current_user
 from app.models.analysis import AnalyzeRequest, AnalyzeResponse
+from app.services.codebert_validator import validate_predictions
 from app.services.engines.python_engine import PythonEngine
 from app.services.gpt_predictor import generate_submission_name, predict_bugs
 from app.services.persistence_service import (
@@ -53,6 +54,9 @@ async def analyze(
     # 2. GPT bug prediction (async I/O).
     # FR-ANALYSIS-003
     predicted_bugs = await predict_bugs(payload.code, findings)
+
+    # 2b. CodeBERT validation — attaches confidence + flagged to each bug.
+    predicted_bugs = await validate_predictions(payload.code, predicted_bugs)
 
     # 3. Final score incorporates both finding sets.
     # FR-REPORT-001

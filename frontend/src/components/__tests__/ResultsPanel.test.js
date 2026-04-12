@@ -359,3 +359,76 @@ describe('ResultsPanel — download report button', () => {
     expect(blob.type).toBe('text/html')
   })
 })
+
+// CodeBERT confidence badge + filter slider
+describe('ResultsPanel — CodeBERT confidence', () => {
+  const resultsWithConfidence = {
+    overall_score: 80,
+    summary: 'Score 80/100.',
+    findings: [],
+    predicted_bugs: [
+      {
+        line_number: 5,
+        bug_type: 'high_conf_bug',
+        severity: 'high',
+        description: 'desc',
+        suggested_fix: 'fix',
+        confidence: 0.85,
+        flagged: false,
+      },
+      {
+        line_number: 10,
+        bug_type: 'low_conf_bug',
+        severity: 'low',
+        description: 'desc',
+        suggested_fix: 'fix',
+        confidence: 0.25,
+        flagged: true,
+      },
+    ],
+  }
+
+  it('renders a confidence badge for each bug that has a score', () => {
+    render(<ResultsPanel results={resultsWithConfidence} loading={false} error={null} />)
+    expect(screen.getByText('85%')).toBeInTheDocument()
+    expect(screen.getByText('25%')).toBeInTheDocument()
+  })
+
+  it('renders no confidence badge for bugs without a score', () => {
+    render(<ResultsPanel results={mockResults} loading={false} error={null} />)
+    expect(screen.queryByTestId('confidence-badge')).not.toBeInTheDocument()
+  })
+
+  it('marks flagged bugs with the flagged class', () => {
+    render(<ResultsPanel results={resultsWithConfidence} loading={false} error={null} />)
+    const flaggedCard = screen.getByTestId('bug-low_conf_bug')
+    expect(flaggedCard.className).toContain('flagged')
+  })
+
+  it('hides the slider when no bug has confidence', () => {
+    render(<ResultsPanel results={mockResults} loading={false} error={null} />)
+    expect(
+      screen.queryByLabelText(/minimum codebert confidence/i)
+    ).not.toBeInTheDocument()
+  })
+
+  it('shows the slider when any bug has confidence', () => {
+    render(<ResultsPanel results={resultsWithConfidence} loading={false} error={null} />)
+    expect(
+      screen.getByLabelText(/minimum codebert confidence/i)
+    ).toBeInTheDocument()
+  })
+
+  it('filters out bugs below the slider value', () => {
+    render(<ResultsPanel results={resultsWithConfidence} loading={false} error={null} />)
+    expect(screen.getByTestId('bug-high_conf_bug')).toBeInTheDocument()
+    expect(screen.getByTestId('bug-low_conf_bug')).toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText(/minimum codebert confidence/i), {
+      target: { value: '50' },
+    })
+
+    expect(screen.getByTestId('bug-high_conf_bug')).toBeInTheDocument()
+    expect(screen.queryByTestId('bug-low_conf_bug')).not.toBeInTheDocument()
+  })
+})

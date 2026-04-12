@@ -156,6 +156,49 @@ def test_compute_score_includes_predicted_bugs() -> None:
     assert score == 90
 
 
+# TC-ANALYSIS-014b — CodeBERT validation
+def test_compute_score_skips_flagged_bugs() -> None:
+    """Bugs flagged by CodeBERT as likely false positives incur no penalty."""
+    bugs = [
+        PredictedBug(
+            line_number=1,
+            bug_type="null_deref",
+            severity="critical",
+            description="x",
+            suggested_fix="y",
+            confidence=0.1,
+            flagged=True,
+        )
+    ]
+    assert compute_score([], bugs) == 100
+
+
+def test_compute_score_penalises_unflagged_bugs_only() -> None:
+    """A mix of flagged and unflagged bugs only counts the unflagged ones."""
+    bugs = [
+        PredictedBug(
+            line_number=1,
+            bug_type="null_deref",
+            severity="critical",
+            description="x",
+            suggested_fix="y",
+            confidence=0.1,
+            flagged=True,
+        ),
+        PredictedBug(
+            line_number=2,
+            bug_type="off_by_one",
+            severity="medium",
+            description="x",
+            suggested_fix="y",
+            confidence=0.9,
+            flagged=False,
+        ),
+    ]
+    # Only the medium bug counts: 100 - 2 (medium) = 98.
+    assert compute_score([], bugs) == 98
+
+
 # ---------------------------------------------------------------------------
 # Naming convention checks
 # ---------------------------------------------------------------------------
