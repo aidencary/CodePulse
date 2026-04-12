@@ -85,8 +85,13 @@ function HelpModal({ onClose }) {
             <ul>
               <li><strong>High confidence (≥ 70%)</strong> — CodeBERT agrees with the LLM. Most likely a real issue.</li>
               <li><strong>Medium (30–70%)</strong> — worth a look but not guaranteed.</li>
-              <li><strong>Low (&lt; 30%)</strong> — CodeBERT thinks this is likely a false positive. The bug is <em>flagged</em>, visually dimmed, and excluded from your overall score.</li>
+              <li><strong>Low (&lt; 30%)</strong> — CodeBERT thinks this is likely a false positive. The bug is <em>flagged</em> and excluded from your overall score.</li>
             </ul>
+            <p>
+              Flagged bugs are easy to spot: they get a <span className="help-swatch help-swatch--flagged" /> <strong>purple </strong>
+              left border (overriding the severity color), a purple flag icon in the card header, and a purple confidence
+              pill — so you can see at a glance which predictions CodeBERT doesn't trust.
+            </p>
             <p>
               This is why your score can stay high even when the LLM surfaces bugs: flagged predictions don't cost you points.
               The flag is the model's way of saying "the LLM may have hallucinated this one."

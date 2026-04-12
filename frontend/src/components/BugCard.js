@@ -27,6 +27,17 @@ function BugCard({ bug, onIgnore, onHoverLine }) {
       onMouseLeave={() => onHoverLine?.(null)}
     >
       <div className="bug-card-header">
+        {bug.flagged && (
+          <span
+            className="bug-flag-icon"
+            title="CodeBERT flagged this as a likely false positive — excluded from score"
+            aria-label="Flagged as likely false positive"
+          >
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M5 3a1 1 0 0 1 1 1v16a1 1 0 1 1-2 0V4a1 1 0 0 1 1-1zm2 1h11.382a1 1 0 0 1 .894 1.447L17.618 9l1.658 3.553A1 1 0 0 1 18.382 14H7V4z" />
+            </svg>
+          </span>
+        )}
         <span className={`severity-badge severity-${bug.severity}`}>
           {bug.severity}
         </span>
