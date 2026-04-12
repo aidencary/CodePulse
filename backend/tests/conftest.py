@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import pytest
 
+from app.limiter import limiter
 from app.services import codebert_validator
 
 
@@ -30,6 +31,11 @@ def _disable_codebert_network(monkeypatch: pytest.MonkeyPatch) -> None:
     # The inference cache is module-global — clear it so fake-model results
     # from one test never leak into another.
     codebert_validator._score_cache.clear()
+
+    # Disable rate limiting for the duration of the test. The limiter is
+    # process-global and would otherwise leak state across tests.
+    limiter.enabled = False
+    limiter.reset()
 
     # Also patch the symbol imported into app.main so the FastAPI lifespan
     # hook is a no-op regardless of import timing.

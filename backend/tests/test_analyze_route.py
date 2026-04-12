@@ -275,3 +275,53 @@ def test_analyze_code_too_long_returns_422() -> None:
         headers=_make_headers(),
     )
     assert resp.status_code == 422
+
+
+# ---------------------------------------------------------------------------
+# Rate limiting
+# ---------------------------------------------------------------------------
+
+
+# NFR-SEC-002
+def test_analyze_rate_limit_returns_429_after_threshold() -> None:
+    """The 11th authenticated /analyze call in a minute returns 429."""
+    from app.limiter import limiter
+
+    limiter.reset()
+    limiter.enabled = True
+    try:
+        with (
+            patch(
+                "app.routes.analysis.run_static_analysis",
+                return_value=([], 100),
+            ),
+            patch(
+                "app.routes.analysis.predict_bugs",
+                new=AsyncMock(return_value=[]),
+            ),
+            patch(
+                "app.routes.analysis.generate_submission_name",
+                new=AsyncMock(return_value="Test"),
+            ),
+            patch(
+                "app.routes.analysis.persist_analysis",
+                new=AsyncMock(return_value=("submission-id", "Test")),
+            ),
+        ):
+            headers = _make_headers()
+            for _ in range(10):
+                resp = client.post(
+                    "/api/v1/analyze",
+                    json={"code": _SAMPLE_CODE},
+                    headers=headers,
+                )
+                assert resp.status_code == 200
+            resp = client.post(
+                "/api/v1/analyze",
+                json={"code": _SAMPLE_CODE},
+                headers=headers,
+            )
+            assert resp.status_code == 429
+    finally:
+        limiter.reset()
+        limiter.enabled = False

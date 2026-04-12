@@ -118,7 +118,10 @@ The `SUPABASE_SERVICE_ROLE_KEY` bypasses RLS and is reserved for trusted server-
 ### 5. Input Validation — API Boundaries
 All data entering the API is validated using Pydantic models before it reaches the service layer. User-submitted code is treated as untrusted input and is never executed by the server.
 
-### 6. Secrets Management
+### 6. Rate Limiting — Abuse Prevention
+`POST /api/v1/analyze` is protected by [`slowapi`](https://github.com/laurentS/slowapi) at **10 requests/minute per bearer token** (with remote-address fallback). Each analyze call hits OpenAI and runs CodeBERT inference, so the limit prevents a single token from draining cost or monopolising inference on the free-tier host. Exceeding the limit returns `429 Too Many Requests`. The limiter lives in [app/limiter.py](app/limiter.py) and is wired into [app/main.py](app/main.py) as middleware.
+
+### 7. Secrets Management
 All credentials are stored in environment variables loaded from `.env`. The `.env` file is listed in `.gitignore` and is never committed. See `.env.example` for the required variable names.
 
 ---
@@ -208,7 +211,7 @@ pytest tests/test_gpt_predictor.py -v    # GPT predictor tests (mocked)
 pytest tests/test_analyze_route.py -v    # Route integration tests
 ```
 
-187 tests, all passing. Add a corresponding test file in `tests/` for each new service module.
+188 tests, all passing. Add a corresponding test file in `tests/` for each new service module.
 
 ---
 

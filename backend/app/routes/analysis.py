@@ -2,9 +2,10 @@
 
 import logging
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 
 from app.dependencies import get_current_user
+from app.limiter import limiter
 from app.models.analysis import AnalyzeRequest, AnalyzeResponse
 from app.services.codebert_validator import validate_predictions
 from app.services.engines.python_engine import PythonEngine
@@ -30,8 +31,11 @@ router = APIRouter(tags=["analysis"])
 # FR-REPORT-002
 # NFR-PERF-001
 # NFR-RELI-001
+# NFR-SEC-002
 @router.post("/analyze", response_model=AnalyzeResponse)
+@limiter.limit("10/minute")
 async def analyze(
+    request: Request,
     payload: AnalyzeRequest,
     user_id: str = Depends(get_current_user),
 ) -> AnalyzeResponse:
