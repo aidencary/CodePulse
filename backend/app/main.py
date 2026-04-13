@@ -37,8 +37,33 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+def _build_allowed_origins(raw_origins: str) -> list[str]:
+    origins: list[str] = []
+    for origin in raw_origins.split(","):
+        origin = origin.strip()
+        if origin and origin not in origins:
+            origins.append(origin)
+
+    local_dev_origins = [
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "http://localhost:5173",
+        "http://localhost:4173",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:3001",
+        "http://127.0.0.1:5173",
+        "http://127.0.0.1:4173",
+    ]
+
+    for origin in local_dev_origins:
+        if origin not in origins:
+            origins.append(origin)
+
+    return origins
+
+
 _raw_origins = os.environ.get("ALLOWED_ORIGINS", "http://localhost:3000")
-_origins = [o.strip() for o in _raw_origins.split(",")]
+_origins = _build_allowed_origins(_raw_origins)
 
 app.add_middleware(
     CORSMiddleware,
