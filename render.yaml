@@ -21,5 +21,7 @@ services:
         value: "gpt-4o-mini"
       - key: ALLOWED_ORIGINS
         sync: false
+      - key: HF_TOKEN
+        sync: false
       - key: DEBUG
         value: "false"
