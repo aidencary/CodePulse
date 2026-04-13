@@ -37,6 +37,7 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+
 def _build_allowed_origins(raw_origins: str) -> list[str]:
     origins: list[str] = []
     for origin in raw_origins.split(","):
