@@ -217,7 +217,7 @@ function EditorSettingsPanel({ settings, onChangeSetting, onReset }) {
 
 // FR-DASH-001
 // FR-DASH-002
-function CodeEditor({ code, onCodeChange, onRun, loading, isDark, highlightLine }) {
+function CodeEditor({ code, onCodeChange, onRun, loading, isDark, highlightLine, jumpToLine }) {
   const btnRef = useRef(null)
   const editorRef = useRef(null)
   const decorationsRef = useRef([])
@@ -268,6 +268,21 @@ function CodeEditor({ code, onCodeChange, onRun, loading, isDark, highlightLine 
       decorationsRef.current = editor.deltaDecorations(decorationsRef.current, [])
     }
   }, [highlightLine, settings.severityHighlight])
+
+  useEffect(() => {
+    const editor = editorRef.current
+    if (!editor || jumpToLine == null) return
+    const rawLine = typeof jumpToLine === 'object' ? jumpToLine.line : jumpToLine
+    if (!Number.isInteger(rawLine)) return
+
+    const model = editor.getModel()
+    const maxLine = model?.getLineCount() || rawLine
+    const line = Math.max(1, Math.min(rawLine, maxLine))
+
+    editor.revealLineInCenter(line)
+    editor.setPosition({ lineNumber: line, column: 1 })
+    editor.focus()
+  }, [jumpToLine])
 
   useEffect(() => {
     if (!btnRef.current) return

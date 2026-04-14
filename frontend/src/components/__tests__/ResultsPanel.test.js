@@ -292,6 +292,58 @@ describe('ResultsPanel — hover line highlight', () => {
   })
 })
 
+// Click-to-jump behavior
+describe('ResultsPanel — jump to line', () => {
+  // TC-REPORT-024A
+  it('calls onJumpLine when clicking a finding row', () => {
+    const onJumpLine = jest.fn()
+    render(
+      <ResultsPanel
+        results={mockResults}
+        loading={false}
+        error={null}
+        onJumpLine={onJumpLine}
+      />
+    )
+
+    fireEvent.click(screen.getByTestId('finding-long_line'))
+    expect(onJumpLine).toHaveBeenCalledWith({ line: 5, severity: 'low' })
+  })
+
+  // TC-REPORT-024B
+  it('calls onJumpLine when clicking a bug card', () => {
+    const onJumpLine = jest.fn()
+    render(
+      <ResultsPanel
+        results={mockResults}
+        loading={false}
+        error={null}
+        onJumpLine={onJumpLine}
+      />
+    )
+
+    fireEvent.click(screen.getByTestId('bug-null_dereference'))
+    expect(onJumpLine).toHaveBeenCalledWith({ line: 8, severity: 'high' })
+  })
+
+  // TC-REPORT-024C
+  it('does not call onJumpLine when clicking ignore controls', () => {
+    const onJumpLine = jest.fn()
+    render(
+      <ResultsPanel
+        results={mockResults}
+        loading={false}
+        error={null}
+        onJumpLine={onJumpLine}
+      />
+    )
+
+    fireEvent.click(screen.getAllByTitle('Ignore this finding')[0])
+    fireEvent.click(screen.getByTitle('Ignore this bug'))
+    expect(onJumpLine).not.toHaveBeenCalled()
+  })
+})
+
 // Sort controls
 describe('ResultsPanel — sort controls', () => {
   // Three findings: two share severity 'Low' so line-number tiebreaking is testable.

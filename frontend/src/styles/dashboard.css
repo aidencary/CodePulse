@@ -1180,6 +1180,15 @@ body {
 .finding-item.finding-sev-med  { border-left-color: #facc15; }
 .finding-item.finding-sev-high { border-left-color: var(--danger); }
 
+.finding-item.finding-clickable {
+  cursor: pointer;
+}
+
+.finding-item.finding-clickable:focus-visible {
+  outline: 1px solid var(--purple-lite);
+  outline-offset: 2px;
+}
+
 .finding-item:hover {
   background: rgba(124, 58, 237, 0.06);
   transition: background 0.15s;
@@ -1223,6 +1232,15 @@ body {
 .bug-card.bug-sev-medium   { border-left-color: #facc15; }
 .bug-card.bug-sev-high     { border-left-color: var(--danger); }
 .bug-card.bug-sev-critical { border-left-color: #ff4444; }
+
+.bug-card.bug-clickable {
+  cursor: pointer;
+}
+
+.bug-card.bug-clickable:focus-visible {
+  outline: 1px solid var(--purple-lite);
+  outline-offset: 2px;
+}
 
 .bug-card.flagged {
   opacity: 0.72;
