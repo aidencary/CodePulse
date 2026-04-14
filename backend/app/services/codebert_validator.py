@@ -2,9 +2,10 @@
 
 Loads a fine-tuned CodeBERT binary classifier once at startup and scores
 each GPT-predicted bug. The "buggy" label index is read from the model's
-``config.label2id`` at load time, so either label order works and a later
-retrain won't require a code change. Predictions whose P(buggy) falls
-below ``codebert_flag_threshold`` are marked ``flagged`` so downstream
+config metadata (``label2id``/``id2label``) at load time, with an optional
+``CODEBERT_BUGGY_INDEX`` override for checkpoints that only expose placeholder
+labels. Predictions whose P(buggy) falls below ``codebert_flag_threshold``
+are contrast-remapped (optional) and marked ``flagged`` so downstream
 scoring can skip their penalty.
 
 Safe-fallback everywhere: if the model fails to load (e.g. OOM on free-tier
@@ -16,7 +17,9 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import math
 import re
+import statistics
 from threading import Lock
 from typing import Any
 
@@ -29,12 +32,8 @@ _model: Any = None
 _tokenizer: Any = None
 _lock = Lock()
 
-# Index of the "buggy" class in the model's output logits. Resolved from
-# ``model.config.label2id`` in ``load_model``; defaults to 0 because the
-# current ``aidencary/codepulse-codebert`` checkpoint ships with placeholder
-# ``LABEL_0``/``LABEL_1`` names and label 0 is empirically the buggy class.
-# A retrain that sets ``id2label={0: "clean", 1: "buggy"}`` will flip this
-# automatically with no code change required.
+# Index of the "buggy" class in the model's output logits. Resolved at
+# model-load time from config metadata or ``CODEBERT_BUGGY_INDEX`` override.
 _buggy_index: int = 0
 
 # Bounded cache of snippet → P(buggy). Inference is deterministic in eval
@@ -54,19 +53,26 @@ _COMMENT_RE = re.compile(
 )
 
 
-def _resolve_buggy_index(model: Any) -> int:
-    """Inspect ``model.config.label2id`` and return the index of the buggy class.
+def _resolve_buggy_index(model: Any) -> int | None:
+    """Return the buggy-class index from model metadata when unambiguous.
 
-    Accepts any case-insensitive label matching ``buggy``/``bug``/``positive``
-    and returns its id. If the config only exposes ``LABEL_0``/``LABEL_1``
-    placeholders (no semantic names), falls back to 0 — the empirically-known
-    layout of the current ``aidencary/codepulse-codebert`` checkpoint.
+    Tries both ``label2id`` and ``id2label`` mappings and accepts
+    case-insensitive label names matching ``buggy``/``bug``/``positive``.
+    Returns ``None`` when only placeholder labels are present (for example
+    ``LABEL_0``/``LABEL_1``), so callers can apply an explicit fallback policy.
     """
-    label2id = getattr(getattr(model, "config", None), "label2id", None) or {}
+    config = getattr(model, "config", None)
+    label2id = getattr(config, "label2id", None) or {}
     for name, idx in label2id.items():
         if str(name).strip().lower() in {"buggy", "bug", "positive", "1"}:
             return int(idx)
-    return 0
+
+    id2label = getattr(config, "id2label", None) or {}
+    for idx, name in id2label.items():
+        if str(name).strip().lower() in {"buggy", "bug", "positive", "1"}:
+            return int(idx)
+
+    return None
 
 
 def load_model() -> None:
@@ -89,12 +95,43 @@ def load_model() -> None:
             settings.codebert_model_path, token=settings.hf_token
         )
         _model.eval()
-        _buggy_index = _resolve_buggy_index(_model)
+        resolved_buggy_index = _resolve_buggy_index(_model)
+        configured_buggy_index = settings.codebert_buggy_index
+        num_labels = int(getattr(_model.config, "num_labels", 0) or 0)
+
+        if configured_buggy_index is not None:
+            if num_labels and not (0 <= configured_buggy_index < num_labels):
+                raise ValueError(
+                    "CODEBERT_BUGGY_INDEX out of range "
+                    f"(got {configured_buggy_index}, model has {num_labels} labels)"
+                )
+            _buggy_index = int(configured_buggy_index)
+            buggy_source = "env"
+        elif resolved_buggy_index is not None:
+            _buggy_index = resolved_buggy_index
+            buggy_source = "model-config"
+        else:
+            # Ambiguous placeholder labels (e.g. LABEL_0/LABEL_1). Keep legacy
+            # default for backwards compatibility but warn so deployments can
+            # pin the correct class with CODEBERT_BUGGY_INDEX.
+            _buggy_index = 0
+            buggy_source = "fallback"
+            logger.warning(
+                "CodeBERT label mapping is ambiguous (label2id=%s, id2label=%s). "
+                "Defaulting buggy class index to 0; set CODEBERT_BUGGY_INDEX "
+                "to override.",
+                getattr(_model.config, "label2id", {}),
+                getattr(_model.config, "id2label", {}),
+            )
+
         _score_cache.clear()
         logger.info(
-            "CodeBERT model loaded. Buggy class index: %d (label2id=%s)",
+            "CodeBERT model loaded. Buggy class index: %d (source=%s, "
+            "label2id=%s, id2label=%s)",
             _buggy_index,
+            buggy_source,
             getattr(_model.config, "label2id", {}),
+            getattr(_model.config, "id2label", {}),
         )
 
 
@@ -121,7 +158,9 @@ def _extract_snippet(code: str, line_number: int | None, window: int = 0) -> str
     Comments are stripped first so a ``# null deref`` annotation on the bug
     line can't leak the label into the model. Remaining lines are joined
     with ``\\n`` and the block's common leading indentation is removed so
-    the model sees the code at column 0. Returns an empty string for
+    the model sees the code at column 0. When context is included, the
+    target line is prefixed with ``BUG_LINE:`` so adjacent bug lines do not
+    collapse to the exact same snippet text. Returns an empty string for
     ``None`` line numbers or out-of-range values.
     """
     if line_number is None:
@@ -132,12 +171,15 @@ def _extract_snippet(code: str, line_number: int | None, window: int = 0) -> str
         return ""
     start = max(0, line_number - 1 - window)
     end = min(len(lines), line_number + window)
+    target_idx = line_number - 1 - start
     block = lines[start:end]
     non_blank = [ln for ln in block if ln.strip()]
     if not non_blank:
         return ""
     indent = min(len(ln) - len(ln.lstrip()) for ln in non_blank)
     dedented = [(ln[indent:] if len(ln) >= indent else ln).rstrip() for ln in block]
+    if window > 0 and 0 <= target_idx < len(dedented):
+        dedented[target_idx] = f"BUG_LINE: {dedented[target_idx]}"
     # Drop leading/trailing blank lines that fall out of comment stripping.
     while dedented and not dedented[0].strip():
         dedented.pop(0)
@@ -180,6 +222,32 @@ def _score_snippet(snippet: str) -> float:
     return p_buggy
 
 
+def _apply_confidence_contrast(
+    scores: list[float],
+    strength: float,
+    blend: float,
+) -> list[float]:
+    """Spread close confidence scores apart while preserving rank order."""
+    if len(scores) < 2:
+        return scores
+    std = statistics.pstdev(scores)
+    if std <= 1e-9:
+        return scores
+
+    mean = statistics.fmean(scores)
+    # Keep settings bounded to avoid instability from extreme env values.
+    strength = max(0.1, min(strength, 6.0))
+    blend = max(0.0, min(blend, 1.0))
+
+    contrasted: list[float] = []
+    for score in scores:
+        z = (score - mean) / std
+        sigmoid = 1.0 / (1.0 + math.exp(-strength * z))
+        adjusted = (1.0 - blend) * score + blend * sigmoid
+        contrasted.append(max(0.0, min(1.0, adjusted)))
+    return contrasted
+
+
 async def validate_predictions(
     code: str, predicted_bugs: list[PredictedBug]
 ) -> list[PredictedBug]:
@@ -187,9 +255,9 @@ async def validate_predictions(
 
     For every bug with a valid line number, runs the bug line plus its
     configured context window through the classifier, attaches
-    ``confidence`` = P(buggy), and sets ``flagged`` to True when confidence
-    is below the configured threshold. Inference runs on a worker thread
-    so it doesn't block the FastAPI event loop.
+    ``confidence`` = P(buggy), and sets ``flagged`` to True when confidence is
+    below the configured threshold. Inference runs on a worker thread so it
+    doesn't block the FastAPI event loop.
 
     Bugs are passed through untouched when:
     - the model failed to load (``_model`` is None),
@@ -201,25 +269,42 @@ async def validate_predictions(
 
     settings = get_settings()
     window = max(0, settings.codebert_context_window)
-    validated: list[PredictedBug] = []
-    for bug in predicted_bugs:
+    threshold = settings.codebert_flag_threshold
+    contrast_strength = float(
+        getattr(settings, "codebert_confidence_contrast_strength", 2.5)
+    )
+    contrast_blend = float(getattr(settings, "codebert_confidence_contrast_blend", 0.4))
+
+    validated: list[PredictedBug] = list(predicted_bugs)
+    scored_items: list[tuple[int, PredictedBug, float]] = []
+
+    for idx, bug in enumerate(predicted_bugs):
         snippet = _extract_snippet(code, bug.line_number, window=window)
         if not snippet:
-            validated.append(bug)
             continue
         try:
             p_buggy = await asyncio.to_thread(_score_snippet, snippet)
-            validated.append(
-                bug.model_copy(
-                    update={
-                        "confidence": p_buggy,
-                        "flagged": p_buggy < settings.codebert_flag_threshold,
-                    }
-                )
-            )
+            scored_items.append((idx, bug, p_buggy))
         except Exception as exc:
             logger.warning(
                 "CodeBERT inference failed for line %s: %s", bug.line_number, exc
             )
-            validated.append(bug)
+
+    transformed_scores: list[float] = []
+    if scored_items:
+        raw_scores = [score for _, _, score in scored_items]
+        transformed_scores = _apply_confidence_contrast(
+            raw_scores,
+            strength=contrast_strength,
+            blend=contrast_blend,
+        )
+
+    for (idx, bug, _), p_buggy in zip(scored_items, transformed_scores, strict=False):
+        validated[idx] = bug.model_copy(
+            update={
+                "confidence": p_buggy,
+                "flagged": p_buggy < threshold,
+            }
+        )
+
     return validated

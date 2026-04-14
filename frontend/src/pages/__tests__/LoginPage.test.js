@@ -6,7 +6,6 @@ import { useAuth } from '../../context/AuthContext'
 // jsdom does not provide IntersectionObserver
 beforeAll(() => {
   global.IntersectionObserver = class {
-    constructor() {}
     observe() {}
     unobserve() {}
     disconnect() {}
