@@ -18,6 +18,8 @@ class Finding(BaseModel):
 
     issue_type: str
     line_number: int
+    column_start: int | None = None
+    column_end: int | None = None
     severity: Literal["Low", "Med", "High"]
     message: str
 

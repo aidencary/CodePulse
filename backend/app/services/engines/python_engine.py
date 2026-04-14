@@ -1,4 +1,4 @@
-"""Python static analysis engine — single-pass AST and text-based PEP 8 checks."""
+""" v1.0.0 Python static analysis engine — single-pass AST and text-based PEP 8 checks."""
 
 import ast
 import logging
@@ -197,6 +197,9 @@ _BINARY_OPS = frozenset(
     {"+", "-", "*", "/", "//", "%", "**", "and", "or", "|", "&", "^"}
 )
 
+# Known top-level local packages for absolute-import grouping.
+_LOCAL_IMPORT_ROOTS = frozenset({"app"})
+
 # Comment prefixes to skip for block-comment capitalisation check.
 _COMMENT_SKIP_PREFIXES = (
     "#!",
@@ -387,6 +390,167 @@ def _collect_keyword_arg_equals(
     return keyword_arg_equals
 
 
+def _find_equals_between(
+    lines: list[str],
+    start_line: int,
+    start_col: int,
+    end_line: int,
+    end_col: int,
+) -> tuple[int, int] | None:
+    """Return the first ``=`` between two source positions, if any."""
+    return _find_char_between(lines, start_line, start_col, end_line, end_col, "=")
+
+
+def _find_char_between(
+    lines: list[str],
+    start_line: int,
+    start_col: int,
+    end_line: int,
+    end_col: int,
+    char: str,
+) -> tuple[int, int] | None:
+    """Return the first occurrence of *char* between source positions."""
+    if start_line < 1 or end_line < start_line:
+        return None
+
+    for line_number in range(start_line, end_line + 1):
+        if line_number < 1 or line_number > len(lines):
+            return None
+        line = lines[line_number - 1]
+        left = start_col if line_number == start_line else 0
+        right = end_col if line_number == end_line else len(line)
+        left = max(0, left)
+        right = min(len(line), right)
+        if left > right:
+            continue
+        char_index = line.find(char, left, right)
+        if char_index != -1:
+            return line_number, char_index
+    return None
+
+
+def _collect_param_default_equals(
+    tree: ast.Module, lines: list[str]
+) -> dict[int, dict[int, bool]]:
+    """Return default-parameter ``=`` positions with annotation metadata."""
+    default_param_equals: dict[int, dict[int, bool]] = {}
+
+    for node in ast.walk(tree):
+        if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            continue
+
+        arg_default_pairs: list[tuple[ast.arg, ast.expr]] = []
+
+        positional_args = [*node.args.posonlyargs, *node.args.args]
+        positional_defaults = node.args.defaults
+        if positional_defaults:
+            defaulted_args = positional_args[-len(positional_defaults) :]
+            arg_default_pairs.extend(zip(defaulted_args, positional_defaults))
+
+        for kw_arg, kw_default in zip(node.args.kwonlyargs, node.args.kw_defaults):
+            if kw_default is None:
+                continue
+            arg_default_pairs.append((kw_arg, kw_default))
+
+        for arg_node, default_node in arg_default_pairs:
+            start_line = getattr(arg_node, "end_lineno", None) or getattr(
+                arg_node, "lineno", None
+            )
+            start_col = getattr(arg_node, "end_col_offset", None)
+            end_line = getattr(default_node, "lineno", None)
+            end_col = getattr(default_node, "col_offset", None)
+            if None in (start_line, start_col, end_line, end_col):
+                continue
+
+            eq_pos = _find_equals_between(
+                lines,
+                int(start_line),
+                int(start_col),
+                int(end_line),
+                int(end_col),
+            )
+            if eq_pos is None:
+                continue
+
+            eq_line, eq_col = eq_pos
+            default_param_equals.setdefault(eq_line, {})[eq_col] = (
+                arg_node.annotation is not None
+            )
+
+    return default_param_equals
+
+
+def _collect_annotation_colons(
+    tree: ast.Module, lines: list[str]
+) -> dict[int, set[int]]:
+    """Return ``:`` positions used by variable/parameter annotations."""
+    annotation_colons: dict[int, set[int]] = {}
+
+    def _record_colon(
+        start_line: int,
+        start_col: int,
+        end_line: int,
+        end_col: int,
+    ) -> None:
+        colon_pos = _find_char_between(
+            lines,
+            start_line,
+            start_col,
+            end_line,
+            end_col,
+            ":",
+        )
+        if colon_pos is None:
+            return
+        colon_line, colon_col = colon_pos
+        annotation_colons.setdefault(colon_line, set()).add(colon_col)
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.AnnAssign):
+            start_line = getattr(node.target, "end_lineno", None) or getattr(
+                node.target, "lineno", None
+            )
+            start_col = getattr(node.target, "end_col_offset", None)
+            end_line = getattr(node.annotation, "lineno", None)
+            end_col = getattr(node.annotation, "col_offset", None)
+            if None not in (start_line, start_col, end_line, end_col):
+                _record_colon(
+                    int(start_line),
+                    int(start_col),
+                    int(end_line),
+                    int(end_col),
+                )
+
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            annotated_args: list[ast.arg] = [
+                *node.args.posonlyargs,
+                *node.args.args,
+                *node.args.kwonlyargs,
+            ]
+            if node.args.vararg is not None:
+                annotated_args.append(node.args.vararg)
+            if node.args.kwarg is not None:
+                annotated_args.append(node.args.kwarg)
+
+            for arg in annotated_args:
+                if arg.annotation is None:
+                    continue
+                start_line = getattr(arg, "lineno", None)
+                start_col = getattr(arg, "col_offset", None)
+                end_line = getattr(arg.annotation, "lineno", None)
+                end_col = getattr(arg.annotation, "col_offset", None)
+                if None in (start_line, start_col, end_line, end_col):
+                    continue
+                _record_colon(
+                    int(start_line),
+                    int(start_col),
+                    int(end_line),
+                    int(end_col),
+                )
+
+    return annotation_colons
+
+
 # ---------------------------------------------------------------------------
 # Single-pass AST visitor — consolidates all AST-based checks
 # FR-ANALYSIS-001
@@ -416,25 +580,25 @@ class _ASTVisitor(ast.NodeVisitor):
         """Flag stdlib/third-party/local imports that are not grouped."""
         _STDLIB = sys.stdlib_module_names
 
+        def _import_group(top_level: str, level: int = 0) -> int:
+            if level > 0:
+                return 2
+            if top_level in _STDLIB:
+                return 0
+            if top_level in _LOCAL_IMPORT_ROOTS:
+                return 2
+            return 1
+
         imports: list[tuple[int, str, int]] = []
         for node in self._tree.body:
             if isinstance(node, ast.Import):
                 for alias in node.names:
                     top = alias.name.split(".")[0]
-                    if top in _STDLIB:
-                        group = 0
-                    else:
-                        group = 1
+                    group = _import_group(top)
                     imports.append((node.lineno, alias.name, group))
             elif isinstance(node, ast.ImportFrom):
-                if node.level and node.level > 0:
-                    group = 2
-                else:
-                    top = (node.module or "").split(".")[0]
-                    if top in _STDLIB:
-                        group = 0
-                    else:
-                        group = 1
+                top = (node.module or "").split(".")[0]
+                group = _import_group(top, node.level or 0)
                 imports.append((node.lineno, node.module or "", group))
 
         highest_group = -1
@@ -1031,11 +1195,15 @@ def _run_text_checks(
     tree: ast.Module,
     filename: str | None = None,
     keyword_arg_equals: dict[int, set[int]] | None = None,
+    param_default_equals: dict[int, dict[int, bool]] | None = None,
+    annotation_colons: dict[int, set[int]] | None = None,
 ) -> list[Finding]:
     """Run all text-based checks in a single line iteration."""
     findings: list[Finding] = []
     lines = code.splitlines()
     keyword_arg_equals = keyword_arg_equals or {}
+    param_default_equals = param_default_equals or {}
+    annotation_colons = annotation_colons or {}
 
     # module_naming — check filename is lowercase if provided
     if filename:
@@ -1181,11 +1349,14 @@ def _run_text_checks(
 
         # bracket_whitespace (E201/E202)
         if stripped and not stripped.startswith("#"):
-            if re.search(r"[\(\[\{] ", code_portion):
+            opening_match = re.search(r"[\(\[\{] ", code_portion)
+            if opening_match:
                 findings.append(
                     Finding(
                         issue_type="bracket_whitespace",
                         line_number=line_number,
+                        column_start=opening_match.start() + 2,
+                        column_end=opening_match.start() + 2,
                         severity="Low",
                         message=(
                             "Whitespace after opening bracket. "
@@ -1195,11 +1366,16 @@ def _run_text_checks(
                 )
             # Ignore leading indentation so standalone closing brackets on
             # multiline calls (e.g., "    )") are not treated as E202.
-            if re.search(r" [\)\]\}]", code_portion.lstrip()):
+            stripped_code_portion = code_portion.lstrip()
+            closing_match = re.search(r" [\)\]\}]", stripped_code_portion)
+            if closing_match:
+                stripped_offset = len(code_portion) - len(stripped_code_portion)
                 findings.append(
                     Finding(
                         issue_type="bracket_whitespace",
                         line_number=line_number,
+                        column_start=stripped_offset + closing_match.start() + 1,
+                        column_end=stripped_offset + closing_match.start() + 1,
                         severity="Low",
                         message=(
                             "Whitespace before closing bracket. "
@@ -1276,50 +1452,106 @@ def _run_text_checks(
                     )
                 )
 
-        # operator_spacing (E225) — simplified: flag obvious x=y (not ==, !=,
-        # <=, >=, **, //, keyword args, default args, decorators)
+        # operator_spacing (E225) — assignment operator '=' spacing.
         if stripped and not stripped.startswith(("#", "@")):
             # Only check lines that are not def/lambda signatures
             # (to avoid false positives on default args)
             if not re.match(r"^\s*(def |lambda )", line):
                 # Match single = without spaces, excluding == != <= >= **=
                 for eq_match in re.finditer(
-                    r"(?<![=!<>*/+\-|&^~%])=(?!=)", code_portion
+                    r"(?<![=!<>*/+\-|&^~%:])=(?!=)", code_portion
                 ):
                     if eq_match.start() in keyword_arg_equals.get(line_number, set()):
                         continue
                     pos = eq_match.start()
-                    if pos > 0 and code_portion[pos - 1] != " ":
+                    left_space = pos > 0 and code_portion[pos - 1].isspace()
+                    right_space = (
+                        pos + 1 < len(code_portion)
+                        and code_portion[pos + 1].isspace()
+                    )
+                    if not (left_space and right_space):
                         findings.append(
                             Finding(
                                 issue_type="operator_spacing",
                                 line_number=line_number,
+                                column_start=pos + 1,
+                                column_end=pos + 1,
                                 severity="Low",
-                                message=("Missing whitespace around operator."),
+                                message=(
+                                    "Missing whitespace around assignment "
+                                    "operator '='."
+                                ),
                             )
                         )
                         break
 
-        # keyword_arg_spacing (E251) — spaces around = in def params
+        # keyword_arg_spacing (E251) — keyword args and default params
         if stripped and not stripped.startswith("#"):
-            if re.match(r"^\s*def\s+", line):
-                # Flag "param = default" in function defs
-                # Look for = surrounded by spaces within parentheses
-                paren_content = re.search(r"\((.+)\)", code_portion)
-                if paren_content:
-                    params = paren_content.group(1)
-                    if re.search(r"\w\s+=\s", params) or re.search(r"\w\s+=\S", params):
+            line_has_keyword_spacing_issue = False
+
+            for kw_pos in sorted(keyword_arg_equals.get(line_number, set())):
+                left_space = kw_pos > 0 and code_portion[kw_pos - 1].isspace()
+                right_space = (
+                    kw_pos + 1 < len(code_portion)
+                    and code_portion[kw_pos + 1].isspace()
+                )
+                if left_space or right_space:
+                    findings.append(
+                        Finding(
+                            issue_type="keyword_arg_spacing",
+                            line_number=line_number,
+                            column_start=kw_pos + 1,
+                            column_end=kw_pos + 1,
+                            severity="Low",
+                            message="No spaces around '=' in keyword argument.",
+                        )
+                    )
+                    line_has_keyword_spacing_issue = True
+                    break
+
+            if not line_has_keyword_spacing_issue:
+                for default_pos, is_annotated in sorted(
+                    param_default_equals.get(line_number, {}).items()
+                ):
+                    left_space = (
+                        default_pos > 0 and code_portion[default_pos - 1].isspace()
+                    )
+                    right_space = (
+                        default_pos + 1 < len(code_portion)
+                        and code_portion[default_pos + 1].isspace()
+                    )
+
+                    if is_annotated and not (left_space and right_space):
                         findings.append(
                             Finding(
                                 issue_type="keyword_arg_spacing",
                                 line_number=line_number,
+                                column_start=default_pos + 1,
+                                column_end=default_pos + 1,
                                 severity="Low",
                                 message=(
-                                    "No spaces around '=' in default "
-                                    "parameter value."
+                                    "Use spaces around '=' in annotated "
+                                    "default parameter value."
                                 ),
                             )
                         )
+                        break
+
+                    if (not is_annotated) and (left_space or right_space):
+                        findings.append(
+                            Finding(
+                                issue_type="keyword_arg_spacing",
+                                line_number=line_number,
+                                column_start=default_pos + 1,
+                                column_end=default_pos + 1,
+                                severity="Low",
+                                message=(
+                                    "No spaces around '=' in unannotated "
+                                    "default parameter value."
+                                ),
+                            )
+                        )
+                        break
 
         # binary_operator_line_break (W504)
         if stripped and not stripped.startswith("#"):
@@ -1360,25 +1592,31 @@ def _run_text_checks(
                         )
                     )
 
-        # annotation_spacing — x:int should be x: int
+        # annotation_spacing — enforce ``name: Type`` style.
         if stripped and not stripped.startswith("#"):
-            # Match variable annotations: name:Type (no space after colon)
-            # Exclude dict literals, slices, and lambda
-            if (
-                re.search(r"\w:[A-Za-z]", code_portion)
-                and "lambda " not in line
-                and not re.match(r"^\s*(#|\'|\"|\{)", stripped)
-            ):
-                findings.append(
-                    Finding(
-                        issue_type="annotation_spacing",
-                        line_number=line_number,
-                        severity="Low",
-                        message=(
-                            "Missing whitespace after ':' in " "variable annotation."
-                        ),
-                    )
+            for colon_pos in sorted(annotation_colons.get(line_number, set())):
+                has_space_before = (
+                    colon_pos > 0 and code_portion[colon_pos - 1].isspace()
                 )
+                has_single_space_after = (
+                    colon_pos + 1 < len(code_portion)
+                    and code_portion[colon_pos + 1] == " "
+                )
+                if has_space_before or not has_single_space_after:
+                    findings.append(
+                        Finding(
+                            issue_type="annotation_spacing",
+                            line_number=line_number,
+                            column_start=colon_pos + 1,
+                            column_end=colon_pos + 1,
+                            severity="Low",
+                            message=(
+                                "Annotation spacing should be 'name: Type' "
+                                "(no space before ':', one space after)."
+                            ),
+                        )
+                    )
+                    break
 
         # block_comment_capitalization
         if stripped.startswith("# ") and len(stripped) > 2:
@@ -1614,9 +1852,19 @@ class PythonEngine:
             return findings, raw_score
 
         # Single-pass text-based checks.
-        keyword_arg_equals = _collect_keyword_arg_equals(tree, code.splitlines())
+        lines = code.splitlines()
+        keyword_arg_equals = _collect_keyword_arg_equals(tree, lines)
+        param_default_equals = _collect_param_default_equals(tree, lines)
+        annotation_colons = _collect_annotation_colons(tree, lines)
         findings.extend(
-            _run_text_checks(code, tree, filename, keyword_arg_equals)
+            _run_text_checks(
+                code,
+                tree,
+                filename,
+                keyword_arg_equals,
+                param_default_equals,
+                annotation_colons,
+            )
         )
 
         # Single-pass AST-based checks.
@@ -1635,7 +1883,7 @@ class PythonEngine:
     def supported_checks() -> list[str]:
         """Return the list of all issue_type strings this engine can produce."""
         return [
-            # Existing checks (24)
+            # Supported static analysis checks.
             "syntax_error",
             "long_line",
             "trailing_whitespace",
