@@ -859,7 +859,7 @@ body {
 
 /* ─── Results panel ────────────────────────────────────────────── */
 .results-panel {
-  width: 320px;
+  width: 340px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
@@ -1290,9 +1290,29 @@ body {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.4rem 0.1rem 0.6rem;
+  padding: 0.1rem 0.1rem 0.2rem;
   font-size: 0.72rem;
   color: var(--muted);
+}
+
+.bug-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.25rem 0.1rem 0.6rem;
+}
+
+.flagged-filter-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.72rem;
+  color: var(--muted);
+  user-select: none;
+}
+
+.flagged-filter-toggle input[type="checkbox"] {
+  accent-color: #9333ea;
 }
 
 .confidence-filter label {

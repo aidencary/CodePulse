@@ -38,6 +38,16 @@ describe('ResultsPanel — idle and error states', () => {
     expect(screen.getByText(/run analysis to see/i)).toBeInTheDocument()
   })
 
+  // TC-REPORT-001A
+  it('uses a slightly larger default panel width', () => {
+    const { container } = render(
+      <ResultsPanel results={null} loading={false} error={null} />
+    )
+    const panel = container.querySelector('.results-panel')
+    expect(panel).toBeInTheDocument()
+    expect(panel).toHaveStyle('width: 340px')
+  })
+
   // TC-REPORT-002
   it('shows the error message on failure', () => {
     render(
@@ -166,6 +176,33 @@ describe('ResultsPanel — predicted bugs section', () => {
     const emptyResults = { ...mockResults, predicted_bugs: [] }
     render(<ResultsPanel results={emptyResults} loading={false} error={null} />)
     expect(screen.getByText(/no predicted bugs found/i)).toBeInTheDocument()
+  })
+
+  // TC-REPORT-017A
+  it('hides flagged bugs when the checkbox is unchecked', () => {
+    const flaggedResults = {
+      ...mockResults,
+      predicted_bugs: [
+        ...mockResults.predicted_bugs,
+        {
+          ...mockResults.predicted_bugs[0],
+          bug_type: 'flagged_bug',
+          line_number: 21,
+          flagged: true,
+        },
+      ],
+    }
+
+    render(<ResultsPanel results={flaggedResults} loading={false} error={null} />)
+
+    expect(screen.getByText('flagged_bug')).toBeInTheDocument()
+    const toggle = screen.getByRole('checkbox', { name: /show flagged bugs/i })
+    expect(toggle).toBeChecked()
+
+    fireEvent.click(toggle)
+    expect(toggle).not.toBeChecked()
+    expect(screen.queryByText('flagged_bug')).not.toBeInTheDocument()
+    expect(screen.getByText('null_dereference')).toBeInTheDocument()
   })
 })
 
