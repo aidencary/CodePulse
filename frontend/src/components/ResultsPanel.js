@@ -87,7 +87,7 @@ function ScoreRing({ score, level, size = 88, strokeWidth = 4.5 }) {
   )
 }
 
-function ResultsPanel({ results, loading, error, onHoverLine, submissionName }) {
+function ResultsPanel({ results, loading, error, onHoverLine, onJumpLine, submissionName }) {
   const [findingSort, setFindingSort] = useState('desc')
   const [findingSortField, setFindingSortField] = useState('severity')
   const [bugSort, setBugSort] = useState('desc')
@@ -95,7 +95,8 @@ function ResultsPanel({ results, loading, error, onHoverLine, submissionName }) 
   const [ignoredFindings, setIgnoredFindings] = useState(new Set())
   const [ignoredBugs, setIgnoredBugs] = useState(new Set())
   const [bugConfidenceFilter, setBugConfidenceFilter] = useState(0)
-  const [panelWidth, setPanelWidth] = useState(320)
+  const [showFlaggedBugs, setShowFlaggedBugs] = useState(true)
+  const [panelWidth, setPanelWidth] = useState(340)
   const isResizing = useRef(false)
 
   const handleMouseDown = useCallback((e) => {
@@ -141,6 +142,7 @@ function ResultsPanel({ results, loading, error, onHoverLine, submissionName }) 
     setIgnoredFindings(new Set())
     setIgnoredBugs(new Set())
     setBugConfidenceFilter(0)
+    setShowFlaggedBugs(true)
   }, [results])
 
   const findingKey = (f) => `${f.issue_type}|${f.line_number}|${f.message}`
@@ -153,12 +155,13 @@ function ResultsPanel({ results, loading, error, onHoverLine, submissionName }) 
   const visibleBugs = useMemo(() => {
     return (results?.predicted_bugs || []).filter((b) => {
       if (ignoredBugs.has(bugKey(b))) return false
+      if (!showFlaggedBugs && b.flagged) return false
       if (bugConfidenceFilter === 0) return true
       // Bugs without a confidence score (CodeBERT disabled or failed) always show.
       if (b.confidence == null) return true
       return b.confidence >= bugConfidenceFilter
     })
-  }, [results?.predicted_bugs, ignoredBugs, bugConfidenceFilter]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [results?.predicted_bugs, ignoredBugs, bugConfidenceFilter, showFlaggedBugs]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const anyBugHasConfidence = useMemo(
     () => (results?.predicted_bugs || []).some((b) => b.confidence != null),
@@ -278,10 +281,21 @@ function ResultsPanel({ results, loading, error, onHoverLine, submissionName }) 
               sortedFindings.map((f) => (
                 <div
                   key={findingKey(f)}
-                  className={`finding-item finding-sev-${f.severity.toLowerCase()}`}
+                  className={`finding-item finding-sev-${f.severity.toLowerCase()}${f.line_number != null ? ' finding-clickable' : ''}`}
                   data-testid={`finding-${f.issue_type}`}
                   onMouseEnter={() => f.line_number != null && onHoverLine?.({ line: f.line_number, severity: f.severity.toLowerCase() })}
                   onMouseLeave={() => onHoverLine?.(null)}
+                  onClick={() => f.line_number != null && onJumpLine?.({ line: f.line_number, severity: f.severity.toLowerCase() })}
+                  onKeyDown={(e) => {
+                    if (f.line_number == null) return
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      onJumpLine?.({ line: f.line_number, severity: f.severity.toLowerCase() })
+                    }
+                  }}
+                  role={f.line_number != null ? 'button' : undefined}
+                  tabIndex={f.line_number != null ? 0 : undefined}
+                  aria-label={f.line_number != null ? `Jump to line ${f.line_number}` : undefined}
                 >
                   <span
                     className={`severity-badge severity-${f.severity.toLowerCase()}`}
@@ -294,7 +308,10 @@ function ResultsPanel({ results, loading, error, onHoverLine, submissionName }) 
                   )}
                   <button
                     className="ignore-btn"
-                    onClick={() => setIgnoredFindings((prev) => new Set([...prev, findingKey(f)]))}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setIgnoredFindings((prev) => new Set([...prev, findingKey(f)]))
+                    }}
                     title="Ignore this finding"
                   >✕</button>
                   <p className="finding-message">{f.message}</p>
@@ -318,24 +335,35 @@ function ResultsPanel({ results, loading, error, onHoverLine, submissionName }) 
                 />
               )}
             </h3>
-            {anyBugHasConfidence && (
-              <div className="confidence-filter">
-                <label htmlFor="bug-conf-filter">Min confidence:</label>
+            <div className="bug-filters">
+              {anyBugHasConfidence && (
+                <div className="confidence-filter">
+                  <label htmlFor="bug-conf-filter">Min confidence:</label>
+                  <input
+                    id="bug-conf-filter"
+                    type="range"
+                    min="0"
+                    max="100"
+                    step="5"
+                    value={Math.round(bugConfidenceFilter * 100)}
+                    onChange={(e) => setBugConfidenceFilter(Number(e.target.value) / 100)}
+                    aria-label="Minimum CodeBERT confidence"
+                  />
+                  <span className="confidence-filter-value">
+                    {Math.round(bugConfidenceFilter * 100)}%
+                  </span>
+                </div>
+              )}
+              <label className="flagged-filter-toggle" htmlFor="show-flagged-bugs">
                 <input
-                  id="bug-conf-filter"
-                  type="range"
-                  min="0"
-                  max="100"
-                  step="5"
-                  value={Math.round(bugConfidenceFilter * 100)}
-                  onChange={(e) => setBugConfidenceFilter(Number(e.target.value) / 100)}
-                  aria-label="Minimum CodeBERT confidence"
+                  id="show-flagged-bugs"
+                  type="checkbox"
+                  checked={showFlaggedBugs}
+                  onChange={(e) => setShowFlaggedBugs(e.target.checked)}
                 />
-                <span className="confidence-filter-value">
-                  {Math.round(bugConfidenceFilter * 100)}%
-                </span>
-              </div>
-            )}
+                Show flagged bugs
+              </label>
+            </div>
             {sortedBugs.length === 0 ? (
               <p className="results-placeholder">No predicted bugs found.</p>
             ) : (
@@ -345,6 +373,7 @@ function ResultsPanel({ results, loading, error, onHoverLine, submissionName }) 
                   bug={bug}
                   onIgnore={() => setIgnoredBugs((prev) => new Set([...prev, bugKey(bug)]))}
                   onHoverLine={onHoverLine}
+                  onJumpLine={onJumpLine}
                 />
               ))
             )}

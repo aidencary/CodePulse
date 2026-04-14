@@ -7,13 +7,15 @@ import { useState } from 'react'
  * @param {Object} props.bug - A PredictedBug object from the backend.
  * @param {Function} props.onIgnore - Called when the ignore (✕) button is clicked.
  * @param {Function} [props.onHoverLine] - Called with the line number on mouseenter; null on mouseleave.
+ * @param {Function} [props.onJumpLine] - Called with line/severity when the card is clicked.
  */
-function BugCard({ bug, onIgnore, onHoverLine }) {
+function BugCard({ bug, onIgnore, onHoverLine, onJumpLine }) {
   const [expanded, setExpanded] = useState(false)
 
   const cardClass = [
     'bug-card',
     `bug-sev-${bug.severity}`,
+    bug.line_number != null ? 'bug-clickable' : '',
     bug.flagged ? 'flagged' : '',
   ]
     .filter(Boolean)
@@ -25,6 +27,17 @@ function BugCard({ bug, onIgnore, onHoverLine }) {
       data-testid={`bug-${bug.bug_type}`}
       onMouseEnter={() => bug.line_number != null && onHoverLine?.({ line: bug.line_number, severity: bug.severity.toLowerCase() })}
       onMouseLeave={() => onHoverLine?.(null)}
+      onClick={() => bug.line_number != null && onJumpLine?.({ line: bug.line_number, severity: bug.severity.toLowerCase() })}
+      onKeyDown={(e) => {
+        if (bug.line_number == null) return
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          onJumpLine?.({ line: bug.line_number, severity: bug.severity.toLowerCase() })
+        }
+      }}
+      role={bug.line_number != null ? 'button' : undefined}
+      tabIndex={bug.line_number != null ? 0 : undefined}
+      aria-label={bug.line_number != null ? `Jump to line ${bug.line_number}` : undefined}
     >
       <div className="bug-card-header">
         {bug.flagged && (
@@ -58,14 +71,24 @@ function BugCard({ bug, onIgnore, onHoverLine }) {
             {Math.round(bug.confidence * 100)}%
           </span>
         )}
-        <button className="ignore-btn" onClick={onIgnore} title="Ignore this bug">
+        <button
+          className="ignore-btn"
+          onClick={(e) => {
+            e.stopPropagation()
+            onIgnore()
+          }}
+          title="Ignore this bug"
+        >
           ✕
         </button>
       </div>
       <p className="bug-description">{bug.description}</p>
       <button
         className="bug-fix-toggle"
-        onClick={() => setExpanded((e) => !e)}
+        onClick={(e) => {
+          e.stopPropagation()
+          setExpanded((prev) => !prev)
+        }}
         aria-expanded={expanded}
       >
         {expanded ? 'Hide fix' : 'Show suggested fix'}

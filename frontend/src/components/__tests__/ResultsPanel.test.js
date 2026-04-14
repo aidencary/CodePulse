@@ -38,6 +38,16 @@ describe('ResultsPanel — idle and error states', () => {
     expect(screen.getByText(/run analysis to see/i)).toBeInTheDocument()
   })
 
+  // TC-REPORT-001A
+  it('uses a slightly larger default panel width', () => {
+    const { container } = render(
+      <ResultsPanel results={null} loading={false} error={null} />
+    )
+    const panel = container.querySelector('.results-panel')
+    expect(panel).toBeInTheDocument()
+    expect(panel).toHaveStyle('width: 340px')
+  })
+
   // TC-REPORT-002
   it('shows the error message on failure', () => {
     render(
@@ -167,6 +177,33 @@ describe('ResultsPanel — predicted bugs section', () => {
     render(<ResultsPanel results={emptyResults} loading={false} error={null} />)
     expect(screen.getByText(/no predicted bugs found/i)).toBeInTheDocument()
   })
+
+  // TC-REPORT-017A
+  it('hides flagged bugs when the checkbox is unchecked', () => {
+    const flaggedResults = {
+      ...mockResults,
+      predicted_bugs: [
+        ...mockResults.predicted_bugs,
+        {
+          ...mockResults.predicted_bugs[0],
+          bug_type: 'flagged_bug',
+          line_number: 21,
+          flagged: true,
+        },
+      ],
+    }
+
+    render(<ResultsPanel results={flaggedResults} loading={false} error={null} />)
+
+    expect(screen.getByText('flagged_bug')).toBeInTheDocument()
+    const toggle = screen.getByRole('checkbox', { name: /show flagged bugs/i })
+    expect(toggle).toBeChecked()
+
+    fireEvent.click(toggle)
+    expect(toggle).not.toBeChecked()
+    expect(screen.queryByText('flagged_bug')).not.toBeInTheDocument()
+    expect(screen.getByText('null_dereference')).toBeInTheDocument()
+  })
 })
 
 // Ignore / dismiss
@@ -252,6 +289,58 @@ describe('ResultsPanel — hover line highlight', () => {
     )
     fireEvent.mouseEnter(screen.getByTestId('bug-null_dereference'))
     expect(onHoverLine).not.toHaveBeenCalledWith(expect.any(Number))
+  })
+})
+
+// Click-to-jump behavior
+describe('ResultsPanel — jump to line', () => {
+  // TC-REPORT-024A
+  it('calls onJumpLine when clicking a finding row', () => {
+    const onJumpLine = jest.fn()
+    render(
+      <ResultsPanel
+        results={mockResults}
+        loading={false}
+        error={null}
+        onJumpLine={onJumpLine}
+      />
+    )
+
+    fireEvent.click(screen.getByTestId('finding-long_line'))
+    expect(onJumpLine).toHaveBeenCalledWith({ line: 5, severity: 'low' })
+  })
+
+  // TC-REPORT-024B
+  it('calls onJumpLine when clicking a bug card', () => {
+    const onJumpLine = jest.fn()
+    render(
+      <ResultsPanel
+        results={mockResults}
+        loading={false}
+        error={null}
+        onJumpLine={onJumpLine}
+      />
+    )
+
+    fireEvent.click(screen.getByTestId('bug-null_dereference'))
+    expect(onJumpLine).toHaveBeenCalledWith({ line: 8, severity: 'high' })
+  })
+
+  // TC-REPORT-024C
+  it('does not call onJumpLine when clicking ignore controls', () => {
+    const onJumpLine = jest.fn()
+    render(
+      <ResultsPanel
+        results={mockResults}
+        loading={false}
+        error={null}
+        onJumpLine={onJumpLine}
+      />
+    )
+
+    fireEvent.click(screen.getAllByTitle('Ignore this finding')[0])
+    fireEvent.click(screen.getByTitle('Ignore this bug'))
+    expect(onJumpLine).not.toHaveBeenCalled()
   })
 })
 

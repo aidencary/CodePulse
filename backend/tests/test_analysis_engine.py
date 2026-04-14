@@ -1,10 +1,45 @@
 """Unit tests for the static analysis engine."""
 
+import pytest
+
 from app.models.analysis import Finding, PredictedBug
 from app.services.engines.python_engine import PythonEngine
 
+pycodestyle = pytest.importorskip("pycodestyle")
+
 compute_score = PythonEngine.compute_score
 run_static_analysis = PythonEngine.run_static_analysis
+
+
+class _CollectPycodestyleReport(pycodestyle.BaseReport):
+    """Collect pycodestyle error codes for snippet parity checks."""
+
+    def __init__(self, options: object) -> None:
+        super().__init__(options)
+        self.codes: list[str] = []
+
+    def error(
+        self,
+        line_number: int,
+        offset: int,
+        text: str,
+        check: object,
+    ) -> int:
+        self.codes.append(text[:4])
+        return super().error(line_number, offset, text, check)
+
+
+def _pycodestyle_codes(code: str) -> set[str]:
+    """Return pycodestyle error codes raised for a source snippet."""
+    style = pycodestyle.StyleGuide(quiet=True)
+    report = _CollectPycodestyleReport(style.options)
+    checker = pycodestyle.Checker(
+        lines=code.splitlines(True),
+        options=style.options,
+        report=report,
+    )
+    checker.check_all()
+    return set(report.codes)
 
 
 # Long-line detection
@@ -836,6 +871,38 @@ def test_properly_grouped_imports_not_flagged() -> None:
     assert not any(f.issue_type == "import_ordering" for f in findings)
 
 
+# TC-ANALYSIS-065A
+def test_local_absolute_before_third_party_detected() -> None:
+    """A third-party import after absolute local import is flagged."""
+    code = (
+        "import app.config\n"
+        "import requests\n"
+        "\n\n"
+        'def foo():\n    """Doc."""\n    pass\n'
+    )
+    findings, _ = run_static_analysis(code)
+    io = [f for f in findings if f.issue_type == "import_ordering"]
+    assert len(io) == 1
+    assert "third-party" in io[0].message
+    assert "local" in io[0].message
+
+
+# TC-ANALYSIS-065B
+def test_proper_grouping_with_local_absolute_not_flagged() -> None:
+    """Stdlib, third-party, then absolute local imports are accepted."""
+    code = (
+        "import os\n"
+        "\n"
+        "import requests\n"
+        "\n"
+        "import app.config\n"
+        "\n\n"
+        'def foo():\n    """Doc."""\n    pass\n'
+    )
+    findings, _ = run_static_analysis(code)
+    assert not any(f.issue_type == "import_ordering" for f in findings)
+
+
 # ---------------------------------------------------------------------------
 # Try block scope
 # ---------------------------------------------------------------------------
@@ -1179,12 +1246,36 @@ def test_bracket_whitespace_not_flagged_for_clean() -> None:
     assert not any(f.issue_type == "bracket_whitespace" for f in findings)
 
 
+# TC-ANALYSIS-104
+def test_bracket_whitespace_not_flagged_for_tab_indented_multiline_call() -> None:
+    """Tab-indented multiline calls do not produce bracket_whitespace."""
+    code = (
+        "return Enemy(\n"
+        "\tname=random.choice(names),\n"
+        "\thp=20 + safe_level * 3,\n"
+        "\tattack=5 + safe_level,\n"
+        "\tdefense=2 + safe_level // 2,\n"
+        "\tgold=10 + safe_level * 2,\n"
+        "\t)\n"
+    )
+    findings, _ = run_static_analysis(code)
+    assert not any(f.issue_type == "bracket_whitespace" for f in findings)
+
+
+# TC-ANALYSIS-104A
+def test_bracket_whitespace_not_flagged_for_space_indented_closing_bracket() -> None:
+    """Space indentation before standalone ')' is not bracket_whitespace."""
+    code = "x = foo(\n    1,\n    2,\n    )\n"
+    findings, _ = run_static_analysis(code)
+    assert not any(f.issue_type == "bracket_whitespace" for f in findings)
+
+
 # ---------------------------------------------------------------------------
 # whitespace_before_punctuation (E203)
 # ---------------------------------------------------------------------------
 
 
-# TC-ANALYSIS-104
+# TC-ANALYSIS-105
 def test_whitespace_before_punctuation_detected() -> None:
     """Space before comma is flagged."""
     code = "x = [1 , 2]\n"
@@ -1193,7 +1284,7 @@ def test_whitespace_before_punctuation_detected() -> None:
     assert len(wp) >= 1
 
 
-# TC-ANALYSIS-105
+# TC-ANALYSIS-106
 def test_whitespace_before_punctuation_not_flagged() -> None:
     """No space before comma is not flagged."""
     code = "x = [1, 2]\n"
@@ -1257,6 +1348,17 @@ def test_operator_spacing_detected() -> None:
     findings, _ = run_static_analysis(code)
     ops = [f for f in findings if f.issue_type == "operator_spacing"]
     assert len(ops) >= 1
+    assert ops[0].column_start == 2
+    assert ops[0].column_end == 2
+
+
+# TC-ANALYSIS-110A
+def test_operator_spacing_detected_missing_right_side_space() -> None:
+    """Missing right-side space around = is flagged."""
+    code = "x =1\n"
+    findings, _ = run_static_analysis(code)
+    ops = [f for f in findings if f.issue_type == "operator_spacing"]
+    assert len(ops) >= 1
 
 
 # TC-ANALYSIS-111
@@ -1267,12 +1369,20 @@ def test_operator_spacing_not_flagged_for_spaced() -> None:
     assert not any(f.issue_type == "operator_spacing" for f in findings)
 
 
+# TC-ANALYSIS-112
+def test_operator_spacing_not_flagged_for_keyword_argument() -> None:
+    """Keyword arguments such as default_factory=list are not flagged."""
+    code = "from dataclasses import field\n\nvalue = field(default_factory=list)\n"
+    findings, _ = run_static_analysis(code)
+    assert not any(f.issue_type == "operator_spacing" for f in findings)
+
+
 # ---------------------------------------------------------------------------
 # keyword_arg_spacing (E251)
 # ---------------------------------------------------------------------------
 
 
-# TC-ANALYSIS-112
+# TC-ANALYSIS-113
 def test_keyword_arg_spacing_detected() -> None:
     """Space around = in default param is flagged."""
     code = 'def foo(x = 1):\n    """Doc."""\n    pass\n'
@@ -1281,7 +1391,7 @@ def test_keyword_arg_spacing_detected() -> None:
     assert len(kas) == 1
 
 
-# TC-ANALYSIS-113
+# TC-ANALYSIS-114
 def test_keyword_arg_spacing_not_flagged() -> None:
     """No space around = in default param is not flagged."""
     code = 'def foo(x=1):\n    """Doc."""\n    pass\n'
@@ -1289,12 +1399,39 @@ def test_keyword_arg_spacing_not_flagged() -> None:
     assert not any(f.issue_type == "keyword_arg_spacing" for f in findings)
 
 
+# TC-ANALYSIS-114A
+def test_keyword_arg_spacing_detected_for_call_keyword_spaces() -> None:
+    """Spaces around = in call keyword argument are flagged."""
+    code = "result = magic(r = 1)\n"
+    findings, _ = run_static_analysis(code)
+    kas = [f for f in findings if f.issue_type == "keyword_arg_spacing"]
+    assert len(kas) >= 1
+    assert kas[0].column_start is not None
+
+
+# TC-ANALYSIS-114B
+def test_keyword_arg_spacing_not_flagged_for_annotated_default_with_spaces() -> None:
+    """Annotated defaults require spaces around = and should pass."""
+    code = 'def foo(x: int = 1):\n    """Doc."""\n    return x\n'
+    findings, _ = run_static_analysis(code)
+    assert not any(f.issue_type == "keyword_arg_spacing" for f in findings)
+
+
+# TC-ANALYSIS-114C
+def test_keyword_arg_spacing_detected_for_annotated_default_without_spaces() -> None:
+    """Annotated defaults without spaces around = are flagged."""
+    code = 'def foo(x: int=1):\n    """Doc."""\n    return x\n'
+    findings, _ = run_static_analysis(code)
+    kas = [f for f in findings if f.issue_type == "keyword_arg_spacing"]
+    assert len(kas) >= 1
+
+
 # ---------------------------------------------------------------------------
 # binary_operator_line_break (W504)
 # ---------------------------------------------------------------------------
 
 
-# TC-ANALYSIS-114
+# TC-ANALYSIS-115
 def test_binary_operator_line_break_detected() -> None:
     """Line ending with 'and' operator is flagged."""
     code = "def foo():\n" '    """Doc."""\n' "    x = (a and\n" "         b)\n"
@@ -1353,6 +1490,87 @@ def test_annotation_spacing_not_flagged() -> None:
     code = "x: int = 1\n"
     findings, _ = run_static_analysis(code)
     assert not any(f.issue_type == "annotation_spacing" for f in findings)
+
+
+# TC-ANALYSIS-119A
+def test_annotation_spacing_detected_space_before_colon() -> None:
+    """Space before ':' in annotation is flagged."""
+    code = "x : int = 1\n"
+    findings, _ = run_static_analysis(code)
+    ans = [f for f in findings if f.issue_type == "annotation_spacing"]
+    assert len(ans) == 1
+
+
+# TC-ANALYSIS-119B
+def test_annotation_spacing_not_flagged_for_named_slice() -> None:
+    """Named slices (a:b) are not misclassified as annotations."""
+    code = "x = arr[a:b]\n"
+    findings, _ = run_static_analysis(code)
+    assert not any(f.issue_type == "annotation_spacing" for f in findings)
+
+
+# TC-ANALYSIS-119C
+def test_annotation_spacing_detected_for_function_parameter_annotation() -> None:
+    """Missing space after ':' in function parameter annotation is flagged."""
+    code = 'def foo(x:int):\n    """Doc."""\n    return x\n'
+    findings, _ = run_static_analysis(code)
+    ans = [f for f in findings if f.issue_type == "annotation_spacing"]
+    assert len(ans) == 1
+    assert ans[0].column_start is not None
+
+
+# TC-ANALYSIS-119D
+def test_operator_spacing_parity_with_pycodestyle_e225() -> None:
+    """Assignment spacing tracks pycodestyle E225 outcomes."""
+    cases = (
+        ("x = 1\n", False),
+        ("x=1\n", True),
+        ("x =1\n", True),
+    )
+    for code, expected in cases:
+        findings, _ = run_static_analysis(code)
+        has_engine_issue = any(f.issue_type == "operator_spacing" for f in findings)
+        has_pycodestyle_issue = "E225" in _pycodestyle_codes(code)
+        assert has_engine_issue == expected
+        assert has_engine_issue == has_pycodestyle_issue
+
+
+# TC-ANALYSIS-119E
+def test_keyword_arg_spacing_parity_with_pycodestyle() -> None:
+    """Keyword/default spacing tracks pycodestyle E251/E252 outcomes."""
+    cases = (
+        ("value = f(a=1)\n", False),
+        ("value = f(a = 1)\n", True),
+        ('def f(x=1):\n    """Doc."""\n    return x\n', False),
+        ('def f(x = 1):\n    """Doc."""\n    return x\n', True),
+        ('def f(x: int = 1):\n    """Doc."""\n    return x\n', False),
+        ('def f(x: int=1):\n    """Doc."""\n    return x\n', True),
+    )
+    for code, expected in cases:
+        findings, _ = run_static_analysis(code)
+        has_engine_issue = any(f.issue_type == "keyword_arg_spacing" for f in findings)
+        py_codes = _pycodestyle_codes(code)
+        has_pycodestyle_issue = bool(py_codes.intersection({"E251", "E252"}))
+        assert has_engine_issue == expected
+        assert has_engine_issue == has_pycodestyle_issue
+
+
+# TC-ANALYSIS-119F
+def test_annotation_spacing_parity_with_pycodestyle_e231() -> None:
+    """Annotation spacing tracks pycodestyle and ignores named slices."""
+    cases = (
+        ("x: int = 1\n", False),
+        ("x:int = 1\n", True),
+        ('def f(x: int):\n    """Doc."""\n    return x\n', False),
+        ('def f(x:int):\n    """Doc."""\n    return x\n', True),
+        ("x = arr[a:b]\n", False),
+    )
+    for code, expected in cases:
+        findings, _ = run_static_analysis(code)
+        has_engine_issue = any(f.issue_type == "annotation_spacing" for f in findings)
+        has_pycodestyle_issue = "E231" in _pycodestyle_codes(code)
+        assert has_engine_issue == expected
+        assert has_engine_issue == has_pycodestyle_issue
 
 
 # ---------------------------------------------------------------------------

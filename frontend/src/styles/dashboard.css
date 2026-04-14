@@ -859,7 +859,7 @@ body {
 
 /* ─── Results panel ────────────────────────────────────────────── */
 .results-panel {
-  width: 320px;
+  width: 340px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
@@ -1180,6 +1180,15 @@ body {
 .finding-item.finding-sev-med  { border-left-color: #facc15; }
 .finding-item.finding-sev-high { border-left-color: var(--danger); }
 
+.finding-item.finding-clickable {
+  cursor: pointer;
+}
+
+.finding-item.finding-clickable:focus-visible {
+  outline: 1px solid var(--purple-lite);
+  outline-offset: 2px;
+}
+
 .finding-item:hover {
   background: rgba(124, 58, 237, 0.06);
   transition: background 0.15s;
@@ -1223,6 +1232,15 @@ body {
 .bug-card.bug-sev-medium   { border-left-color: #facc15; }
 .bug-card.bug-sev-high     { border-left-color: var(--danger); }
 .bug-card.bug-sev-critical { border-left-color: #ff4444; }
+
+.bug-card.bug-clickable {
+  cursor: pointer;
+}
+
+.bug-card.bug-clickable:focus-visible {
+  outline: 1px solid var(--purple-lite);
+  outline-offset: 2px;
+}
 
 .bug-card.flagged {
   opacity: 0.72;
@@ -1290,9 +1308,29 @@ body {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.4rem 0.1rem 0.6rem;
+  padding: 0.1rem 0.1rem 0.2rem;
   font-size: 0.72rem;
   color: var(--muted);
+}
+
+.bug-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.25rem 0.1rem 0.6rem;
+}
+
+.flagged-filter-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.72rem;
+  color: var(--muted);
+  user-select: none;
+}
+
+.flagged-filter-toggle input[type="checkbox"] {
+  accent-color: #9333ea;
 }
 
 .confidence-filter label {

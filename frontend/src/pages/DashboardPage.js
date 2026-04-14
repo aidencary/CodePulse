@@ -46,6 +46,8 @@ function DashboardPage() {
   const [error, setError] = useState(null)
   const [activeId, setActiveId] = useState(null)
   const [hoveredLine, setHoveredLine] = useState(null) // null or { line, severity }
+  const [jumpTarget, setJumpTarget] = useState(null)
+  const jumpSeqRef = useRef(0)
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [theme, setTheme] = useState(
     () => localStorage.getItem('cp-theme') || 'dark'
@@ -94,6 +96,8 @@ function DashboardPage() {
       setError(null)
       setActiveId(null)
       setSubmissionName(null)
+      setHoveredLine(null)
+      setJumpTarget(null)
       return
     }
 
@@ -122,6 +126,13 @@ function DashboardPage() {
     } catch {
       setResults(null)
     }
+  }
+
+  const handleJumpLine = (target) => {
+    if (!target || target.line == null) return
+    setHoveredLine(target)
+    jumpSeqRef.current += 1
+    setJumpTarget({ ...target, seq: jumpSeqRef.current })
   }
 
   return (
@@ -184,9 +195,10 @@ function DashboardPage() {
             loading={loading}
             isDark={theme === 'dark'}
             highlightLine={hoveredLine}
+            jumpToLine={jumpTarget}
           />
           {/* FR-DASH-006 FR-REPORT-005 */}
-          <ResultsPanel results={results} loading={loading} error={error} onHoverLine={setHoveredLine} submissionName={submissionName} />
+          <ResultsPanel results={results} loading={loading} error={error} onHoverLine={setHoveredLine} onJumpLine={handleJumpLine} submissionName={submissionName} />
         </main>
       </div>
     </div>
