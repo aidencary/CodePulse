@@ -83,9 +83,9 @@ function HelpModal({ onClose }) {
               above the bug list to hide low-confidence predictions.
             </p>
             <ul>
-              <li><strong>High confidence (≥ 70%)</strong> — CodeBERT agrees with the LLM. Most likely a real issue.</li>
-              <li><strong>Medium (30–70%)</strong> — worth a look but not guaranteed.</li>
-              <li><strong>Low (&lt; 30%)</strong> — CodeBERT thinks this is likely a false positive. The bug is <em>flagged</em> and excluded from your overall score.</li>
+              <li><strong>High confidence (≥ 80%)</strong> — CodeBERT agrees with the LLM. Most likely a real issue.</li>
+              <li><strong>Medium (45%–70%)</strong> — worth a look but not guaranteed.</li>
+              <li><strong>Low (&le; 45%)</strong> — CodeBERT thinks this is likely a false positive. The bug is <em>flagged</em> and excluded from your overall score.</li>
             </ul>
             <p>
               Flagged bugs are easy to spot: they get a <span className="help-swatch help-swatch--flagged" /> <strong>purple </strong>

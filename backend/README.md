@@ -153,8 +153,11 @@ uvicorn app.main:app --reload   # Runs at http://localhost:8000
 | `GPT_MODEL` | No | GPT model name (default: `gpt-4o-mini`) |
 | `HF_TOKEN` | No | HuggingFace access token used to pull the private CodeBERT checkpoint |
 | `CODEBERT_MODEL_PATH` | No | HuggingFace model ID (default: `aidencary/codepulse-codebert`) |
-| `CODEBERT_FLAG_THRESHOLD` | No | P(buggy) below which predictions are flagged and skipped in scoring (default: `0.3`) |
-| `CODEBERT_CONTEXT_WINDOW` | No | Lines of context fed to CodeBERT on each side of the bug line (default: `2`) |
+| `CODEBERT_BUGGY_INDEX` | No | Explicit buggy class index override (for ambiguous model labels like `LABEL_0`/`LABEL_1`) |
+| `CODEBERT_FLAG_THRESHOLD` | No | P(buggy) below which predictions are flagged and skipped in scoring (default: `0.45`) |
+| `CODEBERT_CONTEXT_WINDOW` | No | Lines of context fed to CodeBERT on each side of the bug line (default: `1`) |
+| `CODEBERT_CONFIDENCE_CONTRAST_STRENGTH` | No | Sigmoid slope for confidence remapping (default: `2.5`) |
+| `CODEBERT_CONFIDENCE_CONTRAST_BLEND` | No | Blend factor between raw and remapped confidence (default: `0.4`) |
 | `SITE_URL` | No | Production frontend URL used as invite redirect (default: `https://code-pulse-six.vercel.app`) |
 | `ALLOWED_ORIGINS` | Yes | Comma-separated allowed CORS origins (e.g. `http://localhost:3000`) |
 | `DEBUG` | No | Set to `true` locally to enable `/docs` and `/redoc`; omit in production |

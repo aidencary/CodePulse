@@ -82,7 +82,7 @@ def test_extract_snippet_with_context_dedents() -> None:
     # ±1 around line 3 → lines 2..4; common indent (4 spaces) stripped.
     assert (
         codebert_validator._extract_snippet(code, 3, window=1)
-        == "x = None\nx.foo()\nreturn x"
+        == "x = None\nBUG_LINE: x.foo()\nreturn x"
     )
 
 
@@ -90,7 +90,7 @@ def test_extract_snippet_clamps_to_file_bounds() -> None:
     code = "a = 1\nb = 2\nc = 3\n"
     # window extends past start/end — should just return whatever's in range.
     assert codebert_validator._extract_snippet(code, 1, window=5) == (
-        "a = 1\nb = 2\nc = 3"
+        "BUG_LINE: a = 1\nb = 2\nc = 3"
     )
 
 
@@ -107,8 +107,17 @@ def test_extract_snippet_strips_inline_comments() -> None:
     code = "user = None\nprint(user.name)  # null deref here\n"
     assert (
         codebert_validator._extract_snippet(code, 2, window=1)
-        == "user = None\nprint(user.name)"
+        == "user = None\nBUG_LINE: print(user.name)"
     )
+
+
+def test_extract_snippet_marks_target_line_for_disambiguation() -> None:
+    code = "a = 1\nb = 2\nc = 3\n"
+    s1 = codebert_validator._extract_snippet(code, 2, window=1)
+    s2 = codebert_validator._extract_snippet(code, 3, window=1)
+    assert s1 != s2
+    assert "BUG_LINE: b = 2" in s1
+    assert "BUG_LINE: c = 3" in s2
 
 
 def test_resolve_buggy_index_reads_label2id() -> None:
@@ -131,18 +140,30 @@ def test_resolve_buggy_index_case_insensitive() -> None:
     assert codebert_validator._resolve_buggy_index(_M()) == 1
 
 
-def test_resolve_buggy_index_falls_back_to_zero_for_placeholders() -> None:
+def test_resolve_buggy_index_reads_id2label() -> None:
     class _Cfg:
-        label2id = {"LABEL_0": 0, "LABEL_1": 1}
+        label2id = {}
+        id2label = {0: "clean", 1: "buggy"}
 
     class _M:
         config = _Cfg()
 
-    assert codebert_validator._resolve_buggy_index(_M()) == 0
+    assert codebert_validator._resolve_buggy_index(_M()) == 1
+
+
+def test_resolve_buggy_index_returns_none_for_placeholders() -> None:
+    class _Cfg:
+        label2id = {"LABEL_0": 0, "LABEL_1": 1}
+        id2label = {0: "LABEL_0", 1: "LABEL_1"}
+
+    class _M:
+        config = _Cfg()
+
+    assert codebert_validator._resolve_buggy_index(_M()) is None
 
 
 def test_resolve_buggy_index_handles_missing_config() -> None:
-    assert codebert_validator._resolve_buggy_index(object()) == 0
+    assert codebert_validator._resolve_buggy_index(object()) is None
 
 
 def test_strip_comments_preserves_string_literals() -> None:
@@ -154,6 +175,18 @@ def test_strip_comments_preserves_string_literals() -> None:
         codebert_validator._strip_comments("s = '# not a comment'")
         == "s = '# not a comment'"
     )
+
+
+def test_apply_confidence_contrast_spreads_close_scores() -> None:
+    raw = [0.86, 0.75]
+    adjusted = codebert_validator._apply_confidence_contrast(
+        raw,
+        strength=1.5,
+        blend=0.25,
+    )
+    assert adjusted[0] > raw[0] - 0.02
+    assert adjusted[1] < raw[1]
+    assert (adjusted[0] - adjusted[1]) > (raw[0] - raw[1])
 
 
 # ---------------------------------------------------------------------------
@@ -247,3 +280,16 @@ async def test_validate_inference_failure_passes_through(
     # Safe fallback — bug returned untouched, confidence still None.
     assert result[0].confidence is None
     assert result[0].flagged is False
+
+
+@pytest.mark.asyncio
+async def test_validate_flags_every_bug_below_threshold(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _install_fakes(monkeypatch, p_buggy=0.2)
+    bugs = [_make_bug(1), _make_bug(2), _make_bug(3)]
+    result = await codebert_validator.validate_predictions(
+        "a = 1\nb = 2\nc = 3\n", bugs
+    )
+    assert all(b.confidence == pytest.approx(0.2, abs=1e-5) for b in result)
+    assert all(b.flagged is True for b in result)
