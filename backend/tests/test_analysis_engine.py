@@ -1548,9 +1548,7 @@ def test_keyword_arg_spacing_parity_with_pycodestyle() -> None:
     )
     for code, expected in cases:
         findings, _ = run_static_analysis(code)
-        has_engine_issue = any(
-            f.issue_type == "keyword_arg_spacing" for f in findings
-        )
+        has_engine_issue = any(f.issue_type == "keyword_arg_spacing" for f in findings)
         py_codes = _pycodestyle_codes(code)
         has_pycodestyle_issue = bool(py_codes.intersection({"E251", "E252"}))
         assert has_engine_issue == expected

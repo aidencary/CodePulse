@@ -1466,8 +1466,7 @@ def _run_text_checks(
                     pos = eq_match.start()
                     left_space = pos > 0 and code_portion[pos - 1].isspace()
                     right_space = (
-                        pos + 1 < len(code_portion)
-                        and code_portion[pos + 1].isspace()
+                        pos + 1 < len(code_portion) and code_portion[pos + 1].isspace()
                     )
                     if not (left_space and right_space):
                         findings.append(
