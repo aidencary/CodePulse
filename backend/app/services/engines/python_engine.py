@@ -1,4 +1,4 @@
-""" v1.0.0 Python static analysis engine — single-pass AST and text-based PEP 8 checks."""
+""" Python static analysis engine with single-pass AST and text PEP 8 checks """
 
 import ast
 import logging
