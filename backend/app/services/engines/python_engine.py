@@ -362,6 +362,31 @@ def _collect_returns(node: ast.AST) -> list[ast.Return]:
     return returns
 
 
+def _collect_keyword_arg_equals(
+    tree: ast.Module, lines: list[str]
+) -> dict[int, set[int]]:
+    """Return ``=`` positions that belong to keyword arguments in calls."""
+    keyword_arg_equals: dict[int, set[int]] = {}
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        for keyword in node.keywords:
+            if keyword.arg is None:
+                continue
+            line_number = getattr(keyword, "lineno", None)
+            if line_number is None or line_number < 1 or line_number > len(lines):
+                continue
+            line = lines[line_number - 1]
+            start = getattr(keyword, "col_offset", None)
+            if start is None or start < 0 or start >= len(line):
+                continue
+            equals_index = line.find("=", start)
+            if equals_index == -1:
+                continue
+            keyword_arg_equals.setdefault(line_number, set()).add(equals_index)
+    return keyword_arg_equals
+
+
 # ---------------------------------------------------------------------------
 # Single-pass AST visitor — consolidates all AST-based checks
 # FR-ANALYSIS-001
@@ -1002,11 +1027,15 @@ class _ASTVisitor(ast.NodeVisitor):
 
 
 def _run_text_checks(
-    code: str, tree: ast.Module, filename: str | None = None
+    code: str,
+    tree: ast.Module,
+    filename: str | None = None,
+    keyword_arg_equals: dict[int, set[int]] | None = None,
 ) -> list[Finding]:
     """Run all text-based checks in a single line iteration."""
     findings: list[Finding] = []
     lines = code.splitlines()
+    keyword_arg_equals = keyword_arg_equals or {}
 
     # module_naming — check filename is lowercase if provided
     if filename:
@@ -1164,7 +1193,9 @@ def _run_text_checks(
                         ),
                     )
                 )
-            if re.search(r" [\)\]\}]", code_portion):
+            # Ignore leading indentation so standalone closing brackets on
+            # multiline calls (e.g., "    )") are not treated as E202.
+            if re.search(r" [\)\]\}]", code_portion.lstrip()):
                 findings.append(
                     Finding(
                         issue_type="bracket_whitespace",
@@ -1255,6 +1286,8 @@ def _run_text_checks(
                 for eq_match in re.finditer(
                     r"(?<![=!<>*/+\-|&^~%])=(?!=)", code_portion
                 ):
+                    if eq_match.start() in keyword_arg_equals.get(line_number, set()):
+                        continue
                     pos = eq_match.start()
                     if pos > 0 and code_portion[pos - 1] != " ":
                         findings.append(
@@ -1581,7 +1614,10 @@ class PythonEngine:
             return findings, raw_score
 
         # Single-pass text-based checks.
-        findings.extend(_run_text_checks(code, tree, filename))
+        keyword_arg_equals = _collect_keyword_arg_equals(tree, code.splitlines())
+        findings.extend(
+            _run_text_checks(code, tree, filename, keyword_arg_equals)
+        )
 
         # Single-pass AST-based checks.
         visitor = _ASTVisitor(tree)

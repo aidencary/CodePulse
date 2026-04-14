@@ -1179,12 +1179,36 @@ def test_bracket_whitespace_not_flagged_for_clean() -> None:
     assert not any(f.issue_type == "bracket_whitespace" for f in findings)
 
 
+# TC-ANALYSIS-104
+def test_bracket_whitespace_not_flagged_for_tab_indented_multiline_call() -> None:
+    """Tab-indented multiline calls do not produce bracket_whitespace."""
+    code = (
+        "return Enemy(\n"
+        "\tname=random.choice(names),\n"
+        "\thp=20 + safe_level * 3,\n"
+        "\tattack=5 + safe_level,\n"
+        "\tdefense=2 + safe_level // 2,\n"
+        "\tgold=10 + safe_level * 2,\n"
+        "\t)\n"
+    )
+    findings, _ = run_static_analysis(code)
+    assert not any(f.issue_type == "bracket_whitespace" for f in findings)
+
+
+# TC-ANALYSIS-104A
+def test_bracket_whitespace_not_flagged_for_space_indented_closing_bracket() -> None:
+    """Space indentation before standalone ')' is not bracket_whitespace."""
+    code = "x = foo(\n    1,\n    2,\n    )\n"
+    findings, _ = run_static_analysis(code)
+    assert not any(f.issue_type == "bracket_whitespace" for f in findings)
+
+
 # ---------------------------------------------------------------------------
 # whitespace_before_punctuation (E203)
 # ---------------------------------------------------------------------------
 
 
-# TC-ANALYSIS-104
+# TC-ANALYSIS-105
 def test_whitespace_before_punctuation_detected() -> None:
     """Space before comma is flagged."""
     code = "x = [1 , 2]\n"
@@ -1193,7 +1217,7 @@ def test_whitespace_before_punctuation_detected() -> None:
     assert len(wp) >= 1
 
 
-# TC-ANALYSIS-105
+# TC-ANALYSIS-106
 def test_whitespace_before_punctuation_not_flagged() -> None:
     """No space before comma is not flagged."""
     code = "x = [1, 2]\n"
@@ -1267,12 +1291,20 @@ def test_operator_spacing_not_flagged_for_spaced() -> None:
     assert not any(f.issue_type == "operator_spacing" for f in findings)
 
 
+# TC-ANALYSIS-112
+def test_operator_spacing_not_flagged_for_keyword_argument() -> None:
+    """Keyword arguments such as default_factory=list are not flagged."""
+    code = "from dataclasses import field\n\nvalue = field(default_factory=list)\n"
+    findings, _ = run_static_analysis(code)
+    assert not any(f.issue_type == "operator_spacing" for f in findings)
+
+
 # ---------------------------------------------------------------------------
 # keyword_arg_spacing (E251)
 # ---------------------------------------------------------------------------
 
 
-# TC-ANALYSIS-112
+# TC-ANALYSIS-113
 def test_keyword_arg_spacing_detected() -> None:
     """Space around = in default param is flagged."""
     code = 'def foo(x = 1):\n    """Doc."""\n    pass\n'
@@ -1281,7 +1313,7 @@ def test_keyword_arg_spacing_detected() -> None:
     assert len(kas) == 1
 
 
-# TC-ANALYSIS-113
+# TC-ANALYSIS-114
 def test_keyword_arg_spacing_not_flagged() -> None:
     """No space around = in default param is not flagged."""
     code = 'def foo(x=1):\n    """Doc."""\n    pass\n'
@@ -1294,7 +1326,7 @@ def test_keyword_arg_spacing_not_flagged() -> None:
 # ---------------------------------------------------------------------------
 
 
-# TC-ANALYSIS-114
+# TC-ANALYSIS-115
 def test_binary_operator_line_break_detected() -> None:
     """Line ending with 'and' operator is flagged."""
     code = "def foo():\n" '    """Doc."""\n' "    x = (a and\n" "         b)\n"
