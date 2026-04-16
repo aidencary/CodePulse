@@ -47,10 +47,10 @@ backend/
 │   ├── test_placeholder.py
 │   ├── test_analyze_endpoint.py
 │   ├── test_analyze_route.py       # Route integration tests (mocked services)
-│   ├── test_analysis_engine.py     # Static analyzer unit tests (113 tests — 46 PEP 8 checks)
-│   ├── test_gpt_predictor.py       # GPT predictor unit tests (mocked OpenAI)
-│   ├── test_codebert_validator.py  # CodeBERT validator unit tests (mocked model/tokenizer)
-│   ├── test_account_routes.py      # Account CRUD route tests (16 tests — includes invite)
+│   ├── test_analysis_engine.py     # Static analyzer unit tests (130 tests — 46 PEP 8 checks)
+│   ├── test_gpt_predictor.py       # GPT predictor unit tests (mocked OpenAI, 8 tests)
+│   ├── test_codebert_validator.py  # CodeBERT validator unit tests (mocked model/tokenizer, 23 tests)
+│   ├── test_account_routes.py      # Account CRUD route tests (18 tests — includes invite + export)
 │   └── test_submission_routes.py   # Submission CRUD route tests (13 tests)
 ├── database/
 │   └── schema.sql              # Supabase PostgreSQL schema (source of truth)
@@ -185,6 +185,7 @@ docker run -p 8000:8000 --env-file .env codepulse-backend
 | `POST` | `/api/v1/account/avatar` | Bearer JWT | Upload profile picture (multipart, ≤2 MB) |
 | `POST` | `/api/v1/account/change-password` | Bearer JWT | Change password (verifies current password) |
 | `POST` | `/api/v1/account/invite` | Bearer JWT | Send a Supabase invite email to a new user |
+| `GET` | `/api/v1/account/export` | Bearer JWT | Export all user data (GDPR/CCPA JSON) |
 | `DELETE` | `/api/v1/account` | Bearer JWT | Delete account (cascades all user data) |
 | `GET` | `/api/v1/submissions` | Bearer JWT | List user's submissions with scores |
 | `PATCH` | `/api/v1/submissions/{id}` | Bearer JWT | Rename a submission |
@@ -211,7 +212,7 @@ pytest tests/test_gpt_predictor.py -v    # GPT predictor tests (mocked)
 pytest tests/test_analyze_route.py -v    # Route integration tests
 ```
 
-187 tests, all passing. Add a corresponding test file in `tests/` for each new service module.
+206 tests, all passing. Add a corresponding test file in `tests/` for each new service module.
 
 ---
 
@@ -241,6 +242,13 @@ A pull request cannot be merged if any CI step fails. All new code must be Black
 
 ---
 
+## Requirements
+
+See [REQUIREMENTS.md](REQUIREMENTS.md) for the full list of functional and non-functional
+requirements with unique IDs, descriptions, and implementation file locations.
+
+---
+
 ## Implementation Status
 
 | Feature | Status |
@@ -248,16 +256,20 @@ A pull request cannot be merged if any CI step fails. All new code must be Black
 | Database schema + RLS | Done |
 | Environment config (`app/config.py`) | Done |
 | FastAPI app scaffold (`app/main.py`) | Done |
-| JWT auth dependency (`app/dependencies.py`) | Done |
+| JWT auth dependency (`app/dependencies.py`, HS256 + ES256) | Done |
 | Supabase client module (`app/database.py`) | Done |
-| `POST /api/v1/analyze` — real analysis pipeline | Done |
+| `POST /api/v1/analyze` — full analysis pipeline (static + GPT + CodeBERT) | Done |
 | Dockerfile | Done |
 | Static analysis engine (`app/services/engines/python_engine.py`, 46 PEP 8 checks) | Done |
 | GPT bug prediction (`app/services/gpt_predictor.py`, prompts in `prompts/python_prompt.py`) | Done |
 | Submission persistence to Supabase (`app/services/persistence_service.py`) | Done |
-| Postman collection + Newman CI | Done |
+| Reanalysis of existing submissions | Done |
+| Postman collection + Newman CI (33 requests) | Done |
 | Account CRUD endpoints (profile, avatar, password, delete) | Done |
 | User invite endpoint (`POST /api/v1/account/invite`) | Done |
+| Data export endpoint (`GET /api/v1/account/export`, GDPR/CCPA) | Done |
 | Submission CRUD endpoints (list, rename, delete, pin) | Done |
 | Submission naming (user-provided or GPT-generated) | Done |
+| Security headers middleware (X-Content-Type-Options, X-Frame-Options, etc.) | Done |
+| Rate limiting on `/analyze` (10/min per bearer token via slowapi) | Done |
 | CodeBERT confidence validator (`app/services/codebert_validator.py`) — fine-tuned `aidencary/codepulse-codebert`, label index auto-resolved from `model.config.label2id`, bounded in-memory cache, non-blocking via `asyncio.to_thread`, flagged bugs skipped in `compute_score` | Done |
