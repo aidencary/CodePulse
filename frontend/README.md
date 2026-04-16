@@ -126,17 +126,19 @@ npm test -- --watchAll=false   # Run once and exit (used in CI)
 
 | Test File | Coverage |
 |-----------|----------|
-| `components/__tests__/ProtectedRoute.test.js` | Loading state, unauthenticated redirect, authenticated render |
-| `context/__tests__/AuthContext.test.js` | Auth lifecycle, signIn / signUp / signOut calls |
-| `pages/__tests__/LoginPage.test.js` | Form toggle, submission handlers, error display, show/hide password, learn-more section (11 tests); forgot password flow (7 tests); MFA step-up (5 tests) — 23 total |
+| `components/__tests__/ProtectedRoute.test.js` | Loading state, unauthenticated redirect, authenticated render (3 tests) |
+| `context/__tests__/AuthContext.test.js` | Auth lifecycle, signIn / signUp / signOut calls (4 tests) |
+| `pages/__tests__/LoginPage.test.js` | Form toggle, submission handlers, error display, show/hide password, learn-more section, remember me, confirm password, password strength, ToS links, OAuth; forgot password flow; MFA step-up (45 tests) |
 | `components/__tests__/TwoFactorSection.test.js` | No-factor state, enrolled state, enroll + QR display, secret display, verify, verify error, success state, disable, re-enable, disable error (11 tests) |
 | `pages/__tests__/ResetPasswordPage.test.js` | Loading state, PASSWORD_RECOVERY trigger, validation, updateUser call, toast + navigation, error on expired link, submit disabled while pending (8 tests) |
 | `components/__tests__/CodeEditor.test.js` | Renders editor, button click fires onRun, disabled during loading, copy button disabled when empty; gear button ARIA, panel open/close, outside-click dismiss, setting change, toggle flip, localStorage persist, localStorage init (11 tests) |
-| `components/__tests__/ResultsPanel.test.js` | Idle, loading, error, score, findings, bugs (expand/collapse), empty states, ignore/dismiss, severity hover line highlight, severity sort, line sort, tiebreaker, null-line sort (28 tests) |
+| `components/__tests__/ResultsPanel.test.js` | Idle, loading, error, score, findings, bugs (expand/collapse), empty states, ignore/dismiss, severity hover line highlight, severity sort, line sort, tiebreaker, null-line sort, confidence filter, flagged bugs, export button, resizable panel (43 tests) |
 | `components/__tests__/SubmissionSidebar.test.js` | Render names, fallback, search, rename no-op, rename, delete, pin/star, collapse (12 tests) |
-| `pages/__tests__/AccountPage.test.js` | Profile load/display, username validation, password change, delete modal (10 tests) |
+| `components/__tests__/InviteModal.test.js` | Render, empty-email disable, submit handler, success toast, error display, cancel, backdrop click, loading state (9 tests) |
+| `utils/__tests__/generateReport.test.js` | Content inclusion, score colors, XSS escaping, empty arrays, naming, complete HTML structure (10 tests) |
+| `pages/__tests__/AccountPage.test.js` | Profile load/display, username validation, password change, avatar, delete modal, report bug, member since, data export, sign out all (16 tests) |
 
-167 tests, all passing.
+172 tests, all passing.
 
 ---
 
@@ -164,6 +166,13 @@ A pull request cannot be merged if any step fails.
 
 ---
 
+## Requirements
+
+See [REQUIREMENTS.md](REQUIREMENTS.md) for the full list of functional and non-functional
+requirements with unique IDs, descriptions, and implementation file locations.
+
+---
+
 ## Implementation Status
 
 | Feature | Status |
@@ -179,8 +188,9 @@ A pull request cannot be merged if any step fails.
 | Results display (Severity/Line field selector pills + ↑/↓ direction toggle; two-key combined sort; resets on submission change) | Done |
 | Copy-to-clipboard button in editor toolbar | Done |
 | Hover finding/bug to highlight corresponding editor line (severity-colored, togglable) | Done |
+| Click-to-jump from finding/bug card to editor line | Done |
 | Ignore/dismiss individual findings and bugs | Done |
-| Account settings page (profile, avatar, password, delete) | Done |
+| Account settings page (profile, avatar, password, 2FA, report bug, data export, sign out all, delete) | Done |
 | Submission sidebar (rename, delete, pin/star via kebab menu) | Done |
 | Submission naming (name input, GPT auto-generation) | Done |
 | Toast notification system | Done |
@@ -192,7 +202,11 @@ A pull request cannot be merged if any step fails.
 | Hover feedback on findings and bug cards | Done |
 | Staggered entrance animations on results | Done |
 | Results panel header icon + dynamic issue count | Done |
-| Login page — sliding toggle, focus glow, card hover lift, scroll entrance animations, chevron scroll cue | Done |
+| HTML report export (self-contained, printable, XSS-safe, purple branding) | Done |
+| Login page — sliding toggle, focus glow, card hover lift, scroll entrance animations, chevron scroll cue, remember me, confirm password, password strength, Google/GitHub OAuth, ToS/Privacy links | Done |
 | Account page — section title icons, lock icons on read-only fields, larger avatar, save confirmation flash | Done |
 | CodeBERT confidence badge on bug cards + min-confidence filter slider in results panel (flagged bugs dimmed, excluded from score) | Done |
 | HelpModal — in-dashboard "?" button explaining pipeline, scoring, and CodeBERT tiers | Done |
+| Invite user modal | Done |
+| Terms of Service and Privacy Policy pages | Done |
+| Password reset page | Done |

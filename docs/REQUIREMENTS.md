@@ -71,10 +71,11 @@ Test-case IDs follow the same module structure: `TC-{MODULE}-{NNN}` (see `TESTIN
 | ID | Original REQ-N | Description | Status |
 |----|---------------|-------------|--------|
 | FR-ANALYSIS-001 | REQ-4, REQ-5 | Python AST parsing using the built-in `ast` module | Changed |
-| FR-ANALYSIS-002 | REQ-5, REQ-6 | 24 PEP 8 / AST-based static checks (naming, style, imports, best practices, docs) | Changed |
+| FR-ANALYSIS-002 | REQ-5, REQ-6 | 46 PEP 8 / AST-based static checks (naming, style, imports, best practices, docs) | Changed |
 | FR-ANALYSIS-003 | REQ-7 | AI-assisted bug prediction using OpenAI GPT-4o-mini | Changed |
 | FR-ANALYSIS-004 | — | GPT-generated descriptive submission names for new submissions | Implemented |
 | FR-ANALYSIS-005 | — | Reanalysis of an existing submission (updates code and results in place) | Implemented |
+| FR-ANALYSIS-006 | — | CodeBERT confidence validation: fine-tuned binary classifier scores GPT predictions with P(buggy); low-confidence bugs flagged and skipped in score computation | Implemented |
 
 ### FR-REPORT — Results Reporting & Display
 
@@ -95,6 +96,7 @@ Test-case IDs follow the same module structure: `TC-{MODULE}-{NNN}` (see `TESTIN
 | FR-ACCT-003 | — | Change password (requires current password verification) | Implemented |
 | FR-ACCT-004 | — | Delete account with full cascade cleanup of all submissions and reports | Implemented |
 | FR-ACCT-005 | — | Invite a new user by email (sends Supabase invite email) | Implemented |
+| FR-ACCT-006 | — | Export all user data (GDPR/CCPA JSON: profile + submissions + reports) | Implemented |
 
 ### FR-HIST — Submission History
 
@@ -154,7 +156,7 @@ artefact consumed immediately by the 24 static-check functions.
 **Original (REQ-5):** The `StaticEngine` shall calculate cyclomatic complexity and identify
 dead code or bloated classes.
 
-**Actual:** The analysis engine (`analysis_engine.py`) implements 24 PEP 8 / AST-based
+**Actual:** The analysis engine (`analysis_engine.py`) implements 46 PEP 8 / AST-based
 checks covering naming conventions, code style, import organisation, documentation, and
 best practices. Cyclomatic complexity and dead-code detection are not included.
 

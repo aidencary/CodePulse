@@ -41,16 +41,17 @@ All test files live in `__tests__/` directories next to the code they test.
 
 | File | What It Tests |
 |------|--------------|
-| `src/components/__tests__/ProtectedRoute.test.js` | Loading state, unauthenticated redirect to `/login`, authenticated render of children |
+| `src/components/__tests__/ProtectedRoute.test.js` | Loading state, unauthenticated redirect to `/login`, authenticated render of children (3 tests) |
 | `src/components/__tests__/CodeEditor.test.js` | Renders editor, button click fires onRun, disabled during loading, copy button; settings gear ARIA, panel open/close, outside-click dismiss, setting change, toggle, localStorage persist/init (11 tests) |
-| `src/components/__tests__/ResultsPanel.test.js` | Idle, loading, error, score, findings, predicted bugs (expand/collapse), empty states |
-| `src/context/__tests__/AuthContext.test.js` | `onAuthStateChange` lifecycle and cleanup, `signIn` / `signUp` / `signOut` call correct Supabase methods with correct arguments |
-| `src/pages/__tests__/LoginPage.test.js` | Log In / Sign Up form toggle, form submission, error display, show/hide password toggle (type attribute + aria-label cycling), learn-more section headings, Show less button, MFA step-up, forgot password flow (23 tests) |
-| `src/pages/__tests__/AccountPage.test.js` | Profile load/display, username validation, update profile, change password validation/success, delete modal and confirmation, report bug mailto link (11 tests) |
-| `src/components/__tests__/SubmissionSidebar.test.js` | Render names, fallback to code, search filter, rename (kebab menu/Enter/Escape), delete confirmation, pin/star toggle, pinned icon display, collapsed state (11 tests) |
+| `src/components/__tests__/ResultsPanel.test.js` | Idle, default panel width, loading, error, score, findings, predicted bugs (expand/collapse), empty states, flagged bug filter, ignore/dismiss, hover line highlight, jump-to-line, sort (severity/line/direction/tiebreaker/null-line), export button/blob, CodeBERT confidence badges, flagged class, slider visibility/filter (43 tests) |
+| `src/context/__tests__/AuthContext.test.js` | `onAuthStateChange` lifecycle and cleanup, `signIn` / `signUp` / `signOut` call correct Supabase methods with correct arguments (4 tests) |
+| `src/pages/__tests__/LoginPage.test.js` | Log In / Sign Up form toggle, form submission, error display, show/hide password toggle (type attribute + aria-label cycling), remember me, confirm password, password strength indicator, legal notice, learn-more section headings, Show less button, MFA step-up, forgot password flow, Google/GitHub OAuth (45 tests) |
+| `src/pages/__tests__/AccountPage.test.js` | Profile load/display, username validation, update profile, change password validation/success, delete modal and confirmation, report bug mailto link, member since date, sign out all devices, data export download (16 tests) |
+| `src/components/__tests__/SubmissionSidebar.test.js` | Render names, fallback to code, search filter, rename (kebab menu/Enter/Escape/no-op), delete confirmation, pin/star toggle, pinned icon display, collapsed state (12 tests) |
 | `src/components/__tests__/InviteModal.test.js` | Email invite modal — render, empty-email disable, submit handler, success toast, error display, cancel, backdrop click, loading state (9 tests) |
 | `src/components/__tests__/TwoFactorSection.test.js` | TOTP enrollment (enroll call, QR code, manual secret), verification (challengeAndVerify, error), successful enable, unenrollment, status display (11 tests) |
 | `src/pages/__tests__/ResetPasswordPage.test.js` | PASSWORD_RECOVERY wait state, form render, password mismatch / too-short validation, successful updateUser, success toast + redirect, expired-link error, button disable while submitting (8 tests) |
+| `src/utils/__tests__/generateReport.test.js` | Content inclusion, score color mapping (good/fair/poor), XSS escaping, empty finding/bug arrays, submission naming, complete HTML structure (10 tests) |
 
 ### Mocking Strategy
 
@@ -107,11 +108,11 @@ All test files live in `backend/tests/` and follow the `test_<module>.py` naming
 | File | What It Tests |
 |------|--------------|
 | `tests/test_analyze_endpoint.py` | Health check, auth guard (missing header, malformed token, wrong Bearer prefix), valid JWT happy path, request body validation (6 tests) |
-| `tests/test_analyze_route.py` | Route integration tests — full response shape, score range, finding/bug schema, persistence failure resilience, max-length validation (6 tests) |
-| `tests/test_analysis_engine.py` | Static analyzer — 46 PEP 8 checks (naming conventions, self/cls, None/boolean/type comparisons, empty sequences, lambda assignment, import formatting, is-not preference, return consistency, exception inheritance, string slicing, trailing whitespace, tab indentation, blank line spacing, comment spacing, triple quote style, import ordering, try block scope, context manager usage, is true/false, exception naming, invalid dunders, return in finally, implicit return none, module dunder placement, relative imports, semicolons, compound statements, bracket whitespace, whitespace before punctuation, whitespace before call, whitespace after separator, operator spacing, keyword arg spacing, binary operator line break, arrow spacing, annotation spacing, block comment capitalization/indentation, quote consistency, module naming), syntax errors, score computation (113 tests) |
+| `tests/test_analyze_route.py` | Route integration tests — full response shape, score range, finding/bug schema, persistence failure resilience, max-length validation (7 tests) |
+| `tests/test_analysis_engine.py` | Static analyzer — 46 PEP 8 checks (naming conventions, self/cls, None/boolean/type comparisons, empty sequences, lambda assignment, import formatting, is-not preference, return consistency, exception inheritance, string slicing, trailing whitespace, tab indentation, blank line spacing, comment spacing, triple quote style, import ordering, try block scope, context manager usage, is true/false, exception naming, invalid dunders, return in finally, implicit return none, module dunder placement, relative imports, semicolons, compound statements, bracket whitespace, whitespace before punctuation, whitespace before call, whitespace after separator, operator spacing, keyword arg spacing, binary operator line break, arrow spacing, annotation spacing, block comment capitalization/indentation, quote consistency, module naming), syntax errors, score computation including flagged-bug skip logic, pycodestyle parity checks (130 tests) |
 | `tests/test_gpt_predictor.py` | GPT predictor — valid responses, empty arrays, API errors, malformed JSON, schema validation, prompt construction, user message formatting (8 tests) |
-| `tests/test_codebert_validator.py` | CodeBERT validator — happy path / flagged low-confidence / threshold boundary, empty input, `line_number=None`, out-of-bounds line, model-not-loaded fallback, inference exception, snippet extraction (single line, context window dedent, file-bound clamping, inline comment stripping, string-literal preservation), buggy-label index resolution via `model.config.label2id` (case-sensitive, case-insensitive, placeholder fallback, missing config) — 19 tests |
-| `tests/test_account_routes.py` | Account CRUD — get profile, update username, duplicate username 409, invalid chars 422, change password (success/wrong/short), avatar upload (success/invalid type), delete account, invite user (success/supabase error/no auth) (16 tests) |
+| `tests/test_codebert_validator.py` | CodeBERT validator — happy path / flagged low-confidence / threshold boundary / flags-every-bug-below-threshold, empty input, `line_number=None`, out-of-bounds line, model-not-loaded fallback, inference exception, snippet extraction (single line, context window dedent, file-bound clamping, inline comment stripping, string-literal preservation, target-line disambiguation marking), buggy-label index resolution via `model.config.label2id` (case-sensitive, case-insensitive, id2label fallback, placeholder fallback, missing config), comment stripping with string-literal preservation, confidence contrast remapping (23 tests) |
+| `tests/test_account_routes.py` | Account CRUD — get profile, update username, duplicate username 409, invalid chars 422, no fields 422, change password (success/wrong/short), avatar upload (success/invalid type), delete account, invite user (success/supabase error/no auth), data export (success/no auth) (18 tests) |
 | `tests/test_submission_routes.py` | Submission CRUD — list submissions, rename (success/not-found/not-owner/empty-name), delete (success/not-found/not-owner), pin toggle (pin/unpin/not-found/not-owner) (13 tests) |
 | `tests/test_placeholder.py` | Confirms the test runner is configured correctly |
 
@@ -310,6 +311,8 @@ Test IDs follow the pattern `TC-{MODULE}-{NNN}`. For full requirement descriptio
 | TC-ANALYSIS-012 | `test_score_decreases_with_findings` | FR-REPORT-001 |
 | TC-ANALYSIS-013 | `test_score_floor_is_zero` | FR-REPORT-001 |
 | TC-ANALYSIS-014 | `test_compute_score_includes_predicted_bugs` | FR-REPORT-001, FR-ANALYSIS-003 |
+| TC-ANALYSIS-014a | `test_compute_score_skips_flagged_bugs` | FR-REPORT-001, FR-ANALYSIS-006 |
+| TC-ANALYSIS-014b | `test_compute_score_penalises_unflagged_bugs_only` | FR-REPORT-001, FR-ANALYSIS-006 |
 | TC-ANALYSIS-015 | `test_camel_case_function_detected` | FR-ANALYSIS-002 |
 | TC-ANALYSIS-016 | `test_snake_case_function_not_flagged` | FR-ANALYSIS-002 |
 | TC-ANALYSIS-017 | `test_non_pascal_case_class_detected` | FR-ANALYSIS-002 |
@@ -361,6 +364,8 @@ Test IDs follow the pattern `TC-{MODULE}-{NNN}`. For full requirement descriptio
 | TC-ANALYSIS-063 | `test_triple_double_quotes_not_flagged` | FR-ANALYSIS-002 |
 | TC-ANALYSIS-064 | `test_stdlib_after_third_party_detected` | FR-ANALYSIS-002 |
 | TC-ANALYSIS-065 | `test_properly_grouped_imports_not_flagged` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-065a | `test_local_absolute_before_third_party_detected` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-065b | `test_proper_grouping_with_local_absolute_not_flagged` | FR-ANALYSIS-002 |
 | TC-ANALYSIS-066 | `test_broad_try_block_detected` | FR-ANALYSIS-002 |
 | TC-ANALYSIS-067 | `test_narrow_try_block_not_flagged` | FR-ANALYSIS-002 |
 | TC-ANALYSIS-068 | `test_try_finally_close_detected` | FR-ANALYSIS-002 |
@@ -385,6 +390,8 @@ Test IDs follow the pattern `TC-{MODULE}-{NNN}`. For full requirement descriptio
 | TC-ANALYSIS-101 | `test_compound_statement_not_flagged_for_multiline` | FR-ANALYSIS-002 |
 | TC-ANALYSIS-102 | `test_bracket_whitespace_detected` | FR-ANALYSIS-002 |
 | TC-ANALYSIS-103 | `test_bracket_whitespace_not_flagged_for_clean` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-103a | `test_bracket_whitespace_not_flagged_for_tab_indented_multiline_call` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-103b | `test_bracket_whitespace_not_flagged_for_space_indented_closing_bracket` | FR-ANALYSIS-002 |
 | TC-ANALYSIS-104 | `test_whitespace_before_punctuation_detected` | FR-ANALYSIS-002 |
 | TC-ANALYSIS-105 | `test_whitespace_before_punctuation_not_flagged` | FR-ANALYSIS-002 |
 | TC-ANALYSIS-106 | `test_whitespace_before_call_detected` | FR-ANALYSIS-002 |
@@ -392,15 +399,26 @@ Test IDs follow the pattern `TC-{MODULE}-{NNN}`. For full requirement descriptio
 | TC-ANALYSIS-108 | `test_whitespace_after_separator_detected` | FR-ANALYSIS-002 |
 | TC-ANALYSIS-109 | `test_whitespace_after_separator_not_flagged` | FR-ANALYSIS-002 |
 | TC-ANALYSIS-110 | `test_operator_spacing_detected` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-110a | `test_operator_spacing_detected_missing_right_side_space` | FR-ANALYSIS-002 |
 | TC-ANALYSIS-111 | `test_operator_spacing_not_flagged_for_spaced` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-111a | `test_operator_spacing_not_flagged_for_keyword_argument` | FR-ANALYSIS-002 |
 | TC-ANALYSIS-112 | `test_keyword_arg_spacing_detected` | FR-ANALYSIS-002 |
 | TC-ANALYSIS-113 | `test_keyword_arg_spacing_not_flagged` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-113a | `test_keyword_arg_spacing_detected_for_call_keyword_spaces` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-113b | `test_keyword_arg_spacing_not_flagged_for_annotated_default_with_spaces` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-113c | `test_keyword_arg_spacing_detected_for_annotated_default_without_spaces` | FR-ANALYSIS-002 |
 | TC-ANALYSIS-114 | `test_binary_operator_line_break_detected` | FR-ANALYSIS-002 |
 | TC-ANALYSIS-115 | `test_binary_operator_line_break_not_flagged` | FR-ANALYSIS-002 |
 | TC-ANALYSIS-116 | `test_arrow_spacing_detected` | FR-ANALYSIS-002 |
 | TC-ANALYSIS-117 | `test_arrow_spacing_not_flagged` | FR-ANALYSIS-002 |
 | TC-ANALYSIS-118 | `test_annotation_spacing_detected` | FR-ANALYSIS-002 |
 | TC-ANALYSIS-119 | `test_annotation_spacing_not_flagged` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-119a | `test_annotation_spacing_detected_space_before_colon` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-119b | `test_annotation_spacing_not_flagged_for_named_slice` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-119c | `test_annotation_spacing_detected_for_function_parameter_annotation` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-119d | `test_operator_spacing_parity_with_pycodestyle_e225` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-119e | `test_keyword_arg_spacing_parity_with_pycodestyle` | FR-ANALYSIS-002 |
+| TC-ANALYSIS-119f | `test_annotation_spacing_parity_with_pycodestyle_e231` | FR-ANALYSIS-002 |
 | TC-ANALYSIS-120 | `test_block_comment_capitalization_detected` | FR-ANALYSIS-002 |
 | TC-ANALYSIS-121 | `test_block_comment_capitalization_not_flagged` | FR-ANALYSIS-002 |
 | TC-ANALYSIS-122 | `test_block_comment_indentation_detected` | FR-ANALYSIS-002 |
@@ -422,6 +440,34 @@ Test IDs follow the pattern `TC-{MODULE}-{NNN}`. For full requirement descriptio
 | TC-ANALYSIS-075 | `test_system_prompt_includes_static_findings` | FR-ANALYSIS-003 |
 | TC-ANALYSIS-076 | `test_user_message_prefixes_each_line_with_line_number` | FR-ANALYSIS-003 |
 | TC-ANALYSIS-077 | `test_user_message_preserves_blank_lines` | FR-ANALYSIS-003 |
+
+#### `tests/test_codebert_validator.py`
+
+| TC-ID | Test Function | Requirements Covered |
+|-------|---------------|----------------------|
+| TC-CBERT-001 | `test_extract_snippet_single_line` | FR-ANALYSIS-006 |
+| TC-CBERT-002 | `test_extract_snippet_with_context_dedents` | FR-ANALYSIS-006 |
+| TC-CBERT-003 | `test_extract_snippet_clamps_to_file_bounds` | FR-ANALYSIS-006 |
+| TC-CBERT-004 | `test_extract_snippet_handles_none` | FR-ANALYSIS-006 |
+| TC-CBERT-005 | `test_extract_snippet_handles_out_of_range` | FR-ANALYSIS-006 |
+| TC-CBERT-006 | `test_extract_snippet_strips_inline_comments` | FR-ANALYSIS-006 |
+| TC-CBERT-007 | `test_extract_snippet_marks_target_line_for_disambiguation` | FR-ANALYSIS-006 |
+| TC-CBERT-008 | `test_resolve_buggy_index_reads_label2id` | FR-ANALYSIS-006 |
+| TC-CBERT-009 | `test_resolve_buggy_index_case_insensitive` | FR-ANALYSIS-006 |
+| TC-CBERT-010 | `test_resolve_buggy_index_reads_id2label` | FR-ANALYSIS-006 |
+| TC-CBERT-011 | `test_resolve_buggy_index_returns_none_for_placeholders` | FR-ANALYSIS-006 |
+| TC-CBERT-012 | `test_resolve_buggy_index_handles_missing_config` | FR-ANALYSIS-006 |
+| TC-CBERT-013 | `test_strip_comments_preserves_string_literals` | FR-ANALYSIS-006 |
+| TC-CBERT-014 | `test_apply_confidence_contrast_spreads_close_scores` | FR-ANALYSIS-006 |
+| TC-CBERT-015 | `test_validate_high_confidence_not_flagged` | FR-ANALYSIS-006 |
+| TC-CBERT-016 | `test_validate_low_confidence_flagged` | FR-ANALYSIS-006 |
+| TC-CBERT-017 | `test_validate_threshold_boundary_is_not_flagged` | FR-ANALYSIS-006 |
+| TC-CBERT-018 | `test_validate_empty_list` | FR-ANALYSIS-006 |
+| TC-CBERT-019 | `test_validate_line_number_none_passes_through` | FR-ANALYSIS-006, NFR-RELI-001 |
+| TC-CBERT-020 | `test_validate_line_number_out_of_range_passes_through` | FR-ANALYSIS-006, NFR-RELI-001 |
+| TC-CBERT-021 | `test_validate_no_model_loaded_passes_through` | FR-ANALYSIS-006, NFR-RELI-001 |
+| TC-CBERT-022 | `test_validate_inference_failure_passes_through` | FR-ANALYSIS-006, NFR-RELI-001 |
+| TC-CBERT-023 | `test_validate_flags_every_bug_below_threshold` | FR-ANALYSIS-006 |
 
 ---
 
@@ -446,6 +492,7 @@ Test IDs follow the pattern `TC-{MODULE}-{NNN}`. For full requirement descriptio
 | TC-ANALYSIS-079 | `test_analyze_score_in_range` | FR-REPORT-001, NFR-PERF-001 |
 | TC-ANALYSIS-080 | `test_analyze_findings_have_required_fields` | FR-REPORT-001 |
 | TC-ANALYSIS-081 | `test_analyze_predicted_bugs_have_required_fields` | FR-REPORT-002 |
+| TC-ANALYSIS-081a | `test_analyze_flagged_bug_does_not_lower_score` | FR-REPORT-001, FR-ANALYSIS-006 |
 | TC-ANALYSIS-082 | `test_analyze_persistence_failure_still_returns_200` | NFR-RELI-001 |
 | TC-ANALYSIS-083 | `test_analyze_code_too_long_returns_422` | NFR-RELI-001 |
 
@@ -469,6 +516,8 @@ Test IDs follow the pattern `TC-{MODULE}-{NNN}`. For full requirement descriptio
 | TC-ACCT-014 | `test_invite_user_success` | FR-ACCT-005 |
 | TC-ACCT-015 | `test_invite_user_supabase_error` | FR-ACCT-005 |
 | TC-ACCT-016 | `test_invite_user_no_auth` | FR-AUTH-007 |
+| TC-ACCT-050 | `test_export_data_success` | FR-ACCT-006 |
+| TC-ACCT-051 | `test_export_data_no_auth` | FR-AUTH-007 |
 
 #### `tests/test_submission_routes.py`
 
@@ -521,6 +570,7 @@ Test IDs follow the pattern `TC-{MODULE}-{NNN}`. For full requirement descriptio
 | TC-ID | Test Description | Requirements Covered |
 |-------|-----------------|----------------------|
 | TC-REPORT-001 | shows idle placeholder when there are no results | FR-REPORT-001 |
+| TC-REPORT-001a | uses a slightly larger default panel width | FR-REPORT-008 |
 | TC-REPORT-002 | shows the error message on failure | FR-REPORT-001, NFR-RELI-001 |
 | TC-REPORT-003 | shows the skeleton with aria-label while loading | FR-DASH-002, NFR-USAB-001 |
 | TC-REPORT-004 | does not show the skeleton when not loading | FR-DASH-002 |
@@ -537,6 +587,7 @@ Test IDs follow the pattern `TC-{MODULE}-{NNN}`. For full requirement descriptio
 | TC-REPORT-015 | expands suggested fix when toggle is clicked | FR-REPORT-002 |
 | TC-REPORT-016 | collapses suggested fix on second click | FR-REPORT-002 |
 | TC-REPORT-017 | shows empty state when predicted_bugs array is empty | FR-REPORT-002 |
+| TC-REPORT-017a | hides flagged bugs when the checkbox is unchecked | FR-REPORT-007 |
 | TC-REPORT-018 | ignoring a finding removes it from the list | FR-REPORT-004 |
 | TC-REPORT-019 | ignoring a bug removes it from the list | FR-REPORT-004 |
 | TC-REPORT-020 | ignored items reappear when results are reset | FR-REPORT-004 |
@@ -544,10 +595,23 @@ Test IDs follow the pattern `TC-{MODULE}-{NNN}`. For full requirement descriptio
 | TC-REPORT-022 | calls onHoverLine with null when leaving a finding | FR-REPORT-005, FR-DASH-006 |
 | TC-REPORT-023 | calls onHoverLine with line number when hovering a bug card | FR-REPORT-005, FR-DASH-006 |
 | TC-REPORT-024 | does not call onHoverLine when bug has no line number | FR-REPORT-005 |
+| TC-REPORT-024a | calls onJumpLine when clicking a finding row | FR-DASH-007 |
+| TC-REPORT-024b | calls onJumpLine when clicking a bug card | FR-DASH-007 |
+| TC-REPORT-024c | does not call onJumpLine when clicking ignore controls | FR-DASH-007, FR-REPORT-004 |
 | TC-REPORT-025 | clicking the Line pill re-orders findings by line number ascending | FR-REPORT-003 |
 | TC-REPORT-026 | direction toggle reverses line sort to descending | FR-REPORT-003 |
 | TC-REPORT-027 | equal-severity findings are tiebroken by line number ascending | FR-REPORT-003 |
 | TC-REPORT-028 | null line_number findings sort last when Line sort is active | FR-REPORT-003 |
+| TC-REPORT-029 | shows Export button when results are present | FR-REPORT-006 |
+| TC-REPORT-030 | hides Export button when results are null | FR-REPORT-006 |
+| TC-REPORT-031 | hides Export button during loading | FR-REPORT-006 |
+| TC-REPORT-032 | creates a Blob with text/html on click | FR-REPORT-006 |
+| TC-REPORT-033 | renders a confidence badge for each bug that has a score | FR-REPORT-007 |
+| TC-REPORT-034 | renders no confidence badge for bugs without a score | FR-REPORT-007 |
+| TC-REPORT-035 | marks flagged bugs with the flagged class | FR-REPORT-007 |
+| TC-REPORT-036 | hides the slider when no bug has confidence | FR-REPORT-007 |
+| TC-REPORT-037 | shows the slider when any bug has confidence | FR-REPORT-007 |
+| TC-REPORT-038 | filters out bugs below the slider value | FR-REPORT-007 |
 
 #### `src/components/__tests__/SubmissionSidebar.test.js`
 
@@ -614,6 +678,23 @@ Test IDs follow the pattern `TC-{MODULE}-{NNN}`. For full requirement descriptio
 | TC-AUTH-025 | calls signIn with email and password on login form submit | FR-AUTH-002 |
 | TC-AUTH-026 | calls signUp with email, password, and username on signup form submit | FR-AUTH-001 |
 | TC-AUTH-027 | displays error message when signIn returns an error | FR-AUTH-002 |
+| TC-AUTH-027a | password field starts as type="password" (masked) | FR-AUTH-002 |
+| TC-AUTH-027b | toggles password field to type="text" when show-password button is clicked | FR-AUTH-002 |
+| TC-AUTH-027c | toggles password field back to type="password" on second click | FR-AUTH-002 |
+| TC-AUTH-027d | renders "Remember me" checkbox in login mode | FR-AUTH-002 |
+| TC-AUTH-027e | hides "Remember me" checkbox in signup mode | FR-AUTH-001 |
+| TC-AUTH-027f | hides "Remember me" checkbox in forgot password mode | FR-AUTH-006 |
+| TC-AUTH-027g | renders "Confirm Password" field in signup mode | FR-AUTH-001 |
+| TC-AUTH-027h | hides "Confirm Password" field in login mode | FR-AUTH-002 |
+| TC-AUTH-027i | shows error and blocks signUp when passwords do not match | FR-AUTH-001 |
+| TC-AUTH-027j | calls signUp when passwords match | FR-AUTH-001 |
+| TC-AUTH-027k | has independent show/hide toggles for password and confirm password | FR-AUTH-001 |
+| TC-AUTH-027l | shows legal notice in signup mode | FR-AUTH-001 |
+| TC-AUTH-027m | hides legal notice in login mode | FR-AUTH-002 |
+| TC-AUTH-027n | hides legal notice in forgot password mode | FR-AUTH-006 |
+| TC-AUTH-027o | renders the "Learn more" scroll button | FR-DASH-001 |
+| TC-AUTH-027p | renders the learn-more section with all pipeline stage headings | FR-DASH-001 |
+| TC-AUTH-027q | renders the "Show less" button in the learn-more section | FR-DASH-001 |
 | TC-AUTH-028 | does not show Forgot password before a failed login attempt | FR-AUTH-006 |
 | TC-AUTH-029 | shows Forgot password after a failed login attempt | FR-AUTH-006 |
 | TC-AUTH-030 | shows forgot password email form when Forgot password is clicked | FR-AUTH-006 |
@@ -626,13 +707,26 @@ Test IDs follow the pattern `TC-{MODULE}-{NNN}`. For full requirement descriptio
 | TC-AUTH-037 | calls challenge and verify with factorId and code on MFA submit | FR-AUTH-004 |
 | TC-AUTH-038 | shows Invalid code error on verify failure | FR-AUTH-004 |
 | TC-AUTH-039 | signs out and returns to credentials when Back to Log In is clicked in MFA | FR-AUTH-004 |
+| TC-AUTH-048 | returns 0 for empty or short passwords | FR-AUTH-001 |
+| TC-AUTH-049 | returns 1 (Weak) for >= 6 chars with few criteria | FR-AUTH-001 |
+| TC-AUTH-050 | returns 2 (Fair) for >= 8 chars with 2 criteria | FR-AUTH-001 |
+| TC-AUTH-051 | returns 3 (Strong) for >= 8 chars with all 3 criteria | FR-AUTH-001 |
+| TC-AUTH-052 | does not render strength bar in login mode | FR-AUTH-002 |
+| TC-AUTH-053 | renders strength bar in signup mode when typing | FR-AUTH-001 |
+| TC-AUTH-054 | renders Google and GitHub buttons in login mode | FR-AUTH-008 |
+| TC-AUTH-055 | renders Google and GitHub buttons in signup mode | FR-AUTH-008 |
+| TC-AUTH-056 | hides OAuth buttons in forgot password mode | FR-AUTH-008 |
+| TC-AUTH-057 | calls signInWithOAuth with "google" when Google button is clicked | FR-AUTH-008 |
+| TC-AUTH-058 | calls signInWithOAuth with "github" when GitHub button is clicked | FR-AUTH-008 |
 
 #### `src/pages/__tests__/AccountPage.test.js`
 
 | TC-ID | Test Description | Requirements Covered |
 |-------|-----------------|----------------------|
 | TC-ACCT-026 | renders all sections after profile loads | FR-ACCT-001, FR-ACCT-002, FR-ACCT-003, FR-ACCT-004 |
+| TC-ACCT-026a | renders the report bug mailto link with correct address | FR-ACCT-008 |
 | TC-ACCT-027 | displays profile data in form fields | FR-ACCT-001 |
+| TC-ACCT-027a | displays formatted "Member since" date | FR-ACCT-009 |
 | TC-ACCT-028 | shows validation error when username is too short | FR-ACCT-001 |
 | TC-ACCT-029 | shows validation error when username has invalid characters | FR-ACCT-001 |
 | TC-ACCT-030 | calls updateProfile and shows success toast on valid update | FR-ACCT-001 |
@@ -641,6 +735,10 @@ Test IDs follow the pattern `TC-{MODULE}-{NNN}`. For full requirement descriptio
 | TC-ACCT-033 | calls changePassword and shows success toast on valid password change | FR-ACCT-003 |
 | TC-ACCT-034 | shows delete confirmation modal when Delete Account is clicked | FR-ACCT-004 |
 | TC-ACCT-035 | keeps delete button disabled until username matches | FR-ACCT-004 |
+| TC-ACCT-036 | renders "Sign Out All Devices" button with description | FR-ACCT-007 |
+| TC-ACCT-037 | calls signOut with global scope and navigates to /login | FR-ACCT-007 |
+| TC-ACCT-038 | renders "Download My Data" button with description | FR-ACCT-006 |
+| TC-ACCT-039 | calls exportData and triggers download on click | FR-ACCT-006 |
 
 #### `src/pages/__tests__/ResetPasswordPage.test.js`
 
@@ -654,6 +752,21 @@ Test IDs follow the pattern `TC-{MODULE}-{NNN}`. For full requirement descriptio
 | TC-AUTH-045 | calls toast and navigates to /login on success | FR-AUTH-006 |
 | TC-AUTH-046 | shows error message when updateUser returns an error (expired link) | FR-AUTH-006 |
 | TC-AUTH-047 | disables submit button while submitting | FR-AUTH-006 |
+
+#### `src/utils/__tests__/generateReport.test.js`
+
+| TC-ID | Test Description | Requirements Covered |
+|-------|-----------------|----------------------|
+| TC-REPORT-039 | includes submission name in report title | FR-REPORT-006 |
+| TC-REPORT-040 | includes overall score in report | FR-REPORT-006 |
+| TC-REPORT-041 | maps good score (80+) to green color | FR-REPORT-006 |
+| TC-REPORT-042 | maps fair score (50-79) to yellow color | FR-REPORT-006 |
+| TC-REPORT-043 | maps poor score (<50) to red color | FR-REPORT-006 |
+| TC-REPORT-044 | escapes HTML in user-provided strings (XSS prevention) | FR-REPORT-006, NFR-SEC-002 |
+| TC-REPORT-045 | handles empty findings array | FR-REPORT-006 |
+| TC-REPORT-046 | handles empty predicted_bugs array | FR-REPORT-006 |
+| TC-REPORT-047 | includes findings with line numbers and severity | FR-REPORT-006 |
+| TC-REPORT-048 | generates complete HTML document structure | FR-REPORT-006 |
 
 ---
 
