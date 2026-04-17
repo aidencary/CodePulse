@@ -18,8 +18,7 @@ CodePulse analyzes your code in real-time and provides:
 - **Code Quality Score**: Overall assessment of code quality based on best practices
 - **Standards Compliance**: Identifies deviations from established coding standards
 - **Bug Prediction**: Uses a ChatGPT API to predict bugs
-- **Actionable Feedback**: Provides specific suggestions for code improvements
-- **Real-time Analysis**: Instant feedback as you type in the live editor
+- **Potential Fixes**: Provides specific suggestions for code improvements
 - **Submission Management**: Name, rename, and delete submissions with GPT-generated default names
 - **Account Management**: Update username, upload profile picture, change password, delete account
 
