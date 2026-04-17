@@ -4,6 +4,7 @@ import supabase from '../../services/supabaseClient'
 
 jest.mock('../../services/supabaseClient', () => ({
   auth: {
+    getSession: jest.fn(),
     onAuthStateChange: jest.fn(),
     signInWithPassword: jest.fn(),
     signUp: jest.fn(),
@@ -15,6 +16,7 @@ const mockUnsubscribe = jest.fn()
 
 beforeEach(() => {
   jest.clearAllMocks()
+  supabase.auth.getSession.mockResolvedValue({ data: { session: null } })
   supabase.auth.onAuthStateChange.mockReturnValue({
     data: { subscription: { unsubscribe: mockUnsubscribe } },
   })

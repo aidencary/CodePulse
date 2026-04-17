@@ -40,10 +40,8 @@ describe('ResultsPanel — idle and error states', () => {
 
   // TC-REPORT-001A
   it('uses a slightly larger default panel width', () => {
-    const { container } = render(
-      <ResultsPanel results={null} loading={false} error={null} />
-    )
-    const panel = container.querySelector('.results-panel')
+    render(<ResultsPanel results={null} loading={false} error={null} />)
+    const panel = screen.getByTestId('results-panel')
     expect(panel).toBeInTheDocument()
     expect(panel).toHaveStyle('width: 340px')
   })

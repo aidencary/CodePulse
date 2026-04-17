@@ -389,7 +389,7 @@ function ResultsPanel({ results, loading, error, onHoverLine, onJumpLine, submis
   const totalIssues = results ? sortedFindings.length + sortedBugs.length : 0
 
   return (
-    <div className="results-panel" style={{ width: panelWidth }}>
+    <div className="results-panel" data-testid="results-panel" style={{ width: panelWidth }}>
       <div className="resize-handle" onMouseDown={handleMouseDown} />
       <div className="panel-header">
         <h2 className="panel-title">

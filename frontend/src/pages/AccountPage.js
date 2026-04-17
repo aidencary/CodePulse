@@ -65,16 +65,16 @@ function LockIcon() {
 }
 
 function AccountPage() {
-  const { session, signOut, refreshSession } = useAuth()
+  const { session, signOut, refreshSession, cachedProfile } = useAuth()
   const navigate = useNavigate()
   const toast = useToast()
   const fileInputRef = useRef(null)
   const token = session?.access_token
 
-  // Profile state
-  const [profile, setProfile] = useState(null)
-  const [pageLoading, setPageLoading] = useState(true)
-  const [username, setUsername] = useState('')
+  // Profile state — seed from prefetched cache so the page renders immediately
+  const [profile, setProfile] = useState(cachedProfile || null)
+  const [pageLoading, setPageLoading] = useState(cachedProfile == null)
+  const [username, setUsername] = useState(cachedProfile?.username || '')
   const [profileMsg, setProfileMsg] = useState(null)
   const [profileSaved, setProfileSaved] = useState(false)
   const [profileErr, setProfileErr] = useState(null)
@@ -106,7 +106,10 @@ function AccountPage() {
 
   // Load profile on mount
   useEffect(() => {
-    if (!token) return
+    if (!token) {
+      setPageLoading(false)
+      return
+    }
     getProfile(token)
       .then((data) => {
         setProfile(data)
