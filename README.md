@@ -19,7 +19,8 @@ CodePulse analyzes your code in real-time and provides:
 - **Standards Compliance**: Identifies deviations from established coding standards
 - **Bug Prediction**: Uses a ChatGPT API to predict bugs
 - **Potential Fixes**: Provides specific suggestions for code improvements
-- **Submission Management**: Name, rename, and delete submissions with GPT-generated default names
+- **Live Line Tracking**: Finding and bug cards keep pointing at the right line as you edit; if a flagged line is deleted the card goes stale and a "Show code" toggle reveals the original source line
+- **Submission Management**: Name, rename, and delete submissions with GPT-generated default names; warns before discarding unsaved edits when switching submissions
 - **Account Management**: Update username, upload profile picture, change password, delete account
 
 ## Tech Stack

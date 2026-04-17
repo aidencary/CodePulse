@@ -217,11 +217,16 @@ function EditorSettingsPanel({ settings, onChangeSetting, onReset }) {
 
 // FR-DASH-001
 // FR-DASH-002
-function CodeEditor({ code, onCodeChange, onRun, loading, isDark, highlightLine, jumpToLine }) {
+function CodeEditor({ code, onCodeChange, onRun, loading, isDark, highlightLine, jumpToLine, trackedFindings, onFindingLinesChange }) {
   const btnRef = useRef(null)
   const editorRef = useRef(null)
   const decorationsRef = useRef([])
+  const findingDecorationsRef = useRef(new Map()) // findingId -> decorationId
+  const changeSubRef = useRef(null)
+  const onFindingLinesChangeRef = useRef(onFindingLinesChange)
   const [copied, setCopied] = useState(false)
+
+  useEffect(() => { onFindingLinesChangeRef.current = onFindingLinesChange }, [onFindingLinesChange])
 
   const [settings, setSettings] = useState(() => {
     try {
@@ -268,6 +273,69 @@ function CodeEditor({ code, onCodeChange, onRun, loading, isDark, highlightLine,
       decorationsRef.current = editor.deltaDecorations(decorationsRef.current, [])
     }
   }, [highlightLine, settings.severityHighlight])
+
+  // Tracked decorations for findings: Monaco shifts the range live as the user edits.
+  // We read each decoration's current range on every content change and report
+  // { findingId -> line | null } back to the parent. null means the line was deleted.
+  useEffect(() => {
+    const editor = editorRef.current
+    if (!editor) return
+    const model = editor.getModel()
+    if (!model) return
+
+    const findings = Array.isArray(trackedFindings) ? trackedFindings : []
+    const prevMap = findingDecorationsRef.current
+    const oldDecorationIds = Array.from(prevMap.values())
+
+    // Build new decoration descriptors, preserving order so we can map IDs back.
+    const ids = findings.map((f) => f.id)
+    const newDecorations = findings.map((f) => ({
+      range: {
+        startLineNumber: f.line,
+        endLineNumber: f.line,
+        startColumn: 1,
+        endColumn: Number.MAX_SAFE_INTEGER,
+      },
+      options: {
+        isWholeLine: true,
+        // NeverGrowsWhenTypingAtEdges = 1 in monaco.editor.TrackedRangeStickiness
+        stickiness: 1,
+      },
+    }))
+
+    const newIds = editor.deltaDecorations(oldDecorationIds, newDecorations)
+    const newMap = new Map()
+    ids.forEach((id, i) => newMap.set(id, newIds[i]))
+    findingDecorationsRef.current = newMap
+
+    const emit = () => {
+      const cb = onFindingLinesChangeRef.current
+      if (!cb) return
+      const live = new Map()
+      newMap.forEach((decorationId, findingId) => {
+        const range = model.getDecorationRange(decorationId)
+        if (!range) {
+          live.set(findingId, null)
+          return
+        }
+        const collapsed =
+          range.startLineNumber === range.endLineNumber &&
+          range.startColumn === range.endColumn
+        live.set(findingId, collapsed ? null : range.startLineNumber)
+      })
+      cb(live)
+    }
+
+    // Baseline fire + subscribe to future changes.
+    emit()
+    changeSubRef.current?.dispose()
+    changeSubRef.current = model.onDidChangeContent(() => emit())
+
+    return () => {
+      changeSubRef.current?.dispose()
+      changeSubRef.current = null
+    }
+  }, [trackedFindings])
 
   useEffect(() => {
     const editor = editorRef.current

@@ -74,6 +74,8 @@ file(s) where it is implemented. Requirement IDs are referenced by test cases in
 | FR-REPORT-007 | CodeBERT confidence badge on bug cards; min-confidence filter slider in results panel; flagged bugs dimmed and excluded from score | `src/components/ResultsPanel.js`, `src/components/BugCard.js` |
 | FR-REPORT-008 | Resizable results panel with drag handle (220-600 px range); results panel header with icon and dynamic issue count | `src/components/ResultsPanel.js` |
 | FR-REPORT-009 | Severity left-border accents on findings and bug cards; hover feedback with subtle lift/glow; staggered entrance animations on results load | `src/components/ResultsPanel.js`, `src/components/BugCard.js`, `src/styles/dashboard.css` |
+| FR-REPORT-010 | Live-tracked line numbers on finding and bug cards: Monaco tracked decorations shift each card's displayed line number as the user edits above it; when a flagged line is deleted the card enters a "stale" state (dimmed, "line deleted" badge, jump/hover disabled) | `src/components/CodeEditor.js`, `src/components/ResultsPanel.js`, `src/components/BugCard.js`, `src/pages/DashboardPage.js` |
+| FR-REPORT-011 | "Show code" toggle on finding and bug cards reveals the original source line that was flagged at the time of analysis, sliced from the `analyzedCode` snapshot, so the user can re-locate the relevant code after edits | `src/components/ResultsPanel.js`, `src/components/BugCard.js`, `src/pages/DashboardPage.js`, `src/styles/dashboard.css` |
 
 ### FR-ACCT — Account Management
 
@@ -101,6 +103,7 @@ file(s) where it is implemented. Requirement IDs are referenced by test cases in
 | FR-HIST-004 | Delete a submission with centered confirmation modal via kebab menu | `src/components/SubmissionSidebar.js`, `src/services/submissionService.js` |
 | FR-HIST-005 | Pin / star a submission via kebab menu; pinned submissions sort to top with star icon; toggle pin/unpin | `src/components/SubmissionSidebar.js`, `src/services/submissionService.js` |
 | FR-HIST-006 | Search and filter submissions by name in the sidebar search input | `src/components/SubmissionSidebar.js` |
+| FR-HIST-007 | Unsaved-edits confirmation: when the user has edited the code since the last analysis and tries to select a different submission or start a new one, a browser `confirm` dialog warns that changes will not be saved unless Analysis is re-run; bypassed automatically after an explicit delete | `src/pages/DashboardPage.js`, `src/components/SubmissionSidebar.js` |
 
 ### FR-LOGIN — Login Page UI
 
@@ -134,14 +137,14 @@ file(s) where it is implemented. Requirement IDs are referenced by test cases in
 
 ## Test Coverage
 
-172 frontend tests across 11 test suites. See [TESTING.md](../TESTING.md) for the full
+179 frontend tests across 11 test suites. See [TESTING.md](../TESTING.md) for the full
 test matrix mapping `TC-{MODULE}-{NNN}` IDs to requirements.
 
 | Test Suite | Tests | Requirements Covered |
 |-----------|-------|---------------------|
 | `ProtectedRoute.test.js` | 3 | FR-AUTH-007, NFR-USAB-001 |
-| `CodeEditor.test.js` | 11 | FR-DASH-001, FR-DASH-002, NFR-USAB-001 |
-| `ResultsPanel.test.js` | 28 | FR-REPORT-001 through FR-REPORT-005, FR-DASH-002, FR-DASH-006, NFR-USAB-001, NFR-RELI-001 |
+| `CodeEditor.test.js` | 12 | FR-DASH-001, FR-DASH-002, FR-REPORT-010, NFR-USAB-001 |
+| `ResultsPanel.test.js` | 49 | FR-REPORT-001 through FR-REPORT-011, FR-DASH-002, FR-DASH-006, NFR-USAB-001, NFR-RELI-001 |
 | `SubmissionSidebar.test.js` | 12 | FR-HIST-001, FR-HIST-003 through FR-HIST-006, FR-DASH-004 |
 | `InviteModal.test.js` | 9 | FR-ACCT-005, FR-DASH-005 |
 | `TwoFactorSection.test.js` | 11 | FR-AUTH-003, FR-AUTH-004, FR-AUTH-005 |
@@ -153,6 +156,6 @@ test matrix mapping `TC-{MODULE}-{NNN}` IDs to requirements.
 
 > **Note:** Test counts above reflect the `LoginPage.test.js` split — 17 tests in the login
 > page suite cover login, signup, forgot-password, and MFA flows. The remaining frontend
-> tests (49 additional across `ProtectedRoute`, `CodeEditor`, `ResultsPanel`, `SubmissionSidebar`,
+> tests across `ProtectedRoute`, `CodeEditor`, `ResultsPanel`, `SubmissionSidebar`,
 > `InviteModal`, `TwoFactorSection`, `AuthContext`, `AccountPage`, `ResetPasswordPage`,
-> `generateReport`) bring the total to 172.
+> and `generateReport` bring the total to 179.

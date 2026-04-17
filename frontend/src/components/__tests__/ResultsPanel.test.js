@@ -519,3 +519,115 @@ describe('ResultsPanel — CodeBERT confidence', () => {
     expect(screen.queryByTestId('bug-low_conf_bug')).not.toBeInTheDocument()
   })
 })
+
+// Live line tracking + Show code
+describe('ResultsPanel — live line tracking and Show code', () => {
+  const findingIdLongLine = 'f:long_line|5|Line exceeds 88 characters (95 chars).'
+  const bugIdNullDeref = 'b:null_dereference|8'
+
+  it('displays the live line number from liveLineById instead of the original', () => {
+    const liveLineById = new Map([
+      [findingIdLongLine, 7],
+      [bugIdNullDeref, 10],
+    ])
+    render(
+      <ResultsPanel
+        results={mockResults}
+        loading={false}
+        error={null}
+        liveLineById={liveLineById}
+        snippetByFindingId={new Map()}
+      />
+    )
+    expect(screen.getByText('L7')).toBeInTheDocument()
+    expect(screen.queryByText('L5')).not.toBeInTheDocument()
+    expect(screen.getByText('L10')).toBeInTheDocument()
+    expect(screen.queryByText('L8')).not.toBeInTheDocument()
+  })
+
+  it('marks a finding as stale when its live line is null', () => {
+    const liveLineById = new Map([[findingIdLongLine, null]])
+    render(
+      <ResultsPanel
+        results={mockResults}
+        loading={false}
+        error={null}
+        liveLineById={liveLineById}
+      />
+    )
+    const row = screen.getByTestId('finding-long_line')
+    expect(row.className).toMatch(/finding-item--stale/)
+    expect(row).not.toHaveAttribute('role', 'button')
+    // The "line deleted" badge appears in place of the L{n} pill.
+    expect(screen.getAllByText(/line deleted/i).length).toBeGreaterThanOrEqual(1)
+  })
+
+  it('does not call onJumpLine when clicking a stale finding', () => {
+    const liveLineById = new Map([[findingIdLongLine, null]])
+    const onJumpLine = jest.fn()
+    render(
+      <ResultsPanel
+        results={mockResults}
+        loading={false}
+        error={null}
+        liveLineById={liveLineById}
+        onJumpLine={onJumpLine}
+      />
+    )
+    fireEvent.click(screen.getByTestId('finding-long_line'))
+    expect(onJumpLine).not.toHaveBeenCalled()
+  })
+
+  it('uses the live line number when clicking a bug card', () => {
+    const liveLineById = new Map([[bugIdNullDeref, 14]])
+    const onJumpLine = jest.fn()
+    render(
+      <ResultsPanel
+        results={mockResults}
+        loading={false}
+        error={null}
+        liveLineById={liveLineById}
+        onJumpLine={onJumpLine}
+      />
+    )
+    fireEvent.click(screen.getByTestId('bug-null_dereference'))
+    expect(onJumpLine).toHaveBeenCalledWith({ line: 14, severity: 'high' })
+  })
+
+  it('reveals the original source line when "Show code" is clicked on a finding', () => {
+    const snippetByFindingId = new Map([
+      [findingIdLongLine, 'def very_long_function_name_that_exceeds_eighty_eight_characters_probably(): pass'],
+    ])
+    render(
+      <ResultsPanel
+        results={mockResults}
+        loading={false}
+        error={null}
+        liveLineById={new Map()}
+        snippetByFindingId={snippetByFindingId}
+      />
+    )
+    const toggles = screen.getAllByRole('button', { name: /show code/i })
+    expect(toggles.length).toBeGreaterThanOrEqual(1)
+    fireEvent.click(toggles[0])
+    expect(
+      screen.getByText(/very_long_function_name_that_exceeds_eighty_eight_characters_probably/)
+    ).toBeInTheDocument()
+  })
+
+  it('reveals the original source line when "Show code" is clicked on a bug card', () => {
+    const snippetByFindingId = new Map([[bugIdNullDeref, 'print(x.value)']])
+    render(
+      <ResultsPanel
+        results={mockResults}
+        loading={false}
+        error={null}
+        liveLineById={new Map()}
+        snippetByFindingId={snippetByFindingId}
+      />
+    )
+    const toggle = screen.getByRole('button', { name: /^show code$/i })
+    fireEvent.click(toggle)
+    expect(screen.getByText('print(x.value)')).toBeInTheDocument()
+  })
+})

@@ -1417,6 +1417,41 @@ body {
   color: var(--text);
 }
 
+/* ─── Stale findings / bugs (flagged line was deleted) ─────────── */
+.bug-card--stale,
+.finding-item--stale {
+  opacity: 0.55;
+  cursor: default;
+}
+.bug-card--stale:hover,
+.finding-item--stale:hover {
+  background: transparent;
+  border-color: var(--border);
+}
+.stale-badge {
+  font-size: 0.68rem;
+  color: var(--text-muted, #999);
+  background: rgba(128, 128, 128, 0.15);
+  border-radius: 3px;
+  padding: 1px 6px;
+  font-style: italic;
+}
+
+/* ─── Show code / toggle row in bug cards ──────────────────────── */
+.bug-toggle-row {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+.finding-snippet-toggle {
+  margin-top: 0.3rem;
+  align-self: flex-start;
+}
+.finding-snippet-code,
+.bug-code-snippet {
+  margin-top: 0.35rem;
+}
+
 /* ─── Loading skeleton ──────────────────────────────────────────── */
 .results-skeleton {
   padding: 1rem;

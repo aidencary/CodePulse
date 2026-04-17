@@ -42,8 +42,8 @@ All test files live in `__tests__/` directories next to the code they test.
 | File | What It Tests |
 |------|--------------|
 | `src/components/__tests__/ProtectedRoute.test.js` | Loading state, unauthenticated redirect to `/login`, authenticated render of children (3 tests) |
-| `src/components/__tests__/CodeEditor.test.js` | Renders editor, button click fires onRun, disabled during loading, copy button; settings gear ARIA, panel open/close, outside-click dismiss, setting change, toggle, localStorage persist/init (11 tests) |
-| `src/components/__tests__/ResultsPanel.test.js` | Idle, default panel width, loading, error, score, findings, predicted bugs (expand/collapse), empty states, flagged bug filter, ignore/dismiss, hover line highlight, jump-to-line, sort (severity/line/direction/tiebreaker/null-line), export button/blob, CodeBERT confidence badges, flagged class, slider visibility/filter (43 tests) |
+| `src/components/__tests__/CodeEditor.test.js` | Renders editor, button click fires onRun, disabled during loading, copy button; settings gear ARIA, panel open/close, outside-click dismiss, setting change, toggle, localStorage persist/init; trackedFindings smoke test (12 tests) |
+| `src/components/__tests__/ResultsPanel.test.js` | Idle, default panel width, loading, error, score, findings, predicted bugs (expand/collapse), empty states, flagged bug filter, ignore/dismiss, hover line highlight, jump-to-line, sort (severity/line/direction/tiebreaker/null-line), export button/blob, CodeBERT confidence badges, flagged class, slider visibility/filter, live line tracking, stale finding/bug cards, "Show code" snippet toggle (49 tests) |
 | `src/context/__tests__/AuthContext.test.js` | `onAuthStateChange` lifecycle and cleanup, `signIn` / `signUp` / `signOut` call correct Supabase methods with correct arguments (4 tests) |
 | `src/pages/__tests__/LoginPage.test.js` | Log In / Sign Up form toggle, form submission, error display, show/hide password toggle (type attribute + aria-label cycling), remember me, confirm password, password strength indicator, legal notice, learn-more section headings, Show less button, MFA step-up, forgot password flow, Google/GitHub OAuth (45 tests) |
 | `src/pages/__tests__/AccountPage.test.js` | Profile load/display, username validation, update profile, change password validation/success, delete modal and confirmation, report bug mailto link, member since date, sign out all devices, data export download (16 tests) |
@@ -564,6 +564,7 @@ Test IDs follow the pattern `TC-{MODULE}-{NNN}`. For full requirement descriptio
 | TC-DASH-009 | toggles fontLigatures when its switch is clicked | FR-DASH-001 |
 | TC-DASH-010 | persists settings to localStorage when a setting changes | FR-DASH-001 |
 | TC-DASH-011 | initialises settings from localStorage on mount | FR-DASH-001 |
+| TC-DASH-012 | renders without crashing when trackedFindings and onFindingLinesChange are provided | FR-REPORT-010 |
 
 #### `src/components/__tests__/ResultsPanel.test.js`
 
@@ -612,6 +613,12 @@ Test IDs follow the pattern `TC-{MODULE}-{NNN}`. For full requirement descriptio
 | TC-REPORT-036 | hides the slider when no bug has confidence | FR-REPORT-007 |
 | TC-REPORT-037 | shows the slider when any bug has confidence | FR-REPORT-007 |
 | TC-REPORT-038 | filters out bugs below the slider value | FR-REPORT-007 |
+| TC-REPORT-039 | displays the live line number from liveLineById instead of the original | FR-REPORT-010 |
+| TC-REPORT-040 | marks a finding as stale when its live line is null | FR-REPORT-010 |
+| TC-REPORT-041 | does not call onJumpLine when clicking a stale finding | FR-REPORT-010 |
+| TC-REPORT-042 | uses the live line number when clicking a bug card | FR-REPORT-010 |
+| TC-REPORT-043 | reveals the original source line when "Show code" is clicked on a finding | FR-REPORT-011 |
+| TC-REPORT-044 | reveals the original source line when "Show code" is clicked on a bug card | FR-REPORT-011 |
 
 #### `src/components/__tests__/SubmissionSidebar.test.js`
 
