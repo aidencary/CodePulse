@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import supabase from '../services/supabaseClient'
+import { getProfile } from '../services/accountService'
 
 const AuthContext = createContext(null)
 
@@ -7,8 +8,22 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [session, setSession] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [cachedProfile, setCachedProfile] = useState(null)
+
+  function prefetchProfile(token) {
+    if (!token) return
+    getProfile(token).then(setCachedProfile).catch(() => {})
+  }
 
   useEffect(() => {
+    // Hydrate immediately from local cache before waiting for the event
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session)
+      setUser(session?.user ?? null)
+      setLoading(false)
+      prefetchProfile(session?.access_token)
+    })
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         // Session-only login: if the tab was closed and reopened, sign out
@@ -17,6 +32,7 @@ export function AuthProvider({ children }) {
           localStorage.getItem('codepulse-remember-me') === 'false' &&
           !sessionStorage.getItem('codepulse-session-active')
         ) {
+          setLoading(false)
           supabase.auth.signOut()
           localStorage.removeItem('codepulse-remember-me')
           return
@@ -25,6 +41,11 @@ export function AuthProvider({ children }) {
         setSession(session)
         setUser(session?.user ?? null)
         setLoading(false)
+        if (session) {
+          prefetchProfile(session.access_token)
+        } else {
+          setCachedProfile(null)
+        }
       }
     )
     return () => subscription.unsubscribe()
@@ -69,7 +90,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, signUp, signIn, signOut, refreshSession }}>
+    <AuthContext.Provider value={{ user, session, loading, cachedProfile, setCachedProfile, signUp, signIn, signOut, refreshSession }}>
       {children}
     </AuthContext.Provider>
   )

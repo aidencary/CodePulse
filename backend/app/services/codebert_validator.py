@@ -276,19 +276,27 @@ async def validate_predictions(
     contrast_blend = float(getattr(settings, "codebert_confidence_contrast_blend", 0.4))
 
     validated: list[PredictedBug] = list(predicted_bugs)
-    scored_items: list[tuple[int, PredictedBug, float]] = []
 
-    for idx, bug in enumerate(predicted_bugs):
-        snippet = _extract_snippet(code, bug.line_number, window=window)
-        if not snippet:
-            continue
+    async def _safe_score(
+        idx: int, bug: PredictedBug, snippet: str
+    ) -> tuple[int, PredictedBug, float] | None:
         try:
             p_buggy = await asyncio.to_thread(_score_snippet, snippet)
-            scored_items.append((idx, bug, p_buggy))
+            return (idx, bug, p_buggy)
         except Exception as exc:
             logger.warning(
                 "CodeBERT inference failed for line %s: %s", bug.line_number, exc
             )
+            return None
+
+    tasks = [
+        _safe_score(idx, bug, snippet)
+        for idx, bug in enumerate(predicted_bugs)
+        if (snippet := _extract_snippet(code, bug.line_number, window=window))
+    ]
+    scored_items: list[tuple[int, PredictedBug, float]] = [
+        r for r in await asyncio.gather(*tasks) if r is not None
+    ]
 
     transformed_scores: list[float] = []
     if scored_items:

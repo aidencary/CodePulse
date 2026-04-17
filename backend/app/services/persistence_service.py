@@ -1,5 +1,6 @@
 """Persistence service — writes analysis results to Supabase."""
 
+import asyncio
 import logging
 
 from app.database import get_supabase_client
@@ -73,7 +74,8 @@ async def persist_analysis(
         )
         report_id: str = report_result.data[0]["report_id"]
 
-        # 3. Insert findings (bulk).
+        # 3 + 4. Insert findings and bugs concurrently (both depend only on report_id).
+        inserts = []
         if findings:
             findings_rows = [
                 {
@@ -85,9 +87,11 @@ async def persist_analysis(
                 }
                 for f in findings
             ]
-            client.table("findings").insert(findings_rows).execute()
-
-        # 4. Insert predicted bugs (bulk).
+            inserts.append(
+                asyncio.to_thread(
+                    client.table("findings").insert(findings_rows).execute
+                )
+            )
         if predicted_bugs:
             bugs_rows = [
                 {
@@ -102,7 +106,13 @@ async def persist_analysis(
                 }
                 for b in predicted_bugs
             ]
-            client.table("predicted_bugs").insert(bugs_rows).execute()
+            inserts.append(
+                asyncio.to_thread(
+                    client.table("predicted_bugs").insert(bugs_rows).execute
+                )
+            )
+        if inserts:
+            await asyncio.gather(*inserts)
 
         logger.info(
             "Persisted analysis for user %s: submission=%s, report=%s, "
@@ -194,7 +204,8 @@ async def reanalyze_submission(
         )
         report_id: str = report_result.data[0]["report_id"]
 
-        # 5. Insert findings (bulk).
+        # 5 + 6. Insert findings and bugs concurrently (both depend only on report_id).
+        inserts = []
         if findings:
             findings_rows = [
                 {
@@ -206,9 +217,11 @@ async def reanalyze_submission(
                 }
                 for f in findings
             ]
-            client.table("findings").insert(findings_rows).execute()
-
-        # 6. Insert predicted bugs (bulk).
+            inserts.append(
+                asyncio.to_thread(
+                    client.table("findings").insert(findings_rows).execute
+                )
+            )
         if predicted_bugs:
             bugs_rows = [
                 {
@@ -223,7 +236,13 @@ async def reanalyze_submission(
                 }
                 for b in predicted_bugs
             ]
-            client.table("predicted_bugs").insert(bugs_rows).execute()
+            inserts.append(
+                asyncio.to_thread(
+                    client.table("predicted_bugs").insert(bugs_rows).execute
+                )
+            )
+        if inserts:
+            await asyncio.gather(*inserts)
 
         logger.info(
             "Reanalyzed submission %s for user %s: report=%s, "

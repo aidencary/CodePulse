@@ -5,10 +5,20 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+import app.services.gpt_predictor as gpt_predictor_module
 from app.config import Settings
 from app.models.analysis import Finding, PredictedBug
 from app.services.gpt_predictor import predict_bugs
 from app.services.prompts.python_prompt import build_user_message
+
+
+@pytest.fixture(autouse=True)
+def reset_openai_singleton():
+    """Reset the module-level OpenAI client singleton before each test."""
+    gpt_predictor_module._openai_client = None
+    yield
+    gpt_predictor_module._openai_client = None
+
 
 # Shared fixtures
 _MOCK_SETTINGS = Settings.model_construct(
@@ -53,7 +63,7 @@ async def test_returns_predicted_bugs_on_valid_response() -> None:
 
     with (
         patch("app.services.gpt_predictor.get_settings", return_value=_MOCK_SETTINGS),
-        patch("openai.AsyncOpenAI") as MockClient,
+        patch("app.services.gpt_predictor.AsyncOpenAI") as MockClient,
     ):
         MockClient.return_value.chat.completions.create = mock_create
         result = await predict_bugs("x = None\nprint(x.value)", [])
@@ -75,7 +85,7 @@ async def test_returns_empty_list_on_empty_predicted_bugs_array() -> None:
 
     with (
         patch("app.services.gpt_predictor.get_settings", return_value=_MOCK_SETTINGS),
-        patch("openai.AsyncOpenAI") as MockClient,
+        patch("app.services.gpt_predictor.AsyncOpenAI") as MockClient,
     ):
         MockClient.return_value.chat.completions.create = mock_create
         result = await predict_bugs("x = 1", [])
@@ -94,7 +104,7 @@ async def test_returns_empty_list_on_api_error() -> None:
 
     with (
         patch("app.services.gpt_predictor.get_settings", return_value=_MOCK_SETTINGS),
-        patch("openai.AsyncOpenAI") as MockClient,
+        patch("app.services.gpt_predictor.AsyncOpenAI") as MockClient,
     ):
         MockClient.return_value.chat.completions.create = mock_create
         result = await predict_bugs("x = 1", [])
@@ -111,7 +121,7 @@ async def test_returns_empty_list_on_malformed_json() -> None:
 
     with (
         patch("app.services.gpt_predictor.get_settings", return_value=_MOCK_SETTINGS),
-        patch("openai.AsyncOpenAI") as MockClient,
+        patch("app.services.gpt_predictor.AsyncOpenAI") as MockClient,
     ):
         MockClient.return_value.chat.completions.create = mock_create
         result = await predict_bugs("x = 1", [])
@@ -129,7 +139,7 @@ async def test_returns_empty_list_on_schema_validation_failure() -> None:
 
     with (
         patch("app.services.gpt_predictor.get_settings", return_value=_MOCK_SETTINGS),
-        patch("openai.AsyncOpenAI") as MockClient,
+        patch("app.services.gpt_predictor.AsyncOpenAI") as MockClient,
     ):
         MockClient.return_value.chat.completions.create = mock_create
         result = await predict_bugs("x = 1", [])
@@ -155,7 +165,7 @@ async def test_system_prompt_includes_static_findings() -> None:
 
     with (
         patch("app.services.gpt_predictor.get_settings", return_value=_MOCK_SETTINGS),
-        patch("openai.AsyncOpenAI") as MockClient,
+        patch("app.services.gpt_predictor.AsyncOpenAI") as MockClient,
     ):
         MockClient.return_value.chat.completions.create = mock_create
         await predict_bugs("try:\n    pass\nexcept:\n    pass", findings)
