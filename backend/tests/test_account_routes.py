@@ -351,7 +351,7 @@ def test_delete_account_no_auth() -> None:
 # POST /api/v1/account/invite
 # ------------------------------------------------------------------
 
-_INVITE_SETTINGS = MagicMock(site_url="https://code-pulse-six.vercel.app")
+_INVITE_SETTINGS = MagicMock(site_url="https://code-pulse.xyz")
 
 
 # TC-ACCT-014
