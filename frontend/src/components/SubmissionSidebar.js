@@ -170,7 +170,7 @@ const SubmissionSidebar = forwardRef(function SubmissionSidebar(
     try {
       await deleteSubmission(deletingId, token)
       toast('Submission deleted', 'success')
-      if (activeId === deletingId) onSelect(null)
+      if (activeId === deletingId) onSelect(null, { skipUnsavedCheck: true })
       await load()
     } catch {
       toast('Failed to delete submission', 'error')

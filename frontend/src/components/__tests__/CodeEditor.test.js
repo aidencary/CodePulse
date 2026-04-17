@@ -113,4 +113,21 @@ describe('CodeEditor', () => {
     fireEvent.click(screen.getByRole('button', { name: /editor settings/i }))
     expect(screen.getByLabelText(/font size/i)).toHaveValue(20)
   })
+
+  // TC-DASH-012 — smoke test: Monaco is mocked so decoration tracking is unreachable,
+  // but the component must still render cleanly when trackedFindings / onFindingLinesChange are provided.
+  it('renders without crashing when trackedFindings and onFindingLinesChange are provided', () => {
+    const onFindingLinesChange = jest.fn()
+    render(
+      <CodeEditor
+        code="x = 1"
+        onCodeChange={() => {}}
+        onRun={() => {}}
+        loading={false}
+        trackedFindings={[{ id: 'f:x|1|m', line: 1 }]}
+        onFindingLinesChange={onFindingLinesChange}
+      />
+    )
+    expect(screen.getByTestId('mock-editor')).toBeInTheDocument()
+  })
 })

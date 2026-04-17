@@ -9,14 +9,24 @@ import { useState } from 'react'
  * @param {Function} [props.onHoverLine] - Called with the line number on mouseenter; null on mouseleave.
  * @param {Function} [props.onJumpLine] - Called with line/severity when the card is clicked.
  */
-function BugCard({ bug, onIgnore, onHoverLine, onJumpLine }) {
+function BugCard({ bug, onIgnore, onHoverLine, onJumpLine, liveLine, codeSnippet }) {
   const [expanded, setExpanded] = useState(false)
+  const [showCode, setShowCode] = useState(false)
+
+  // liveLine === undefined => no tracking map yet, fall back to the original.
+  // liveLine === null       => the flagged line was deleted — render as stale.
+  // liveLine === number     => current position after edits.
+  const effectiveLine = liveLine !== undefined ? liveLine : bug.line_number
+  const isStale = liveLine === null
+  const clickable = !isStale && effectiveLine != null
+  const sev = bug.severity.toLowerCase()
 
   const cardClass = [
     'bug-card',
     `bug-sev-${bug.severity}`,
-    bug.line_number != null ? 'bug-clickable' : '',
+    clickable ? 'bug-clickable' : '',
     bug.flagged ? 'flagged' : '',
+    isStale ? 'bug-card--stale' : '',
   ]
     .filter(Boolean)
     .join(' ')
@@ -25,19 +35,19 @@ function BugCard({ bug, onIgnore, onHoverLine, onJumpLine }) {
     <div
       className={cardClass}
       data-testid={`bug-${bug.bug_type}`}
-      onMouseEnter={() => bug.line_number != null && onHoverLine?.({ line: bug.line_number, severity: bug.severity.toLowerCase() })}
+      onMouseEnter={() => clickable && onHoverLine?.({ line: effectiveLine, severity: sev })}
       onMouseLeave={() => onHoverLine?.(null)}
-      onClick={() => bug.line_number != null && onJumpLine?.({ line: bug.line_number, severity: bug.severity.toLowerCase() })}
+      onClick={() => clickable && onJumpLine?.({ line: effectiveLine, severity: sev })}
       onKeyDown={(e) => {
-        if (bug.line_number == null) return
+        if (!clickable) return
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault()
-          onJumpLine?.({ line: bug.line_number, severity: bug.severity.toLowerCase() })
+          onJumpLine?.({ line: effectiveLine, severity: sev })
         }
       }}
-      role={bug.line_number != null ? 'button' : undefined}
-      tabIndex={bug.line_number != null ? 0 : undefined}
-      aria-label={bug.line_number != null ? `Jump to line ${bug.line_number}` : undefined}
+      role={clickable ? 'button' : undefined}
+      tabIndex={clickable ? 0 : undefined}
+      aria-label={clickable ? `Jump to line ${effectiveLine}` : undefined}
     >
       <div className="bug-card-header">
         {bug.flagged && (
@@ -55,9 +65,11 @@ function BugCard({ bug, onIgnore, onHoverLine, onJumpLine }) {
           {bug.severity}
         </span>
         <span className="bug-type" title={bug.bug_type}>{bug.bug_type}</span>
-        {bug.line_number != null && (
-          <span className="finding-line">L{bug.line_number}</span>
-        )}
+        {isStale ? (
+          <span className="stale-badge" title="The flagged line was deleted">line deleted</span>
+        ) : effectiveLine != null ? (
+          <span className="finding-line">L{effectiveLine}</span>
+        ) : null}
         {bug.confidence != null && (
           <span
             className={`confidence-badge${bug.flagged ? ' flagged' : ''}`}
@@ -83,17 +95,32 @@ function BugCard({ bug, onIgnore, onHoverLine, onJumpLine }) {
         </button>
       </div>
       <p className="bug-description">{bug.description}</p>
-      <button
-        className="bug-fix-toggle"
-        onClick={(e) => {
-          e.stopPropagation()
-          setExpanded((prev) => !prev)
-        }}
-        aria-expanded={expanded}
-      >
-        {expanded ? 'Hide fix' : 'Show suggested fix'}
-      </button>
+      <div className="bug-toggle-row">
+        <button
+          className="bug-fix-toggle"
+          onClick={(e) => {
+            e.stopPropagation()
+            setExpanded((prev) => !prev)
+          }}
+          aria-expanded={expanded}
+        >
+          {expanded ? 'Hide fix' : 'Show suggested fix'}
+        </button>
+        {codeSnippet && (
+          <button
+            className="bug-fix-toggle bug-show-code-toggle"
+            onClick={(e) => {
+              e.stopPropagation()
+              setShowCode((prev) => !prev)
+            }}
+            aria-expanded={showCode}
+          >
+            {showCode ? 'Hide code' : 'Show code'}
+          </button>
+        )}
+      </div>
       {expanded && <pre className="bug-fix-code">{bug.suggested_fix}</pre>}
+      {showCode && codeSnippet && <pre className="bug-fix-code bug-code-snippet">{codeSnippet}</pre>}
     </div>
   )
 }

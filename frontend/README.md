@@ -36,9 +36,9 @@ frontend/
     │   └── AuthContext.js      # Auth state, useAuth hook, signIn/signUp/signOut, refreshSession
     ├── components/
     │   ├── ProtectedRoute.js   # Redirects unauthenticated users to /login
-    │   ├── CodeEditor.js       # Monaco editor + Copy button + Run Analysis button; severity-colored line highlights (togglable); gear icon settings panel (font size, tab size, word wrap, ligatures, whitespace, bracket colors, smooth scroll, folding, line highlight, Ctrl+scroll zoom, severity highlights) persisted to localStorage
-    │   ├── ResultsPanel.js     # SVG score ring, resizable panel (220–600px), static findings and AI bug cards with severity borders + hover effects + entrance animations; SortControls; per-item ignore/dismiss; header icon + dynamic issue count
-    │   ├── BugCard.js          # Collapsible AI bug prediction card with severity border accent, ignore and hover-highlight support, CodeBERT confidence badge
+    │   ├── CodeEditor.js       # Monaco editor + Copy button + Run Analysis button; severity-colored line highlights (togglable); live-tracked finding decorations that shift as the user edits and collapse to stale when a flagged line is deleted; gear icon settings panel (font size, tab size, word wrap, ligatures, whitespace, bracket colors, smooth scroll, folding, line highlight, Ctrl+scroll zoom, severity highlights) persisted to localStorage
+    │   ├── ResultsPanel.js     # SVG score ring, resizable panel (220–600px), static findings and AI bug cards with severity borders + hover effects + entrance animations; live line numbers from editor tracking (stale badge + "Show code" snippet when a flagged line is deleted); SortControls; per-item ignore/dismiss; header icon + dynamic issue count
+    │   ├── BugCard.js          # Collapsible AI bug prediction card with severity border accent, ignore and hover-highlight support, CodeBERT confidence badge, live line number, "Show code" toggle revealing the originally flagged source line, and stale styling when the line is deleted
     │   ├── HelpModal.js        # "How CodePulse Works" modal — getting started, score, static analysis, AI predictions, CodeBERT confidence tiers, tips
     │   ├── ProfileDropdown.js  # User avatar and dropdown menu (links to /account)
     │   ├── SubmissionSidebar.js # Collapsible sidebar with rename/delete/pin via kebab menu; skips API call if name unchanged
@@ -46,7 +46,7 @@ frontend/
     │   └── Toast.js            # Toast notification system (ToastProvider + useToast)
     ├── pages/
     │   ├── LoginPage.js        # Log In / Sign Up sliding toggle / Forgot Password; MFA step-up (TOTP); purple focus glow; learn-more cards with hover lift + scroll-triggered entrance + light mode support; chevron scroll cue
-    │   ├── DashboardPage.js    # Dashboard shell — editor + results + submission naming
+    │   ├── DashboardPage.js    # Dashboard shell — editor + results + submission naming; owns analyzedCode snapshot, liveLineById state, and unsaved-edits confirmation when switching submissions
     │   ├── AccountPage.js      # Account settings — profile, avatar (96px), password, delete; section title icons, lock icons on read-only fields, save confirmation flash
     │   └── ResetPasswordPage.js # Password reset form — validates token, updates password
     └── styles/
@@ -131,14 +131,14 @@ npm test -- --watchAll=false   # Run once and exit (used in CI)
 | `pages/__tests__/LoginPage.test.js` | Form toggle, submission handlers, error display, show/hide password, learn-more section, remember me, confirm password, password strength, ToS links, OAuth; forgot password flow; MFA step-up (45 tests) |
 | `components/__tests__/TwoFactorSection.test.js` | No-factor state, enrolled state, enroll + QR display, secret display, verify, verify error, success state, disable, re-enable, disable error (11 tests) |
 | `pages/__tests__/ResetPasswordPage.test.js` | Loading state, PASSWORD_RECOVERY trigger, validation, updateUser call, toast + navigation, error on expired link, submit disabled while pending (8 tests) |
-| `components/__tests__/CodeEditor.test.js` | Renders editor, button click fires onRun, disabled during loading, copy button disabled when empty; gear button ARIA, panel open/close, outside-click dismiss, setting change, toggle flip, localStorage persist, localStorage init (11 tests) |
-| `components/__tests__/ResultsPanel.test.js` | Idle, loading, error, score, findings, bugs (expand/collapse), empty states, ignore/dismiss, severity hover line highlight, severity sort, line sort, tiebreaker, null-line sort, confidence filter, flagged bugs, export button, resizable panel (43 tests) |
+| `components/__tests__/CodeEditor.test.js` | Renders editor, button click fires onRun, disabled during loading, copy button disabled when empty; gear button ARIA, panel open/close, outside-click dismiss, setting change, toggle flip, localStorage persist, localStorage init; trackedFindings smoke test (12 tests) |
+| `components/__tests__/ResultsPanel.test.js` | Idle, loading, error, score, findings, bugs (expand/collapse), empty states, ignore/dismiss, severity hover line highlight, severity sort, line sort, tiebreaker, null-line sort, confidence filter, flagged bugs, export button, resizable panel, live line tracking, stale finding/bug cards, "Show code" snippet toggle (49 tests) |
 | `components/__tests__/SubmissionSidebar.test.js` | Render names, fallback, search, rename no-op, rename, delete, pin/star, collapse (12 tests) |
 | `components/__tests__/InviteModal.test.js` | Render, empty-email disable, submit handler, success toast, error display, cancel, backdrop click, loading state (9 tests) |
 | `utils/__tests__/generateReport.test.js` | Content inclusion, score colors, XSS escaping, empty arrays, naming, complete HTML structure (10 tests) |
 | `pages/__tests__/AccountPage.test.js` | Profile load/display, username validation, password change, avatar, delete modal, report bug, member since, data export, sign out all (16 tests) |
 
-172 tests, all passing.
+179 tests, all passing.
 
 ---
 
@@ -189,6 +189,10 @@ requirements with unique IDs, descriptions, and implementation file locations.
 | Copy-to-clipboard button in editor toolbar | Done |
 | Hover finding/bug to highlight corresponding editor line (severity-colored, togglable) | Done |
 | Click-to-jump from finding/bug card to editor line | Done |
+| Live-tracked line numbers on finding and bug cards (Monaco tracked decorations shift line numbers as the user edits) | Done |
+| Stale finding/bug cards when a flagged line is deleted (dimmed, "line deleted" badge, jump/hover disabled) | Done |
+| "Show code" toggle on finding and bug cards revealing the originally flagged source line | Done |
+| Unsaved-edits confirmation when switching submissions or starting a new one after editing without re-analyzing | Done |
 | Ignore/dismiss individual findings and bugs | Done |
 | Account settings page (profile, avatar, password, 2FA, report bug, data export, sign out all, delete) | Done |
 | Submission sidebar (rename, delete, pin/star via kebab menu) | Done |

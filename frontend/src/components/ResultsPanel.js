@@ -3,6 +3,11 @@ import BugCard from './BugCard'
 import { FINDING_SEV_RANK, BUG_SEV_RANK, scoreLevel } from '../utils/scoreHelpers'
 import generateReportHTML from '../utils/generateReport'
 
+// Stable IDs that match the React keys. Exported so DashboardPage can build
+// live-line and snippet maps keyed against the same strings.
+export const findingKey = (f) => `${f.issue_type}|${f.line_number}|${f.message}`
+export const bugKey = (b) => `${b.bug_type}|${b.line_number}`
+
 /**
  * Inline sort controls: "Severity" and "Line" field-selector pills plus a direction toggle.
  *
@@ -87,7 +92,16 @@ function ScoreRing({ score, level, size = 88, strokeWidth = 4.5 }) {
   )
 }
 
-function ResultsPanel({ results, loading, error, onHoverLine, onJumpLine, submissionName }) {
+function ResultsPanel({
+  results,
+  loading,
+  error,
+  onHoverLine,
+  onJumpLine,
+  submissionName,
+  liveLineById,
+  snippetByFindingId,
+}) {
   const [findingSort, setFindingSort] = useState('desc')
   const [findingSortField, setFindingSortField] = useState('severity')
   const [bugSort, setBugSort] = useState('desc')
@@ -97,7 +111,24 @@ function ResultsPanel({ results, loading, error, onHoverLine, onJumpLine, submis
   const [bugConfidenceFilter, setBugConfidenceFilter] = useState(0)
   const [showFlaggedBugs, setShowFlaggedBugs] = useState(true)
   const [panelWidth, setPanelWidth] = useState(340)
+  const [expandedSnippets, setExpandedSnippets] = useState(new Set())
   const isResizing = useRef(false)
+
+  // resolveLine: undefined = no tracking yet (use original), null = line deleted (stale),
+  // number = current live line number.
+  const resolveLine = (id, original) => {
+    if (liveLineById && liveLineById.has(id)) return liveLineById.get(id)
+    return original
+  }
+
+  const toggleSnippet = (id) => {
+    setExpandedSnippets((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
 
   const handleMouseDown = useCallback((e) => {
     e.preventDefault()
@@ -143,10 +174,9 @@ function ResultsPanel({ results, loading, error, onHoverLine, onJumpLine, submis
     setIgnoredBugs(new Set())
     setBugConfidenceFilter(0)
     setShowFlaggedBugs(true)
+    setExpandedSnippets(new Set())
   }, [results])
 
-  const findingKey = (f) => `${f.issue_type}|${f.line_number}|${f.message}`
-  const bugKey = (b) => `${b.bug_type}|${b.line_number}`
 
   const visibleFindings = useMemo(() => {
     return (results?.findings || []).filter((f) => !ignoredFindings.has(findingKey(f)))
@@ -278,45 +308,73 @@ function ResultsPanel({ results, loading, error, onHoverLine, onJumpLine, submis
             {sortedFindings.length === 0 ? (
               <p className="results-placeholder">No issues found.</p>
             ) : (
-              sortedFindings.map((f) => (
-                <div
-                  key={findingKey(f)}
-                  className={`finding-item finding-sev-${f.severity.toLowerCase()}${f.line_number != null ? ' finding-clickable' : ''}`}
-                  data-testid={`finding-${f.issue_type}`}
-                  onMouseEnter={() => f.line_number != null && onHoverLine?.({ line: f.line_number, severity: f.severity.toLowerCase() })}
-                  onMouseLeave={() => onHoverLine?.(null)}
-                  onClick={() => f.line_number != null && onJumpLine?.({ line: f.line_number, severity: f.severity.toLowerCase() })}
-                  onKeyDown={(e) => {
-                    if (f.line_number == null) return
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault()
-                      onJumpLine?.({ line: f.line_number, severity: f.severity.toLowerCase() })
+              sortedFindings.map((f) => {
+                const id = `f:${findingKey(f)}`
+                const displayLine = resolveLine(id, f.line_number)
+                const isStale = displayLine === null
+                const clickable = !isStale && displayLine != null
+                const snippet = snippetByFindingId?.get(id)
+                const snippetOpen = expandedSnippets.has(id)
+                const sev = f.severity.toLowerCase()
+                return (
+                  <div
+                    key={findingKey(f)}
+                    className={
+                      `finding-item finding-sev-${sev}` +
+                      (clickable ? ' finding-clickable' : '') +
+                      (isStale ? ' finding-item--stale' : '')
                     }
-                  }}
-                  role={f.line_number != null ? 'button' : undefined}
-                  tabIndex={f.line_number != null ? 0 : undefined}
-                  aria-label={f.line_number != null ? `Jump to line ${f.line_number}` : undefined}
-                >
-                  <span
-                    className={`severity-badge severity-${f.severity.toLowerCase()}`}
-                  >
-                    {f.severity}
-                  </span>
-                  <span className="finding-type">{f.issue_type}</span>
-                  {f.line_number != null && (
-                    <span className="finding-line">L{f.line_number}</span>
-                  )}
-                  <button
-                    className="ignore-btn"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setIgnoredFindings((prev) => new Set([...prev, findingKey(f)]))
+                    data-testid={`finding-${f.issue_type}`}
+                    onMouseEnter={() => clickable && onHoverLine?.({ line: displayLine, severity: sev })}
+                    onMouseLeave={() => onHoverLine?.(null)}
+                    onClick={() => clickable && onJumpLine?.({ line: displayLine, severity: sev })}
+                    onKeyDown={(e) => {
+                      if (!clickable) return
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault()
+                        onJumpLine?.({ line: displayLine, severity: sev })
+                      }
                     }}
-                    title="Ignore this finding"
-                  >✕</button>
-                  <p className="finding-message">{f.message}</p>
-                </div>
-              ))
+                    role={clickable ? 'button' : undefined}
+                    tabIndex={clickable ? 0 : undefined}
+                    aria-label={clickable ? `Jump to line ${displayLine}` : undefined}
+                  >
+                    <span className={`severity-badge severity-${sev}`}>{f.severity}</span>
+                    <span className="finding-type">{f.issue_type}</span>
+                    {isStale ? (
+                      <span className="stale-badge" title="The flagged line was deleted">line deleted</span>
+                    ) : displayLine != null ? (
+                      <span className="finding-line">L{displayLine}</span>
+                    ) : null}
+                    <button
+                      className="ignore-btn"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setIgnoredFindings((prev) => new Set([...prev, findingKey(f)]))
+                      }}
+                      title="Ignore this finding"
+                    >✕</button>
+                    <p className="finding-message">{f.message}</p>
+                    {snippet && (
+                      <>
+                        <button
+                          className="bug-fix-toggle finding-snippet-toggle"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            toggleSnippet(id)
+                          }}
+                          aria-expanded={snippetOpen}
+                        >
+                          {snippetOpen ? 'Hide code' : 'Show code'}
+                        </button>
+                        {snippetOpen && (
+                          <pre className="bug-fix-code finding-snippet-code">{snippet}</pre>
+                        )}
+                      </>
+                    )}
+                  </div>
+                )
+              })
             )}
           </section>
 
@@ -367,15 +425,20 @@ function ResultsPanel({ results, loading, error, onHoverLine, onJumpLine, submis
             {sortedBugs.length === 0 ? (
               <p className="results-placeholder">No predicted bugs found.</p>
             ) : (
-              sortedBugs.map((bug) => (
-                <BugCard
-                  key={bugKey(bug)}
-                  bug={bug}
-                  onIgnore={() => setIgnoredBugs((prev) => new Set([...prev, bugKey(bug)]))}
-                  onHoverLine={onHoverLine}
-                  onJumpLine={onJumpLine}
-                />
-              ))
+              sortedBugs.map((bug) => {
+                const id = `b:${bugKey(bug)}`
+                return (
+                  <BugCard
+                    key={bugKey(bug)}
+                    bug={bug}
+                    onIgnore={() => setIgnoredBugs((prev) => new Set([...prev, bugKey(bug)]))}
+                    onHoverLine={onHoverLine}
+                    onJumpLine={onJumpLine}
+                    liveLine={resolveLine(id, bug.line_number)}
+                    codeSnippet={snippetByFindingId?.get(id)}
+                  />
+                )
+              })
             )}
           </section>
         </>

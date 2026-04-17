@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { analyzeCode } from '../services/analysisService'
 import { getSubmissionDetail } from '../services/submissionService'
 import CodeEditor from '../components/CodeEditor'
-import ResultsPanel from '../components/ResultsPanel'
+import ResultsPanel, { findingKey, bugKey } from '../components/ResultsPanel'
 import SubmissionSidebar from '../components/SubmissionSidebar'
 import ProfileDropdown from '../components/ProfileDropdown'
 import InviteModal from '../components/InviteModal'
@@ -42,6 +42,8 @@ function DashboardPage() {
 
   const [code, setCode] = useState('')
   const [results, setResults] = useState(null)
+  const [analyzedCode, setAnalyzedCode] = useState('')
+  const [liveLineById, setLiveLineById] = useState(new Map())
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [activeId, setActiveId] = useState(null)
@@ -79,6 +81,8 @@ function DashboardPage() {
         currentCode, session.access_token, undefined, activeId
       )
       setResults(data)
+      setAnalyzedCode(currentCode)
+      setLiveLineById(new Map())
       setActiveId(data.submission_id)
       setSubmissionName(data.name || null)
       sidebarRef.current?.refresh()
@@ -89,10 +93,24 @@ function DashboardPage() {
     }
   }
 
-  const handleSelectSubmission = async (submission) => {
+  const handleSelectSubmission = async (submission, options = {}) => {
+    // Warn when the user is about to discard edits they haven't analyzed.
+    // Callers (e.g. sidebar post-delete cleanup) pass { skipUnsavedCheck: true } to bypass.
+    const targetId = submission?.submission_id ?? null
+    const isSameSubmission = targetId !== null && targetId === activeId
+    const hasUnsavedChanges = code !== analyzedCode && code.trim() !== ''
+    if (!options.skipUnsavedCheck && !isSameSubmission && hasUnsavedChanges) {
+      const proceed = window.confirm(
+        'You have unsaved edits. They will not be saved unless you run Analysis again. Continue anyway?'
+      )
+      if (!proceed) return
+    }
+
     if (!submission) {
       setCode('')
       setResults(null)
+      setAnalyzedCode('')
+      setLiveLineById(new Map())
       setError(null)
       setActiveId(null)
       setSubmissionName(null)
@@ -102,6 +120,8 @@ function DashboardPage() {
     }
 
     setCode(submission.code)
+    setAnalyzedCode(submission.code)
+    setLiveLineById(new Map())
     setError(null)
     setActiveId(submission.submission_id)
     setSubmissionName(submission.name || null)
@@ -134,6 +154,39 @@ function DashboardPage() {
     jumpSeqRef.current += 1
     setJumpTarget({ ...target, seq: jumpSeqRef.current })
   }
+
+  // Build the list of decoration targets. Identity must be stable across renders
+  // where results/analyzedCode haven't changed so Monaco doesn't rebuild decorations.
+  const trackedFindings = useMemo(() => {
+    if (!results) return []
+    const list = []
+    for (const f of results.findings || []) {
+      if (f.line_number != null) list.push({ id: `f:${findingKey(f)}`, line: f.line_number })
+    }
+    for (const b of results.predicted_bugs || []) {
+      if (b.line_number != null) list.push({ id: `b:${bugKey(b)}`, line: b.line_number })
+    }
+    return list
+  }, [results])
+
+  // Slice of analyzed source keyed by the same IDs used in trackedFindings.
+  const snippetByFindingId = useMemo(() => {
+    const map = new Map()
+    if (!results || !analyzedCode) return map
+    const lines = analyzedCode.split('\n')
+    const pick = (n) => (n >= 1 && n <= lines.length ? lines[n - 1] : '')
+    for (const f of results.findings || []) {
+      if (f.line_number != null) map.set(`f:${findingKey(f)}`, pick(f.line_number))
+    }
+    for (const b of results.predicted_bugs || []) {
+      if (b.line_number != null) map.set(`b:${bugKey(b)}`, pick(b.line_number))
+    }
+    return map
+  }, [results, analyzedCode])
+
+  const handleFindingLinesChange = useCallback((live) => {
+    setLiveLineById(live)
+  }, [])
 
   return (
     <div className="dashboard-page">
@@ -196,9 +249,20 @@ function DashboardPage() {
             isDark={theme === 'dark'}
             highlightLine={hoveredLine}
             jumpToLine={jumpTarget}
+            trackedFindings={trackedFindings}
+            onFindingLinesChange={handleFindingLinesChange}
           />
           {/* FR-DASH-006 FR-REPORT-005 */}
-          <ResultsPanel results={results} loading={loading} error={error} onHoverLine={setHoveredLine} onJumpLine={handleJumpLine} submissionName={submissionName} />
+          <ResultsPanel
+            results={results}
+            loading={loading}
+            error={error}
+            onHoverLine={setHoveredLine}
+            onJumpLine={handleJumpLine}
+            submissionName={submissionName}
+            liveLineById={liveLineById}
+            snippetByFindingId={snippetByFindingId}
+          />
         </main>
       </div>
     </div>
