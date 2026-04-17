@@ -1,5 +1,6 @@
 """Account CRUD endpoints for profile management."""
 
+import asyncio
 import logging
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
@@ -33,17 +34,18 @@ async def get_profile(user_id: str = Depends(get_current_user)):
     """Return the authenticated user's profile."""
     sb = get_supabase_client()
 
-    # Fetch profile row
-    result = sb.table("profiles").select("*").eq("id", user_id).execute()
+    # Fetch profile row and auth email concurrently (independent calls).
+    result, auth_user = await asyncio.gather(
+        asyncio.to_thread(sb.table("profiles").select("*").eq("id", user_id).execute),
+        asyncio.to_thread(sb.auth.admin.get_user_by_id, user_id),
+    )
+
     if not result.data:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Profile not found"
         )
 
     profile = result.data[0]
-
-    # Fetch email from Supabase Auth
-    auth_user = sb.auth.admin.get_user_by_id(user_id)
     email = auth_user.user.email if auth_user and auth_user.user else ""
 
     return ProfileResponse(

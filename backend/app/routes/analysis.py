@@ -1,5 +1,6 @@
 """Analysis route — ingress endpoint for code submissions."""
 
+import asyncio
 import logging
 
 from fastapi import APIRouter, Depends
@@ -51,9 +52,21 @@ async def analyze(
     # FR-ANALYSIS-002
     findings, _ = run_static_analysis(payload.code)
 
-    # 2. GPT bug prediction (async I/O).
+    # 2. Predict bugs and generate submission name concurrently.
+    # Name generation only needs payload.code — independent of bug results.
     # FR-ANALYSIS-003
-    predicted_bugs = await predict_bugs(payload.code, findings)
+    # FR-ANALYSIS-004
+    submission_id: str | None = payload.submission_id
+    submission_name: str | None = payload.name
+    need_name = not submission_id and not submission_name
+
+    if need_name:
+        predicted_bugs, submission_name = await asyncio.gather(
+            predict_bugs(payload.code, findings),
+            generate_submission_name(payload.code),
+        )
+    else:
+        predicted_bugs = await predict_bugs(payload.code, findings)
 
     # 2b. CodeBERT validation — attaches confidence + flagged to each bug.
     predicted_bugs = await validate_predictions(payload.code, predicted_bugs)
@@ -69,9 +82,6 @@ async def analyze(
 
     # 4. Branch: reanalyze existing or create new submission.
     # FR-ANALYSIS-005 (reanalyze path) / FR-HIST-001 (new submission path)
-    submission_id: str | None = payload.submission_id
-    submission_name: str | None = payload.name
-
     try:
         if submission_id:
             # Reanalyze — preserves existing name, updates code + results.
@@ -85,10 +95,7 @@ async def analyze(
                 predicted_bugs=predicted_bugs,
             )
         else:
-            # New submission — generate name if not provided.
-            # FR-ANALYSIS-004
-            if not submission_name:
-                submission_name = await generate_submission_name(payload.code)
+            # Name already generated (or provided) concurrently in step 2.
             submission_id, submission_name = await persist_analysis(
                 user_id=user_id,
                 code=payload.code,

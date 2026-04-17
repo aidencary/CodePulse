@@ -374,7 +374,7 @@ def test_invite_user_success() -> None:
     assert "newuser@example.com" in resp.json()["detail"]
     sb.auth.admin.invite_user_by_email.assert_called_once_with(
         "newuser@example.com",
-        options={"redirect_to": "https://code-pulse-six.vercel.app"},
+        options={"redirect_to": "https://code-pulse.xyz"},
     )
 
 

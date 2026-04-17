@@ -3,6 +3,7 @@
 import json
 import logging
 
+from openai import AsyncOpenAI
 from pydantic import BaseModel, ValidationError
 
 from app.config import get_settings
@@ -10,6 +11,15 @@ from app.models.analysis import Finding, PredictedBug
 from app.services.prompts.python_prompt import build_system_prompt, build_user_message
 
 logger = logging.getLogger(__name__)
+
+_openai_client: AsyncOpenAI | None = None
+
+
+def _get_openai_client() -> AsyncOpenAI:
+    global _openai_client
+    if _openai_client is None:
+        _openai_client = AsyncOpenAI(api_key=get_settings().openai_api_key)
+    return _openai_client
 
 
 # Internal validation model
@@ -41,14 +51,11 @@ async def predict_bugs(
         A list of :class:`PredictedBug` objects, or ``[]`` on any failure.
     """
     try:
-        from openai import AsyncOpenAI  # local import to simplify mocking
-
-        settings = get_settings()
-        client = AsyncOpenAI(api_key=settings.openai_api_key)
+        client = _get_openai_client()
 
         # Build the prompt with the findings summary and user code.
         response = await client.chat.completions.create(
-            model=settings.gpt_model,
+            model=get_settings().gpt_model,
             response_format={"type": "json_object"},
             messages=[
                 {"role": "system", "content": build_system_prompt(findings, language)},
@@ -84,13 +91,10 @@ async def generate_submission_name(code: str) -> str:
     Returns a fallback name on any failure.
     """
     try:
-        from openai import AsyncOpenAI
-
-        settings = get_settings()
-        client = AsyncOpenAI(api_key=settings.openai_api_key)
+        client = _get_openai_client()
 
         response = await client.chat.completions.create(
-            model=settings.gpt_model,
+            model=get_settings().gpt_model,
             messages=[
                 {
                     "role": "system",
