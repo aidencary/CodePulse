@@ -41,7 +41,7 @@ app = FastAPI(
 def _build_allowed_origins(raw_origins: str) -> list[str]:
     origins: list[str] = []
     for origin in raw_origins.split(","):
-        origin = origin.strip()
+        origin = origin.strip().rstrip("/")
         if origin and origin not in origins:
             origins.append(origin)
 
