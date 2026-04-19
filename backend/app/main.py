@@ -65,6 +65,7 @@ def _build_allowed_origins(raw_origins: str) -> list[str]:
 
 _raw_origins = os.environ.get("ALLOWED_ORIGINS", "http://localhost:3000")
 _origins = _build_allowed_origins(_raw_origins)
+logger.warning("CORS allowed origins: %s", _origins)
 
 app.add_middleware(
     CORSMiddleware,
