@@ -30,7 +30,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="CodePulse API",
-    version="0.1.0",
+    version="1.0.0",
     description="Gateway between the CodePulse frontend and the analysis engine.",
     docs_url="/docs" if _debug else None,
     redoc_url="/redoc" if _debug else None,

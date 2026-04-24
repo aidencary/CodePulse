@@ -271,5 +271,5 @@ requirements with unique IDs, descriptions, and implementation file locations.
 | Submission CRUD endpoints (list, rename, delete, pin) | Done |
 | Submission naming (user-provided or GPT-generated) | Done |
 | Security headers middleware (X-Content-Type-Options, X-Frame-Options, etc.) | Done |
-| Rate limiting on `/analyze` (10/min per bearer token via slowapi) | Done |
+| Rate limiting on `/analyze` | Not implemented |
 | CodeBERT confidence validator (`app/services/codebert_validator.py`) — fine-tuned `aidencary/codepulse-codebert`, label index auto-resolved from `model.config.label2id`, bounded in-memory cache, non-blocking via `asyncio.to_thread`, flagged bugs skipped in `compute_score` | Done |
