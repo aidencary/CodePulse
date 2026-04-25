@@ -48,6 +48,9 @@ Test-case IDs follow the same module structure: `TC-{MODULE}-{NNN}` (see `TESTIN
 | FR-DASH-004 | — | Three-column layout: collapsible sidebar / Monaco editor / results panel | Implemented |
 | FR-DASH-005 | — | Invite new users by email via in-dashboard modal | Implemented |
 | FR-DASH-006 | — | Line-highlight orchestration between results panel and editor on hover | Implemented |
+| FR-DASH-007 | — | Click-to-jump: clicking a finding or bug card scrolls the editor to the corresponding line | Implemented |
+| FR-DASH-008 | — | Help modal ("?") button in dashboard nav explaining pipeline, scoring, static analysis, AI predictions, and CodeBERT confidence tiers | Implemented |
+| FR-DASH-009 | — | Profile dropdown in navbar with hash-based avatar color, links to Account page and Sign Out | Implemented |
 
 ### FR-AUTH — Authentication & Security
 
@@ -71,7 +74,7 @@ Test-case IDs follow the same module structure: `TC-{MODULE}-{NNN}` (see `TESTIN
 | ID | Original REQ-N | Description | Status |
 |----|---------------|-------------|--------|
 | FR-ANALYSIS-001 | REQ-4, REQ-5 | Python AST parsing using the built-in `ast` module | Changed |
-| FR-ANALYSIS-002 | REQ-5, REQ-6 | 46 PEP 8 / AST-based static checks (naming, style, imports, best practices, docs) | Changed |
+| FR-ANALYSIS-002 | REQ-5, REQ-6 | 48 PEP 8 / AST-based static checks (naming, style, imports, best practices, docs) | Changed |
 | FR-ANALYSIS-003 | REQ-7 | AI-assisted bug prediction using OpenAI GPT-4o-mini | Changed |
 | FR-ANALYSIS-004 | — | GPT-generated descriptive submission names for new submissions | Implemented |
 | FR-ANALYSIS-005 | — | Reanalysis of an existing submission (updates code and results in place) | Implemented |
@@ -86,6 +89,12 @@ Test-case IDs follow the same module structure: `TC-{MODULE}-{NNN}` (see `TESTIN
 | FR-REPORT-003 | — | Sort findings and bugs by severity or line number, with ascending / descending direction toggle | Implemented |
 | FR-REPORT-004 | — | Ignore / dismiss individual findings and predicted bugs | Implemented |
 | FR-REPORT-005 | — | Hover a finding or bug to highlight the corresponding line in the editor | Implemented |
+| FR-REPORT-006 | — | Export analysis results as self-contained HTML report with inline CSS, score card, findings table, AI bug cards, XSS-safe escaping, and print-ready styling | Implemented |
+| FR-REPORT-007 | — | CodeBERT confidence badge on bug cards; min-confidence filter slider in results panel; flagged bugs dimmed and excluded from score | Implemented |
+| FR-REPORT-008 | — | Resizable results panel with drag handle (220–600 px range); results panel header with icon and dynamic issue count | Implemented |
+| FR-REPORT-009 | — | Severity left-border accents on findings and bug cards; hover feedback; staggered entrance animations on results load | Implemented |
+| FR-REPORT-010 | — | Live-tracked line numbers on finding and bug cards via Monaco tracked decorations; stale state (dimmed, "line deleted" badge, jump/hover disabled) when a flagged line is deleted | Implemented |
+| FR-REPORT-011 | — | "Show code" toggle on finding and bug cards reveals the original source line from the analyzed code snapshot | Implemented |
 
 ### FR-ACCT — Account Management
 
@@ -97,6 +106,11 @@ Test-case IDs follow the same module structure: `TC-{MODULE}-{NNN}` (see `TESTIN
 | FR-ACCT-004 | — | Delete account with full cascade cleanup of all submissions and reports | Implemented |
 | FR-ACCT-005 | — | Invite a new user by email (sends Supabase invite email) | Implemented |
 | FR-ACCT-006 | — | Export all user data (GDPR/CCPA JSON: profile + submissions + reports) | Implemented |
+| FR-ACCT-007 | — | Sign out all devices via Supabase Auth | Implemented |
+| FR-ACCT-008 | — | Report bug mailto link in account settings | Implemented |
+| FR-ACCT-009 | — | Display "Member Since" date from profile | Implemented |
+| FR-ACCT-010 | — | Two-factor authentication management section in account settings | Implemented |
+| FR-ACCT-011 | — | Session refresh after profile updates to sync auth metadata | Implemented |
 
 ### FR-HIST — Submission History
 
@@ -108,6 +122,19 @@ Test-case IDs follow the same module structure: `TC-{MODULE}-{NNN}` (see `TESTIN
 | FR-HIST-004 | — | Delete a submission | Implemented |
 | FR-HIST-005 | — | Pin / star a submission so it sorts to the top of the sidebar | Implemented |
 | FR-HIST-006 | — | Search and filter submissions by name in the sidebar | Implemented |
+| FR-HIST-007 | — | Unsaved-edits confirmation: warns user when switching submissions after editing without re-analyzing | Implemented |
+
+### FR-LOGIN — Login Page UI
+
+| ID | Original REQ-N | Description | Status |
+|----|---------------|-------------|--------|
+| FR-LOGIN-001 | — | Hero landing page with animated GIF logo, wordmark, subtitle, and purple gradient background | Implemented |
+| FR-LOGIN-002 | — | Glassmorphism auth card with sliding Log In / Sign Up toggle | Implemented |
+| FR-LOGIN-003 | — | Show/hide password toggle (eye icon) with type attribute and ARIA label cycling | Implemented |
+| FR-LOGIN-004 | — | Purple focus glow on form inputs | Implemented |
+| FR-LOGIN-005 | — | "Learn More" scroll section with info cards, hover lift effect, scroll-triggered entrance animations, light mode support, and chevron scroll cue | Implemented |
+| FR-LOGIN-006 | — | Auto-focus on email input on page load | Implemented |
+| FR-LOGIN-007 | — | Terms of Service and Privacy Policy page links in login form footer | Implemented |
 
 ---
 
@@ -156,7 +183,7 @@ artefact consumed immediately by the 24 static-check functions.
 **Original (REQ-5):** The `StaticEngine` shall calculate cyclomatic complexity and identify
 dead code or bloated classes.
 
-**Actual:** The analysis engine (`analysis_engine.py`) implements 46 PEP 8 / AST-based
+**Actual:** The analysis engine (`analysis_engine.py`) implements 48 PEP 8 / AST-based
 checks covering naming conventions, code style, import organisation, documentation, and
 best practices. Cyclomatic complexity and dead-code detection are not included.
 

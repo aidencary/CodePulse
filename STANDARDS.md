@@ -22,7 +22,7 @@ CodePulse/
 │   │   └── services/         # Business logic layer
 │   │       ├── engines/
 │   │       │   ├── __init__.py
-│   │       │   └── python_engine.py  # AST-based static analyzer (46 PEP 8 checks)
+│   │       │   └── python_engine.py  # AST-based static analyzer (48 PEP 8 checks)
 │   │       ├── prompts/
 │   │       │   ├── __init__.py
 │   │       │   └── python_prompt.py  # GPT prompt templates for Python analysis
@@ -48,12 +48,11 @@ CodePulse/
 │
 ├── docs/                     # Project documentation
 │   ├── CodePulse Class Diagram.drawio.png
+│   ├── CodePulse Client-Server Diagram.drawio.png
 │   ├── CodePulse Deployment Diagram.drawio.png
-│   ├── CodePulse Engine Pipeline Flowchart.png
-│   ├── CodePulse Sequence Diagram.png
-│   ├── CodePulse_Design_&_Architecture.pdf
-│   ├── CodePulse_ER_Diagram.png
-│   └── CodePulse_Requirements_Analysis.pdf
+│   ├── CodePulse ER Diagram.drawio.png
+│   ├── CodePulse Use Case Diagram.drawio.png
+│   └── REQUIREMENTS.md
 ├── postman/                  # API integration tests (Postman / Newman)
 │   ├── collections/
 │   │   └── codepulse-api.postman_collection.json
@@ -78,12 +77,11 @@ CodePulse/
 The `docs/` folder contains project documentation and diagrams:
 
 - **CodePulse Class Diagram.drawio.png** - UML class diagram showing system architecture and relationships
+- **CodePulse Client-Server Diagram.drawio.png** - Client-server architecture diagram
 - **CodePulse Deployment Diagram.drawio.png** - Deployment diagram showing infrastructure layout
-- **CodePulse Engine Pipeline Flowchart.png** - Analysis engine pipeline flowchart
-- **CodePulse Sequence Diagram.png** - Sequence diagram showing request/response flow
-- **CodePulse_Design_&_Architecture.pdf** - Detailed design and architecture specifications
-- **CodePulse_ER_Diagram.png** - Entity-Relationship diagram for database schema
-- **CodePulse_Requirements_Analysis.pdf** - Project requirements and analysis documentation
+- **CodePulse ER Diagram.drawio.png** - Entity-Relationship diagram for database schema
+- **CodePulse Use Case Diagram.drawio.png** - Use case diagram showing user interactions
+- **REQUIREMENTS.md** - Machine-readable requirements with unique IDs, implementation status, and deviation notes
 
 ## Coding Standards
 

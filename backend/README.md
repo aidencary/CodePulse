@@ -36,7 +36,7 @@ backend/
 │   └── services/
 │       ├── engines/
 │       │   ├── __init__.py
-│       │   └── python_engine.py    # AST-based static analyzer (46 PEP 8 checks) + score computation
+│       │   └── python_engine.py    # AST-based static analyzer (48 PEP 8 checks) + score computation
 │       ├── prompts/
 │       │   ├── __init__.py
 │       │   └── python_prompt.py    # GPT prompt templates for Python code analysis
@@ -47,7 +47,7 @@ backend/
 │   ├── test_placeholder.py
 │   ├── test_analyze_endpoint.py
 │   ├── test_analyze_route.py       # Route integration tests (mocked services)
-│   ├── test_analysis_engine.py     # Static analyzer unit tests (130 tests — 46 PEP 8 checks)
+│   ├── test_analysis_engine.py     # Static analyzer unit tests (130 tests — 48 PEP 8 checks)
 │   ├── test_gpt_predictor.py       # GPT predictor unit tests (mocked OpenAI, 8 tests)
 │   ├── test_codebert_validator.py  # CodeBERT validator unit tests (mocked model/tokenizer, 23 tests)
 │   ├── test_account_routes.py      # Account CRUD route tests (18 tests — includes invite + export)
@@ -260,7 +260,7 @@ requirements with unique IDs, descriptions, and implementation file locations.
 | Supabase client module (`app/database.py`) | Done |
 | `POST /api/v1/analyze` — full analysis pipeline (static + GPT + CodeBERT) | Done |
 | Dockerfile | Done |
-| Static analysis engine (`app/services/engines/python_engine.py`, 46 PEP 8 checks) | Done |
+| Static analysis engine (`app/services/engines/python_engine.py`, 48 PEP 8 checks) | Done |
 | GPT bug prediction (`app/services/gpt_predictor.py`, prompts in `prompts/python_prompt.py`) | Done |
 | Submission persistence to Supabase (`app/services/persistence_service.py`) | Done |
 | Reanalysis of existing submissions | Done |

@@ -51,15 +51,16 @@ CodePulse analyzes your code in real-time and provides:
 
 ```
 CodePulse/
-├── backend/          # Python FastAPI backend
-├── frontend/         # React frontend application
-├── postman/          # Postman collections, environments, and API tests
-├── .github/workflows/# CI/CD pipelines (backend-ci, frontend-ci, api-tests)
-├── docs/             # Architecture diagrams and specs
-├── images/           # Project images and GIFs
-├── README.md         # This file
-├── STANDARDS.md      # Coding standards and guidelines
-├── TESTING.md        # Testing and CI/CD guide
+├── backend/           # Python FastAPI backend
+├── frontend/          # React frontend application
+├── postman/           # Postman collections, environments, and API tests
+├── .github/workflows/ # CI/CD pipelines (backend-ci, frontend-ci, api-tests)
+├── docs/              # Architecture diagrams and specs
+├── images/            # Project images and GIFs
+├── README.md          # This file
+├── STANDARDS.md       # Coding standards and guidelines
+├── TESTING.md         # Testing and CI/CD guide
+└── render.yaml        # Render deployment config
 ```
 
 For detailed project structure, see [STANDARDS.md](STANDARDS.md).
@@ -82,10 +83,13 @@ The backend uses FastAPI with these main endpoints:
 | `PATCH` | `/api/v1/account/profile` | Bearer JWT | Update username and/or profile picture URL |
 | `POST` | `/api/v1/account/avatar` | Bearer JWT | Upload profile picture |
 | `POST` | `/api/v1/account/change-password` | Bearer JWT | Change password |
+| `POST` | `/api/v1/account/invite` | Bearer JWT | Send Supabase invite email to a new user |
+| `GET` | `/api/v1/account/export` | Bearer JWT | Export all user data (GDPR/CCPA JSON) |
 | `DELETE` | `/api/v1/account` | Bearer JWT | Delete account (cascades all data) |
 | `GET` | `/api/v1/submissions` | Bearer JWT | List user's submissions |
 | `PATCH` | `/api/v1/submissions/{id}` | Bearer JWT | Rename a submission |
 | `DELETE` | `/api/v1/submissions/{id}` | Bearer JWT | Delete a submission |
+| `PATCH` | `/api/v1/submissions/{id}/pin` | Bearer JWT | Toggle pin/star on a submission |
 
 Full API docs available at `http://localhost:8000/docs` once the server is running (requires `DEBUG=true`).
 
@@ -177,12 +181,11 @@ We welcome contributions! Please follow these steps:
 
 See the [docs](docs/) folder for:
 - Class diagram
+- Client-server diagram
 - Deployment diagram
-- Engine pipeline flowchart
-- Sequence diagram
 - ER diagram
-- Design and architecture documentation
-- Requirements analysis
+- Use case diagram
+- Requirements analysis ([docs/REQUIREMENTS.md](docs/REQUIREMENTS.md))
 
 ## Authors
 

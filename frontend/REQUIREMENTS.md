@@ -149,13 +149,7 @@ test matrix mapping `TC-{MODULE}-{NNN}` IDs to requirements.
 | `InviteModal.test.js` | 9 | FR-ACCT-005, FR-DASH-005 |
 | `TwoFactorSection.test.js` | 11 | FR-AUTH-003, FR-AUTH-004, FR-AUTH-005 |
 | `AuthContext.test.js` | 4 | FR-AUTH-001, FR-AUTH-002 |
-| `LoginPage.test.js` | 17 | FR-AUTH-001, FR-AUTH-002, FR-AUTH-004, FR-AUTH-006 |
-| `AccountPage.test.js` | 10 | FR-ACCT-001 through FR-ACCT-004 |
+| `LoginPage.test.js` | 45 | FR-AUTH-001, FR-AUTH-002, FR-AUTH-004, FR-AUTH-006, FR-AUTH-008 |
+| `AccountPage.test.js` | 16 | FR-ACCT-001 through FR-ACCT-009 |
 | `ResetPasswordPage.test.js` | 8 | FR-AUTH-006 |
 | `generateReport.test.js` | 10 | FR-REPORT-006, NFR-SEC-002 |
-
-> **Note:** Test counts above reflect the `LoginPage.test.js` split — 17 tests in the login
-> page suite cover login, signup, forgot-password, and MFA flows. The remaining frontend
-> tests across `ProtectedRoute`, `CodeEditor`, `ResultsPanel`, `SubmissionSidebar`,
-> `InviteModal`, `TwoFactorSection`, `AuthContext`, `AccountPage`, `ResetPasswordPage`,
-> and `generateReport` bring the total to 179.
