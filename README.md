@@ -188,13 +188,15 @@ See the [docs](docs/) folder for:
 - Deployment diagram
 - ER diagram
 - Use case diagram
+- User story map
+- Engine pipeline diagram
 - Requirements analysis ([docs/REQUIREMENTS.md](docs/REQUIREMENTS.md))
 
 ## Authors
 
-- Aiden Cary (Team Lead/Developer)
-- Keller Willhite (UI/UX Developer)
-- Zachery Atchley (Integration and Unit Tester/Developer)
+- Aiden Cary (Team Lead, Full-Stack Developer, Scrum Master, Unit/System Tester)
+- Keller Willhite (UI/UX Developer, Acceptance Tester)
+- Zachery Atchley (Webmaster, AI/ML Engineer, Integration Tester)
 
 ## Artists
 

@@ -26,6 +26,7 @@ CodePulse/
 │   │       ├── prompts/
 │   │       │   ├── __init__.py
 │   │       │   └── python_prompt.py  # GPT prompt templates for Python analysis
+│   │       ├── codebert_validator.py # Fine-tuned CodeBERT confidence scoring (aidencary/codepulse-codebert)
 │   │       ├── gpt_predictor.py      # OpenAI GPT bug prediction + submission name generation
 │   │       └── persistence_service.py # Supabase write sequence
 │   ├── database/
@@ -35,13 +36,15 @@ CodePulse/
 │   └── .env.example          # Environment variables template
 │
 ├── frontend/                # JavaScript/React frontend
-│   ├── public/              # Static files
+│   ├── public/              # Static files (index.html, favicon, GIFs)
+│   ├── email-templates/     # Supabase transactional email HTML templates
 │   └── src/                 # Source code
-│       ├── components/      # React components (BugCard, CodeEditor, InviteModal, ProfileDropdown, ProtectedRoute, ResultsPanel, SubmissionSidebar, Toast, TwoFactorSection)
+│       ├── components/      # React components (BugCard, CodeEditor, HelpModal, InviteModal, ProfileDropdown, ProtectedRoute, ResultsPanel, SubmissionSidebar, Toast, TwoFactorSection)
 │       ├── context/         # React context (AuthContext with refreshSession)
-│       ├── pages/           # Page components (LoginPage, DashboardPage, AccountPage)
+│       ├── pages/           # Page components (LoginPage, DashboardPage, AccountPage, ResetPasswordPage, PrivacyPage, TermsPage)
 │       ├── services/        # API service calls (supabaseClient, analysisService, submissionService, accountService)
-│       ├── styles/          # CSS/styling files
+│       ├── styles/          # CSS/styling files (auth.css, dashboard.css, account.css, legal.css)
+│       ├── utils/           # Utility helpers (generateReport.js, scoreHelpers.js)
 │       ├── setupTests.js    # Jest / Testing Library global setup
 │       ├── App.js           # Main app component
 │       └── index.js         # Entry point
@@ -52,6 +55,8 @@ CodePulse/
 │   ├── CodePulse Deployment Diagram.drawio.png
 │   ├── CodePulse ER Diagram.drawio.png
 │   ├── CodePulse Use Case Diagram.drawio.png
+│   ├── CodePulse User Story Map.drawio.png
+│   ├── CodePulse Engine Pipeline.drawio.png
 │   └── REQUIREMENTS.md
 ├── postman/                  # API integration tests (Postman / Newman)
 │   ├── collections/
@@ -70,6 +75,7 @@ CodePulse/
 ├── README.md                 # Project overview
 ├── STANDARDS.md              # This file
 ├── TESTING.md                # Testing and CI/CD guide
+└── render.yaml               # Render deployment config
 ```
 
 ## Documentation
@@ -81,6 +87,8 @@ The `docs/` folder contains project documentation and diagrams:
 - **CodePulse Deployment Diagram.drawio.png** - Deployment diagram showing infrastructure layout
 - **CodePulse ER Diagram.drawio.png** - Entity-Relationship diagram for database schema
 - **CodePulse Use Case Diagram.drawio.png** - Use case diagram showing user interactions
+- **CodePulse User Story Map.drawio.png** - User story map showing epics, user stories, and release slices
+- **CodePulse Engine Pipeline.drawio.png** - Analysis engine pipeline diagram showing the flow from code input through static analysis, GPT prediction, and CodeBERT validation
 - **REQUIREMENTS.md** - Machine-readable requirements with unique IDs, implementation status, and deviation notes
 
 ## Coding Standards

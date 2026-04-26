@@ -22,7 +22,10 @@ React frontend for the CodePulse code quality and bug prediction dashboard.
 ```
 frontend/
 ├── public/
-│   └── index.html              # HTML shell
+│   ├── index.html              # HTML shell
+│   ├── favicon.png
+│   └── CodePulseSlow.gif
+├── email-templates/            # Supabase transactional email HTML templates
 └── src/
     ├── index.js                # React entry point
     ├── App.js                  # Router and AuthProvider setup
@@ -48,11 +51,17 @@ frontend/
     │   ├── LoginPage.js        # Log In / Sign Up sliding toggle / Forgot Password; MFA step-up (TOTP); purple focus glow; learn-more cards with hover lift + scroll-triggered entrance + light mode support; chevron scroll cue
     │   ├── DashboardPage.js    # Dashboard shell — editor + results + submission naming; owns analyzedCode snapshot, liveLineById state, and unsaved-edits confirmation when switching submissions
     │   ├── AccountPage.js      # Account settings — profile, avatar (96px), password, delete; section title icons, lock icons on read-only fields, save confirmation flash
-    │   └── ResetPasswordPage.js # Password reset form — validates token, updates password
+    │   ├── ResetPasswordPage.js # Password reset form — validates token, updates password
+    │   ├── PrivacyPage.js      # Privacy policy page
+    │   └── TermsPage.js        # Terms of service page
+    ├── utils/
+    │   ├── generateReport.js   # HTML report export generator (self-contained, XSS-safe)
+    │   └── scoreHelpers.js     # Score color/label utilities
     └── styles/
         ├── auth.css            # Login/sign-up form styles — sliding toggle, focus glow, learn-more hover/entrance/light-mode, chevron scroll cue
         ├── dashboard.css       # Dashboard + toast + submission naming + resizable results panel + SVG score ring + severity borders/highlights + entrance animations
-        └── account.css         # Account settings page — section icons, lock icon, larger avatar, save confirmation flash
+        ├── account.css         # Account settings page — section icons, lock icon, larger avatar, save confirmation flash
+        └── legal.css           # Terms and Privacy page styles
 ```
 
 ---
@@ -66,6 +75,8 @@ frontend/
 | `/reset-password` | Public | Set a new password after clicking a reset email link |
 | `/dashboard` | Protected | Main dashboard — requires authentication |
 | `/account` | Protected | Account settings — profile, avatar, password, delete |
+| `/terms` | Public | Terms of Service |
+| `/privacy` | Public | Privacy Policy |
 
 ---
 
