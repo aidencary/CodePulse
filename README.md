@@ -6,6 +6,9 @@
 
 A code quality and bug prediction dashboard to verify if code adheres to coding standards and give feedback on potential bugs. Users can paste code into the live text editor and get feedback from the dashboard such as a code quality score, deviations from code standards, and potential bugs.
 
+## CodePulse is currently live!
+- Visit [code-pulse.xyz](https://www.code-pulse.xyz/)
+
 ## Link to HuggingFace Repository
 - https://huggingface.co/aidencary/codepulse-codebert/tree/main 
 
